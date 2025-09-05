@@ -1,0 +1,311 @@
+name: Codebase Health Monitor
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  NODE_VERSION: '22.x'
+  PNPM_VERSION: '9'
+
+jobs:
+  health-check:
+    name: Codebase Health Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        check: 
+          - name: "Code Quality"
+            script: "code-quality:ci"
+            critical: false
+          - name: "Architecture"
+            script: "architecture:ci" 
+            critical: false
+          - name: "Import Issues"
+            script: "import-issues:ci"
+            critical: false
+          - name: "Performance"
+            script: "performance:ci"
+            critical: false
+          - name: "Test Coverage"
+            script: "test-coverage:ci"
+            critical: false
+          - name: "Unused Code"
+            script: "unused-code:ci"
+            critical: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install ripgrep
+        run: |
+          curl -LO https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep_13.0.0_amd64.deb
+          sudo dpkg -i ripgrep_13.0.0_amd64.deb
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ${{ matrix.check.name }} Check
+        id: health-check
+        run: |
+          echo "Running ${{ matrix.check.name }} health check..."
+          pnpm run ${{ matrix.check.script }} || exit_code=$?
+          echo "exit_code=${exit_code:-0}" >> $GITHUB_OUTPUT
+        continue-on-error: ${{ !matrix.check.critical }}
+
+      - name: Handle Critical Failure
+        if: matrix.check.critical && steps.health-check.outputs.exit_code != '0'
+        run: |
+          echo "❌ Critical health check failed: ${{ matrix.check.name }}"
+          echo "This check is marked as critical and will fail the CI pipeline."
+          exit 1
+
+      - name: Handle Non-Critical Failure
+        if: ${{ !matrix.check.critical && steps.health-check.outputs.exit_code != '0' }}
+        run: |
+          echo "⚠️  Non-critical health check failed: ${{ matrix.check.name }}"
+          echo "This check failed but won't block the CI pipeline."
+
+  # Comprehensive health report job that runs after individual checks
+  health-report:
+    name: Health Report Summary
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: always()
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install ripgrep
+        run: |
+          curl -LO https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep_13.0.0_amd64.deb
+          sudo dpkg -i ripgrep_13.0.0_amd64.deb
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Comprehensive Health Report
+        run: |
+          echo "# 📊 Codebase Health Report" > health-report.md
+          echo "" >> health-report.md
+          echo "Generated on: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> health-report.md
+          echo "Commit: ${{ github.sha }}" >> health-report.md
+          echo "" >> health-report.md
+          
+          # Run all health checks and capture outputs
+          echo "## 🧪 Code Quality Analysis" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          pnpm run code-quality 2>&1 || echo "Code quality check failed" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          echo "" >> health-report.md
+          
+          echo "## 🏗️ Architecture Validation" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          pnpm run architecture 2>&1 || echo "Architecture check failed" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          echo "" >> health-report.md
+          
+          echo "## 📦 Import Analysis" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          pnpm run import-issues 2>&1 || echo "Import analysis failed" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          echo "" >> health-report.md
+          
+          echo "## ⚡ Performance Profiling" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          pnpm run performance 2>&1 || echo "Performance analysis failed" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          echo "" >> health-report.md
+          
+          echo "## 🧪 Test Coverage" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          pnpm run test-coverage 2>&1 || echo "Test coverage analysis failed" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          echo "" >> health-report.md
+          
+          echo "## 🗑️ Unused Code Detection" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+          pnpm run unused-code 2>&1 || echo "Unused code analysis failed" >> health-report.md
+          echo "\`\`\`" >> health-report.md
+
+      - name: Upload Health Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: codebase-health-report-${{ github.sha }}
+          path: health-report.md
+          retention-days: 30
+
+      - name: Comment PR with Health Report (if PR)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('health-report.md', 'utf8');
+            
+            // Truncate report if too long for PR comment
+            const maxLength = 32000;
+            let truncatedReport = report;
+            if (report.length > maxLength) {
+              truncatedReport = report.substring(0, maxLength) + '\n\n... (report truncated, see artifact for full report)';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🏥 Codebase Health Report\n\n${truncatedReport}\n\n---\n*Generated by Codebase Health Monitor*`
+            });
+
+  # Fast feedback job for critical issues only
+  quick-health:
+    name: Quick Health Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install ripgrep
+        run: |
+          curl -LO https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep_13.0.0_amd64.deb
+          sudo dpkg -i ripgrep_13.0.0_amd64.deb
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Quick Critical Checks
+        run: |
+          echo "🚀 Running quick critical health checks..."
+          
+          # Only run the most critical checks for fast PR feedback
+          echo "Checking code quality..."
+          pnpm run code-quality:debug || critical_issues=true
+          
+          echo "Checking architecture..."
+          pnpm run architecture:imports || critical_issues=true
+          
+          echo "Checking import issues..."  
+          pnpm run import-issues:circular || critical_issues=true
+          
+          if [ "$critical_issues" = true ]; then
+            echo "❌ Critical issues found in quick check"
+            exit 1
+          else
+            echo "✅ Quick health check passed"
+          fi
+
+  # Dependency and security analysis
+  security-health:
+    name: Security & Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install ripgrep
+        run: |
+          curl -LO https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep_13.0.0_amd64.deb
+          sudo dpkg -i ripgrep_13.0.0_amd64.deb
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for Unused Dependencies
+        run: |
+          echo "🔍 Checking for unused dependencies..."
+          pnpm run unused-deps:security || echo "Security dependency issues found"
+
+      - name: Audit Dependencies
+        run: |
+          echo "🔒 Auditing dependencies for security vulnerabilities..."
+          pnpm audit --audit-level moderate || echo "Security vulnerabilities found"
+        continue-on-error: true
+
+      - name: Check Bundle Size Impact
+        run: |
+          echo "📦 Analyzing bundle size impact..."
+          pnpm run performance:bundle || echo "Bundle size issues detected"
+        continue-on-error: true

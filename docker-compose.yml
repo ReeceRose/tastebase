@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  tastebase:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=/app/data/tastebase.db
+      - BETTER_AUTH_SECRET=your-super-secret-key-change-this-in-production-at-least-32-chars-long
+      - BETTER_AUTH_URL=http://localhost:3000
+      - UPLOAD_DIR=/app/uploads
+      - MAX_FILE_SIZE=10485760
+    volumes:
+      - tastebase-data:/app/data
+      - tastebase-uploads:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  tastebase-data:
+  tastebase-uploads:
