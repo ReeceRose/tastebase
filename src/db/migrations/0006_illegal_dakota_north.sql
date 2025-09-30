@@ -1,0 +1,1 @@
+ALTER TABLE `user_note_templates` DROP COLUMN `is_public`;

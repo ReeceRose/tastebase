@@ -1,0 +1,1 @@
+ALTER TABLE `ai_provider_configurations` ADD `image_processing_method` text DEFAULT 'auto';

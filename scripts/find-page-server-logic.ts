@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 
+import { readFileSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { execSync } from 'child_process';
-import { readFileSync, statSync } from 'fs';
-import { resolve } from 'path';
 
 type ServerLogicItem = {
   path: string;
@@ -240,7 +240,7 @@ class PageServerLogicAnalyzer {
     if (this.results.length === 0) return;
 
     this.log('\n💡 REFACTORING RECOMMENDATIONS:', 'cyan');
-    this.log('   1. Move database queries to src/features/<feature>/server/actions.ts', 'cyan');
+    this.log('   1. Move database queries to src/lib/server-actions/actions.ts', 'cyan');
     this.log('   2. Create dedicated server actions for data fetching', 'cyan');
     this.log('   3. Keep page files minimal - only UI composition and server action calls', 'cyan');
     this.log('   4. Import database queries from server actions, not directly from @/db', 'cyan');

@@ -19,7 +19,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loading } from "@/components/ui/loading";
 import { authClient } from "@/lib/auth/auth-client";
-import { cn } from "@/lib/utils/utils";
+import { ComponentSize } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const signInSchema = z.object({
   email: z
@@ -142,7 +143,7 @@ export function SignInForm({
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">
-                      <Loading size="sm" />
+                      <Loading size={ComponentSize.SM} />
                       Logging in...
                     </div>
                   ) : (

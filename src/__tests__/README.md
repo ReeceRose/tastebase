@@ -28,8 +28,7 @@ src/__tests__/
 
 src/components/ui/__tests__/     # Component tests
 src/lib/__tests__/              # Utility function tests
-src/features/*/components/__tests__/ # Feature component tests
-src/features/*/server/__tests__/ # Server action tests
+src/components organized by purpose/__tests__/ # Feature component tests
 ```
 
 ## Running Tests
@@ -46,9 +45,6 @@ pnpm run test:coverage
 
 # Run specific test file
 pnpm run test src/components/ui/__tests__/button.test.tsx
-
-# Run tests for specific directory
-pnpm run test src/features/projects/
 ```
 
 ## Writing Tests
@@ -209,5 +205,4 @@ To exclude files from coverage, update the `coverage.exclude` array in `vitest.c
 See the following files for testing examples:
 - Component: `src/components/ui/__tests__/button.test.tsx`
 - Utilities: `src/lib/__tests__/utils.test.ts`
-- Server Actions: `src/features/projects/server/__tests__/actions.test.ts`
 - Integration: `src/__tests__/examples/integration-example.test.ts`

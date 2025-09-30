@@ -20,7 +20,7 @@ Automatically refactor React components in a directory to conform to modern UX/U
 
 **Example**:
 ```
-I need you to refactor the directory `src/features/billing/components` to conform to modern UX/UI best practices...
+I need you to refactor the directory `src/components` to conform to modern UX/UI best practices...
 ```
 
 ## How to Use Commands

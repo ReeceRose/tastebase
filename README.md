@@ -1,17 +1,18 @@
 # Tastebase
 
-A simple, local-first recipe management application designed for personal use. Keep your recipes organized and accessible on your own computer with Docker deployment - no cloud dependencies, no subscriptions, just your recipes stored locally and securely.
+A simple, local-first recipe management application designed for shared instances. Keep your group's recipes organized and accessible on your own server with Docker deployment - no cloud dependencies, no subscriptions, just your shared recipe collection stored locally and securely.
 
 ## 🚀 Features
 
 - **🏠 Local-First** - Everything stored on your computer, no cloud dependencies
-- **🍳 Recipe Management** - Create, edit, and organize your personal recipe collection
+- **🍳 Recipe Management** - Create, edit, and organize your group's shared recipe collection
 - **🔍 Search & Filter** - Find recipes quickly by name, ingredients, or tags
 - **📝 Personal Notes** - Add cooking tips, modifications, and personal notes
 - **🏷️ Organization** - Tag and categorize recipes your way
 - **📱 Responsive Design** - Works great on desktop, tablet, and mobile
 - **🌙 Dark/Light Mode** - Choose your preferred theme
-- **🔐 Single-User Auth** - Simple authentication for personal use
+- **🔐 Multi-User Auth** - Simple authentication with privacy controls for shared instances
+- **👥 Sharing Controls** - Public recipes (shared with all users) or private recipes (personal only)
 - **💾 SQLite Database** - Reliable local storage with full data ownership
 - **🐳 Docker Deployment** - Run locally with one simple command
 - **⚡ Modern Stack** - Built with Next.js 15 and modern web technologies
@@ -110,10 +111,14 @@ recipe-app/
 │   │   ├── profile/           # Protected profile page
 │   │   ├── api/               # API routes and webhooks
 │   │   └── page.tsx           # Main dashboard page
-│   ├── components/            # UI components organized by feature
+│   ├── components/            # UI components organized by purpose
 │   │   ├── ui/                # ShadCN base components
+│   │   ├── layout/            # Dashboard layout components
 │   │   ├── auth/              # Authentication components
-│   │   ├── profile/           # Profile management components
+│   │   ├── forms/             # All form components
+│   │   ├── lists/             # List and table components
+│   │   ├── cards/             # Card components
+│   │   ├── skeletons/         # Loading state components
 │   │   └── theme/             # Theme components
 │   ├── lib/                   # Utilities organized by category
 │   │   ├── auth/              # Authentication & user management
@@ -139,6 +144,10 @@ DATABASE_URL="file:./recipes.db"
 BETTER_AUTH_SECRET="your-secret-key-here"
 BETTER_AUTH_URL="http://localhost:3000"
 
+# API Key Encryption (Required for AI features)
+ENCRYPTION_SECRET="your-separate-64-character-encryption-secret"
+CURRENT_ENCRYPTION_VERSION=1
+
 # AI Services (Choose one)
 OPENAI_API_KEY="sk-..."
 # OR
@@ -153,6 +162,21 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NODE_ENV="development"
 ```
 
+### 🔐 Security Setup
+
+**Generate secure encryption key:**
+```bash
+# Generate a 64-character encryption secret
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**⚠️ Security Requirements:**
+- `ENCRYPTION_SECRET` must be **different** from `BETTER_AUTH_SECRET`
+- Must be at least 32 characters (64 recommended)
+- Must have good entropy and character variety
+- **Never commit secrets to version control**
+- Store securely in production environments
+
 ### Required vs Optional
 
 **Required for basic functionality:**
@@ -162,11 +186,13 @@ NODE_ENV="development"
 - `NEXT_PUBLIC_APP_URL` - Public application URL
 
 **Required for AI features:**
+- `ENCRYPTION_SECRET` - Secure API key encryption
 - `OPENAI_API_KEY` OR `ANTHROPIC_API_KEY` - For recipe parsing
 
 **Optional:**
 - `UPLOAD_DIR` - Custom upload directory (defaults to ./uploads)
 - `MAX_FILE_SIZE` - Max file size in bytes (defaults to 10MB)
+- `CURRENT_ENCRYPTION_VERSION` - Key rotation version (defaults to 1)
 
 ## 🎯 Available Scripts
 
@@ -350,20 +376,23 @@ pnpm run db:generate  # Creates migration files
 pnpm run db:migrate   # Applies to database
 ```
 
-### 4. Create Feature Structure
+### 4. Create Component Structure
 ```bash
-mkdir -p src/components/<feature-name> src/lib/<feature-name>
+mkdir -p src/components/forms src/components/cards src/components/lists src/components/skeletons
 ```
 
 ### 5. Implement Server Actions
 ```typescript
-// src/lib/<feature-name>/<feature-name>-actions.ts
+// src/lib/server-actions/<feature-name>-actions.ts
 "use server";
+import { headers } from "next/headers";
 import { auth } from "@/lib/auth/auth";
 import { db } from "@/db";
 
 export async function createMyFeature(data: FormData) {
-  const session = await auth();
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
   if (!session?.user) throw new Error("Unauthorized");
   
   // Implementation here
@@ -371,7 +400,9 @@ export async function createMyFeature(data: FormData) {
 ```
 
 ### 6. Build UI Components
-- Create form components in `components/`
+- Create form components in `components/forms/`
+- Create list components in `components/lists/`
+- Create card components in `components/cards/`
 - Add skeleton components in `components/skeletons/`
 - Follow existing patterns for consistency
 - Use Suspense with skeleton fallbacks
@@ -380,13 +411,13 @@ export async function createMyFeature(data: FormData) {
 ```typescript
 // src/app/<feature>/page.tsx
 import { Suspense } from "react";
-import { MyFeatureContent } from "@/components/<feature>/my-feature-content";
-import { MyFeatureSkeleton } from "@/components/<feature>/my-feature-skeleton";
+import { MyFeatureList } from "@/components/lists/my-feature-list";
+import { MyFeatureSkeleton } from "@/components/skeletons/my-feature-skeleton";
 
 export default function MyFeaturePage() {
   return (
     <Suspense fallback={<MyFeatureSkeleton />}>
-      <MyFeatureContent />
+      <MyFeatureList />
     </Suspense>
   );
 }
@@ -441,7 +472,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Built for home cooks and cooking enthusiasts** 🍳
 
-This recipe app is designed to be your personal recipe collection with AI-powered import, beautiful UI, and seamless organization. Perfect for anyone who loves to cook and wants to organize their recipes in one place.
+This recipe app is designed to be your group's shared recipe collection with AI-powered import, beautiful UI, and seamless organization. Perfect for families, roommates, cooking clubs, restaurants, or any group who wants to organize recipes together with privacy controls for personal recipes.
 
 ### Why Choose This Recipe App?
 

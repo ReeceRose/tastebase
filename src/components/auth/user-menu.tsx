@@ -46,11 +46,20 @@ export function UserMenu({ user }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button
+          variant="ghost"
+          className="flex items-center gap-3 h-auto p-2 cursor-pointer"
+        >
           <Avatar className="h-8 w-8">
             <AvatarImage src={user.image || ""} alt={user.name || user.email} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
+          <div className="hidden md:block text-left">
+            <p className="text-sm font-medium leading-none">
+              {user.name || "User"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Recipe Chef</p>
+          </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
@@ -65,11 +74,16 @@ export function UserMenu({ user }: UserMenuProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/profile")}>
-          Profile
+        <DropdownMenuItem
+          onClick={() => router.push("/settings")}
+          className="cursor-pointer"
+        >
+          Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+          Sign out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

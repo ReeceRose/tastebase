@@ -40,32 +40,35 @@ pnpm run dev
 - **Linting**: Biome (replaces ESLint + Prettier)
 - **Type Checking**: TypeScript with strict mode
 
-### Feature-Based Architecture
+### Component-Based Architecture
 
-Tastebase follows a feature-based architecture where each major feature lives in its own directory:
+Tastebase follows a component-based architecture where components are organized by purpose:
 
 ```
-src/features/<feature-name>/
-├── components/          # Feature-specific React components
-│   ├── forms/          # Form components
-│   ├── lists/          # List and table components
-│   ├── detail/         # Detail view components
-│   └── skeletons/      # Loading states
-├── server/             # Server Actions and database operations
-│   ├── actions.ts      # Main CRUD operations
-│   └── queries.ts      # Complex queries (optional)
-├── lib/                # Feature-specific utilities
-│   ├── types.ts        # TypeScript types
-│   ├── validations.ts  # Zod schemas
-│   └── utils.ts        # Helper functions
-└── __tests__/          # Feature tests
+src/components/
+├── ui/                 # ShadCN base UI components
+├── layout/             # Dashboard layout components  
+├── auth/               # Authentication components
+├── forms/              # All form components
+├── lists/              # List and table components
+├── cards/              # Card components
+├── modals/             # Modal and dialog components
+├── skeletons/          # Loading state components
+└── navigation/         # Navigation components
+
+src/lib/
+├── auth/               # Authentication logic
+├── server-actions/     # Server Actions for CRUD operations
+├── types/              # TypeScript type definitions
+├── validations/        # Zod schemas
+└── utils/              # Helper functions and utilities
 ```
 
 **Benefits**:
-- Clear separation of concerns
-- Easy to locate and modify feature code
-- Prevents circular dependencies
-- Scales well as features grow
+- Components organized by UI purpose, not business domain
+- Easier to find and reuse components
+- Clear separation between UI and business logic
+- More maintainable and scalable architecture
 
 ### Database Schema Organization
 
@@ -88,10 +91,10 @@ src/db/
    - Create feature specification document
    - Define database schema changes if needed
 
-2. **Create Feature Structure**
+2. **Create Component Structure**
    ```bash
-   mkdir -p src/features/<feature-name>/{components,server,lib,__tests__}
-   mkdir -p src/features/<feature-name>/components/{forms,lists,skeletons}
+   mkdir -p src/components/{forms,lists,cards,skeletons}
+   mkdir -p src/lib/{server-actions,types,validations}
    ```
 
 3. **Database Schema (if needed)**
@@ -105,9 +108,44 @@ src/db/
    # Generate migration
    pnpm run db:generate
    
-   # Apply migration
+   # Run migration
    pnpm run db:migrate
    ```
+
+## AI Integration Status
+
+### ✅ Phase 3: Core AI Integration - COMPLETED
+**Context**: `docs/context/phase-3-ai-progress-2025-09-12-1720.md`
+
+Phase 3 is **100% complete** with production-ready features:
+- **Smart URL Detection**: JSON-LD → HTML → AI fallback parsing
+- **Advanced UI Components**: Tab interface with progress indicators  
+- **Multi-Provider Support**: OpenAI, Anthropic, Google, Ollama
+- **OCR Foundation**: Tesseract service with Sharp preprocessing
+
+### 📋 Phase 3.5: Dual Image Processing - READY (3-4 hours)
+
+**Strategic Enhancement**: Support both AI Vision and Local OCR with user toggle.
+
+**Remaining Tasks**:
+1. **AI Vision Service** (~1 hour) - GPT-4V, Claude Vision integration
+2. **Smart Image Processor** (~1 hour) - User preference routing  
+3. **Image Upload Component** (~2 hours) - Drag-drop with dual method support
+4. **Settings Integration** (~30 min) - Add processing method toggle
+
+**Resume Commands**:
+```bash
+# Check Phase 3 completion status
+ls src/lib/ai/tools/fetch-recipe-tool.ts  # Should exist
+ls src/components/forms/recipe-url-input.tsx  # Should exist  
+ls src/lib/ai/services/ocr-service.ts  # Should exist
+
+# Test existing URL parsing
+pnpm run dev  # Test at /recipes/new with URL tab
+
+# Start Phase 3.5 implementation
+# Next: Create src/lib/ai/services/ai-vision-service.ts
+```
 
 4. **Implement Server Actions First**
    - Define TypeScript types
@@ -116,9 +154,10 @@ src/db/
    - Write unit tests for server actions
 
 5. **Build UI Components**
-   - Create skeleton components first
-   - Build forms and list components
-   - Implement detail views
+   - Create skeleton components first in `src/components/skeletons/`
+   - Build form components in `src/components/forms/`
+   - Build list components in `src/components/lists/`
+   - Create card components in `src/components/cards/`
    - Add comprehensive error states
 
 6. **Integration and Testing**
@@ -184,7 +223,7 @@ export async function createRecipe(formData: FormData) {
       ...result.data,
     });
     
-    redirect(`/dashboard/recipes/${recipe.id}`);
+    redirect(`/recipes/${recipe.id}`);
   } catch (error) {
     console.error("Recipe creation error:", error);
     return { error: "Failed to create recipe" };
@@ -325,7 +364,7 @@ describe('Recipe Actions', () => {
 ```typescript
 // __tests__/recipe-form.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react';
-import { RecipeForm } from '../components/forms/recipe-form';
+import { RecipeForm } from '@/components/forms/recipe-form';
 
 describe('RecipeForm', () => {
   it('should validate required fields', async () => {
@@ -479,7 +518,8 @@ docker run -d \
 6. Submit PR with clear description
 
 ### Code Review Checklist
-- [ ] Follows feature-based architecture
+- [ ] Follows component-based architecture
+- [ ] Components organized by purpose (forms/, lists/, cards/, etc.)
 - [ ] Includes proper TypeScript types
 - [ ] Has comprehensive error handling
 - [ ] Includes loading states (skeletons)

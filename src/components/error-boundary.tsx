@@ -6,6 +6,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
@@ -48,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.props.onError?.(error, errorInfo);
 
     // In production, you might want to send this to an error reporting service
-    if (process.env.NODE_ENV === "production") {
+    if (IS_PRODUCTION) {
       // sendErrorReport({ error, errorInfo });
     }
   }
@@ -90,7 +93,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 Error ID: <code className="text-xs">{this.state.errorId}</code>
               </p>
 
-              {process.env.NODE_ENV === "development" && this.state.error && (
+              {IS_DEVELOPMENT && this.state.error && (
                 <details className="text-sm">
                   <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
                     Technical Details

@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { execSync } from "child_process";
-import { existsSync, readFileSync } from "fs";
-import { resolve } from "path";
 import { type Colors, colors, SharedCodeAnalyzer } from "./lib/code-analyzer-shared";
 
 type UsageResult = {
@@ -499,10 +499,10 @@ OPTIONS:
 
 EXAMPLES:
   # Check if a file is imported anywhere (recommended)
-  pnpm check-usage --file src/features/subscription/components/upgrade-prompt.tsx --import-only
+  pnpm check-usage --file src/components/upgrade-prompt.tsx --import-only
   
   # Full analysis of a file (slower, may have false positives)
-  pnpm check-usage --file src/features/subscription/components/upgrade-prompt.tsx
+  pnpm check-usage --file src/components/upgrade-prompt.tsx
   
   # Check a specific string/component
   pnpm check-usage --string UpgradePrompt

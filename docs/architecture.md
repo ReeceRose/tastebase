@@ -8,7 +8,7 @@ This document outlines the file organization patterns and architectural decision
 
 ```
 src/
-├── components/                  # All UI components organized by feature
+├── components organized by purpose
 │   ├── ui/                      # ShadCN base components  
 │   ├── auth/                    # Authentication components
 │   ├── profile/                 # Profile management components
@@ -67,7 +67,7 @@ When adding new code, ask these questions in order:
 
 ### 2. Is this a UI component?
 **→ `src/components/ui/`** (ShadCN base components)
-**→ `src/components/<feature>/`** (Feature-specific components)
+**→ `src/components organized by purpose>/`** (Feature-specific components)
 
 ### 3. Is this authentication/user related?
 **→ `src/lib/auth/`** (Auth config, client, server actions)
@@ -196,7 +196,7 @@ export async function updateRecipe(id: string, data: RecipeFormData) {
 ## Component Organization
 
 ### Feature Components
-- Located in `src/components/<feature>/`
+- Located in `src/components organized by purpose>/`
 - Feature-specific business logic and UI
 - Imports from shared components and lib utilities
 
@@ -205,10 +205,39 @@ export async function updateRecipe(id: string, data: RecipeFormData) {
 - Reusable across multiple features
 - No feature-specific business logic
 
-### Skeleton Components
-- Always create loading states for dynamic data
-- Can be co-located with related components
-- Mirror the structure of the actual component
+### Skeleton Components & Suspense Pattern
+- **ALWAYS use Suspense + streaming** for locally hosted apps like Tastebase
+- **Create skeleton components** in `src/components/skeletons/` for all dynamic data
+- **Separate data components** from page components to enable streaming
+- **Page pattern**: Auth only → Suspense wrapper → Data component + Skeleton
+
+### ✅ Correct Page Structure Pattern
+```typescript
+// src/app/dashboard/page.tsx - ONLY auth, layout, Suspense
+export default async function DashboardPage() {
+  const session = await auth.api.getSession(); // Fast ~50ms
+  if (!session) redirect("/auth/sign-in");
+
+  return (
+    <DashboardLayout user={session.user}>
+      <Suspense fallback={<DashboardStatsSkeleton />}>
+        <DashboardStats />
+      </Suspense>
+    </DashboardLayout>
+  );
+}
+
+// src/components/cards/dashboard-stats.tsx - Data fetching component
+async function DashboardStats() {
+  const data = await getDashboardData(); // Database query ~200ms
+  return <div>{/* Render data */}</div>;
+}
+
+// src/components/skeletons/dashboard-stats-skeleton.tsx - Loading state
+export function DashboardStatsSkeleton() {
+  return <div>{/* Skeleton UI matching real component */}</div>;
+}
+```
 
 ## Database Schema Organization
 
@@ -249,7 +278,7 @@ src/
 ## Key Rules Summary
 
 1. **Route directories** contain ONLY `page.tsx` files
-2. **Components** are organized by feature in `/src/components/<feature>/`
+2. **Components** are organized by components organized by purpose organized by purpose>/`
 3. **Lib utilities** are categorized: `auth/`, `config/`, `logging/`, `utils/`
 4. **Always use @/ imports** - never relative imports
 5. **Create skeleton components** for all dynamic data

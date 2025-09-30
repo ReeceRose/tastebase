@@ -1,0 +1,1 @@
+ALTER TABLE `ai_provider_configurations` ADD `task_specific_token_limits` text;

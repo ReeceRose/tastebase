@@ -6,10 +6,10 @@ A focused tool for analyzing file and component usage patterns in the codebase. 
 
 ```bash
 # Check if a specific file is imported anywhere (fastest, most accurate)
-pnpm check-usage:imports --file src/features/subscription/components/upgrade-prompt.tsx
+pnpm check-usage:imports --file src/components/upgrade-prompt.tsx
 
 # Full analysis of a file (slower, includes individual exports)
-pnpm check-usage --file src/features/subscription/components/upgrade-prompt.tsx
+pnpm check-usage --file src/components/upgrade-prompt.tsx
 
 # Check usage of a specific component/function
 pnpm check-usage --string ComponentName
@@ -57,7 +57,7 @@ pnpm check-usage:imports --file src/components/unused-component.tsx
 
 ```bash
 # Analyze all exports in a file
-pnpm check-usage --file src/features/subscription/components/upgrade-prompt.tsx
+pnpm check-usage --file src/components/upgrade-prompt.tsx
 
 # Shows:
 # - File import status (most important)
@@ -132,7 +132,7 @@ done
 
 ```bash
 # Check if new files are being used
-pnpm check-usage:imports --file src/components/new-feature.tsx
+pnpm check-usage:imports --file src/components organized by purpose.tsx
 ```
 
 ### Refactoring Verification
@@ -186,7 +186,7 @@ pnpm check-usage:imports --file src/components/problematic-file.tsx
 
 The tool automatically handles TypeScript path aliases (`@/`):
 ```typescript
-import { Component } from "@/features/subscription/components/upgrade-prompt"
+import { Component } from "@/components organized by purpose/upgrade-prompt"
 // ✅ Will be detected correctly
 ```
 

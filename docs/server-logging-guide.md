@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
 ### Server Action Logging
 
 ```typescript
-// src/features/profile/server/actions.ts
+// src/lib/server-actions/actions.ts
 import { createUserLogger, logError } from "@/lib/logging/logger";
 
 export async function updateUserProfile(data: ProfileFormData) {

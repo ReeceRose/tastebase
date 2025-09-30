@@ -46,7 +46,7 @@ This phase focuses on cleaning up the inherited SaaS template and establishing t
 ### 1. Remove SaaS Features (Day 1)
 
 #### 1.1 Remove Stripe/Billing Components
-- [x] Delete billing-related components in `/src/features/`
+- [x] Delete billing-related components organized by purposes/`
 - [x] Remove subscription management components
 - [x] Remove payment-related server actions
 - [x] Remove Stripe webhook handlers
@@ -184,7 +184,7 @@ This phase focuses on cleaning up the inherited SaaS template and establishing t
 
 ### ✅ Cleanup Complete When:
 - [x] No references to Stripe, Clerk, organizations, or billing remain
-- [x] All unused components and features are removed
+- [x] All unused components organized by purposes are removed
 - [x] Recipe schema is properly modularized following project conventions
 - [x] BetterAuth is optimized for single-user recipe management
 - [x] Environment variables are configured for recipe app needs
@@ -232,12 +232,16 @@ This phase focuses on cleaning up the inherited SaaS template and establishing t
 2. Update imports and references as you go
 3. Test after each major removal
 4. Update documentation continuously
+5. **CRITICAL: Implement Suspense + streaming pattern** for all new pages
+6. **Create skeleton components** in `/src/components/skeletons/` for loading states
 
 ### Testing Strategy
 1. Run health checks after each major change
 2. Test authentication flows frequently
 3. Verify database operations work
 4. Test Docker setup early and often
+5. **Verify Suspense boundaries** work correctly with progressive loading
+6. **Test skeleton loading states** match actual component structure
 
 ---
 

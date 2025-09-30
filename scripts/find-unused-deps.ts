@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { execSync } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
 
 type DependencyInfo = {
   name: string;

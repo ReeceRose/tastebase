@@ -28,11 +28,11 @@ Refactor large files in `{DIRECTORY_PATH}` using 3-phase architecture-first work
 
 #### Single File Refactoring
 ```
-Refactor large file `src/features/admin/components/organization-table.tsx` using 3-phase architecture-first workflow:
+Refactor large file `src/components organized by purpose/organization-table.tsx` using 3-phase architecture-first workflow:
 
-1) PHASE 1 - Analysis: Use Task tool with system-architect agent: "Analyze file `src/features/admin/components/organization-table.tsx` for large file refactoring. DOCUMENTATION ONLY - Create context file `docs/context/refactoring/organization-table-analysis-YYYY-MM-DD-HHMM.md` with file size analysis, complexity assessment, dependency mapping, and refactoring strategy."
+1) PHASE 1 - Analysis: Use Task tool with system-architect agent: "Analyze file `src/components organized by purpose/organization-table.tsx` for large file refactoring. DOCUMENTATION ONLY - Create context file `docs/context/refactoring/organization-table-analysis-YYYY-MM-DD-HHMM.md` with file size analysis, complexity assessment, dependency mapping, and refactoring strategy."
 
-2) PHASE 2 - Architecture: Use Task tool with system-architect agent: "Create detailed refactoring architecture plan for `src/features/admin/components/organization-table.tsx`. DOCUMENTATION ONLY - Create context file `docs/context/refactoring/organization-table-architecture-YYYY-MM-DD-HHMM.md` with component breakdown, extraction strategy, interface definitions, and step-by-step implementation plan."
+2) PHASE 2 - Architecture: Use Task tool with system-architect agent: "Create detailed refactoring architecture plan for `src/components organized by purpose/organization-table.tsx`. DOCUMENTATION ONLY - Create context file `docs/context/refactoring/organization-table-architecture-YYYY-MM-DD-HHMM.md` with component breakdown, extraction strategy, interface definitions, and step-by-step implementation plan."
 
 3) PHASE 3 - Implementation: Main agent reads both context files and executes ALL refactoring following documented plan exactly.
 
@@ -388,7 +388,7 @@ docs/context/refactoring/
 ## Component Extraction Plan
 ### New File Structure
 ```
-src/features/{feature}/components/
+src/components organized by purpose/
 ├── {component-name}/
 │   ├── index.ts
 │   ├── {component-name}.tsx
@@ -452,7 +452,7 @@ interface ComponentProps {
 
 ### Example 1: Large Admin Component
 ```
-Target: src/features/admin/components/organization-table.tsx (850 lines)
+Target: src/components organized by purpose/organization-table.tsx (850 lines)
 
 Phase 1 Analysis finds:
 - Mixed data fetching, UI rendering, and state management
@@ -485,13 +485,13 @@ Phase 1 Analysis finds:
 - No separation of concerns
 
 Phase 2 Architecture plans:
-- Move business logic to feature components
-- Extract analytics components to feature directory
+- Move business logic to components organized by purpose
+- Extract analytics components organized by purpose directory
 - Create dedicated server actions file
 - Implement proper loading states
 
 Phase 3 Implementation:  
-- Move components to src/features/dashboard/admin/components/analytics/
+- Move components organized by purposes/dashboard/admin/components/analytics/
 - Extract analytics-actions.ts server actions
 - Create analytics-overview.tsx, analytics-charts.tsx  
 - Add comprehensive skeleton components

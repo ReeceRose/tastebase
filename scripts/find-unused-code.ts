@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
+import { readFileSync } from "node:fs";
 import { execSync } from "child_process";
-import { readFileSync } from "fs";
 
 type UnusedItem = {
   file: string;

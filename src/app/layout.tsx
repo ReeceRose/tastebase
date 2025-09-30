@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { env } from "@/lib/config/env";
+import { Theme } from "@/lib/types";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -73,7 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <ThemeProvider defaultTheme="system" storageKey="ui-theme">
+        <ThemeProvider defaultTheme={Theme.SYSTEM} storageKey="ui-theme">
           {children}
           <Toaster />
         </ThemeProvider>

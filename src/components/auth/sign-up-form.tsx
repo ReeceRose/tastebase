@@ -17,8 +17,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loading } from "@/components/ui/loading";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { signUpAction } from "@/lib/auth/auth-actions";
-import { cn } from "@/lib/utils/utils";
+import type { MeasurementUnit, TemperatureUnit } from "@/lib/types";
+import { ComponentSize } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const signUpSchema = z
   .object({
@@ -40,6 +49,9 @@ const signUpSchema = z
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
+    preferredTemperatureUnit: z.enum(["fahrenheit", "celsius"]),
+    preferredWeightUnit: z.enum(["imperial", "metric"]),
+    preferredVolumeUnit: z.enum(["imperial", "metric"]),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -64,10 +76,16 @@ export function SignUpForm({
     handleSubmit,
     formState: { errors, touchedFields },
     watch,
+    setValue,
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     mode: "onBlur",
     reValidateMode: "onChange",
+    defaultValues: {
+      preferredTemperatureUnit: "fahrenheit",
+      preferredWeightUnit: "imperial",
+      preferredVolumeUnit: "imperial",
+    },
   });
 
   const watchedValues = watch();
@@ -88,6 +106,9 @@ export function SignUpForm({
     formData.append("name", data.name);
     formData.append("email", data.email);
     formData.append("password", data.password);
+    formData.append("preferredTemperatureUnit", data.preferredTemperatureUnit);
+    formData.append("preferredWeightUnit", data.preferredWeightUnit);
+    formData.append("preferredVolumeUnit", data.preferredVolumeUnit);
 
     const result = await signUpAction(formData);
 
@@ -229,6 +250,75 @@ export function SignUpForm({
                 )}
               </div>
 
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Recipe Preferences
+                </h3>
+
+                <div className="grid gap-3">
+                  <Label>Temperature Unit</Label>
+                  <Select
+                    defaultValue="fahrenheit"
+                    onValueChange={(value) =>
+                      setValue(
+                        "preferredTemperatureUnit",
+                        value as TemperatureUnit,
+                      )
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fahrenheit">
+                        Fahrenheit (°F)
+                      </SelectItem>
+                      <SelectItem value="celsius">Celsius (°C)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-3">
+                  <Label>Weight Unit</Label>
+                  <Select
+                    defaultValue="imperial"
+                    onValueChange={(value) =>
+                      setValue("preferredWeightUnit", value as MeasurementUnit)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="imperial">
+                        Imperial (oz, lbs)
+                      </SelectItem>
+                      <SelectItem value="metric">Metric (g, kg)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-3">
+                  <Label>Volume Unit</Label>
+                  <Select
+                    defaultValue="imperial"
+                    onValueChange={(value) =>
+                      setValue("preferredVolumeUnit", value as MeasurementUnit)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="imperial">
+                        Imperial (tsp, tbsp, cups)
+                      </SelectItem>
+                      <SelectItem value="metric">Metric (ml, l)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-3">
                 <Button
                   type="submit"
@@ -237,7 +327,7 @@ export function SignUpForm({
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">
-                      <Loading size="sm" />
+                      <Loading size={ComponentSize.SM} />
                       Creating account...
                     </div>
                   ) : (

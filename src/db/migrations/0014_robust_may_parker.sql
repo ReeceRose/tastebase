@@ -1,0 +1,1 @@
+ALTER TABLE `recipe_images` ADD `metadata` text;

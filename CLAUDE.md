@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Tastebase is a local-first, personal recipe management application designed for individual users who want to collect, organize, and manage their recipes on their own computer. Built for Docker deployment with local SQLite storage - no cloud dependencies, no subscriptions, just your personal recipe collection stored securely on your machine.
+Tastebase is a local-first recipe management application designed for shared instances where multiple users want to collect, organize, and manage their recipes together on the same server. Built for Docker deployment with local SQLite storage - no cloud dependencies, no subscriptions, just your group's recipe collection stored securely on your machine.
 
-The architecture is feature-based with each feature contained in `/src/features/<feature-name>/` directories, making it easy to extend functionality.
+**Shared Instance Model**: Each user can create both public recipes (visible to all instance users) and private recipes (visible only to themselves). Users see all public recipes from other instance users plus all of their own recipes. Perfect for families, roommates, cooking clubs, restaurants, or any group sharing recipes.
+
+The architecture is component-based with all components organized in `/src/components/` with appropriate subdirectories, making it easy to extend functionality.
 
 ## Tech Stack
 
@@ -194,32 +196,31 @@ pnpm run health-check:failed
 
 ## Architecture Patterns
 
-### Feature-Based Structure
-Each feature lives in `/src/features/<feature-name>/` with a standardized structure:
+### Component-Based Structure
+Components are organized in `/src/components/` with generic subdirectories by purpose:
 
 ```
-src/features/<feature-name>/
-├── components/               # Feature-specific React components
-│   ├── <feature>-form.tsx   # Form components
-│   ├── <feature>-list.tsx   # List/table components  
-│   ├── <feature>-detail.tsx # Detail view components
-│   └── skeletons/           # Loading state components
-│       ├── <feature>-form-skeleton.tsx
-│       └── <feature>-list-skeleton.tsx
-├── server/                  # Server-side logic
-│   ├── actions.ts          # Server Actions for CRUD operations
-│   └── queries.ts          # Database queries (if complex)
-├── hooks/                   # Custom React hooks (optional)
-│   └── use-<feature>.ts
-└── lib/                     # Feature-specific utilities (optional)
-    ├── validations.ts       # Zod schemas
-    └── utils.ts            # Helper functions
-```
+src/components/
+├── ui/                      # ShadCN base UI components
+├── layout/                  # Dashboard layout components
+├── auth/                    # Authentication forms and components
+├── forms/                   # All form components (recipe forms, user forms, etc.)
+├── lists/                   # List and table components
+├── cards/                   # Card components for displaying data
+├── modals/                  # Modal and dialog components
+├── navigation/              # Navigation components
+└── skeletons/               # All loading state components
 
-**Existing Feature Examples:**
-- `src/features/dashboard/` - Dashboard overview and navigation
-- `src/features/profile/` - User profile management
-- `src/features/settings/` - Application settings
+src/lib/
+├── auth/                   # Authentication logic and server actions
+├── server-actions/         # Server Actions for CRUD operations
+├── types/                  # TypeScript type definitions
+├── validations/           # Zod schemas
+└── utils/                 # Helper functions and utilities
+
+src/hooks/                 # Global custom React hooks
+└── use-<hook-name>.ts
+```
 
 ### Database Schema Organization
 - `db/schema.base.ts` - Base auth schema (BetterAuth tables)
@@ -232,11 +233,11 @@ src/features/<feature-name>/
 - `src/app/(dashboard)/` - Protected dashboard pages (should ONLY contain page.tsx files)
 - `src/app/api/` - API routes (primarily webhooks)
 
-**Important**: Route directories should be kept minimal and only contain page.tsx files. All components, server actions, and business logic should live in `/src/features/` or `/src/components/` directories.
+**Important**: Route directories should be kept minimal and only contain page.tsx files. All components should live in `/src/components/` organized by generic purpose (forms, lists, cards, etc.), and server actions should live in `/src/lib/server-actions/` or `/src/lib/auth/`.
 
 ### Shared Code Organization
 - `src/components/ui/` - ShadCN base UI components
-- `src/components/dashboard/` - Shared dashboard layout components
+- `src/components/layout/` - Shared dashboard layout components
 - `src/lib/` - Shared utilities organized by category:
   - `src/lib/auth/` - Authentication configuration, client, and server actions
   - `src/lib/config/` - Environment variables and configuration
@@ -247,15 +248,16 @@ src/features/<feature-name>/
 
 ## Recipe Management Features
 
-Tastebase provides comprehensive recipe management capabilities:
+Tastebase provides comprehensive recipe management capabilities for shared instances:
 
 ### Core Recipe Features
-- **Recipe Storage**: Create, edit, and organize personal recipes
+- **Recipe Storage**: Create, edit, and organize recipes with instance-wide sharing
 - **Ingredient Management**: Track ingredients with quantities and units
 - **Recipe Categories**: Organize recipes by cuisine, meal type, or custom tags
 - **Recipe Images**: Upload and store recipe photos locally
 - **Recipe Notes**: Add personal notes and modifications to recipes
-- **Recipe Search**: Find recipes by name, ingredients, or tags
+- **Recipe Search**: Find recipes by name, ingredients, or tags across all accessible recipes
+- **Privacy Controls**: Public recipes (shared with all instance users) or private recipes (personal only)
 
 ### Database Schema Structure
 ```typescript
@@ -277,10 +279,10 @@ Tastebase provides comprehensive recipe management capabilities:
 
 ### Authentication (BetterAuth)
 - Middleware in `src/middleware.ts` handles route protection
-- Simple email/password authentication for single-user recipe management
+- Simple email/password authentication for shared instance recipe management
 - User profile management integrated with custom database schema
 - Session management with secure cookie handling
-- No organization or multi-user features - designed for personal use
+- Multi-user instance features with privacy controls
 
 ### Database (SQLite + Drizzle)
 - Local SQLite database with better-sqlite3 driver
@@ -291,20 +293,55 @@ Tastebase provides comprehensive recipe management capabilities:
 - **Troubleshooting**: If better-sqlite3 fails to install, manually build with: `cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && pnpm run build-release`
 
 ### Recipe Management Features
-- **Recipe Storage**: Create, edit, and organize personal recipes
+- **Recipe Storage**: Create, edit, and organize recipes with public/private sharing
 - **Ingredient Management**: Track ingredients with quantities and units
 - **Recipe Categories**: Organize recipes by cuisine, meal type, or custom tags
 - **Recipe Images**: Upload and store recipe photos locally
 - **Recipe Notes**: Add personal notes and modifications to recipes
-- **Recipe Search**: Find recipes by name, ingredients, or tags
+- **Recipe Search**: Find recipes by name, ingredients, or tags across shared instance collection
+- **Privacy Controls**: Mark recipes as public (visible to all instance users) or private (personal only)
 
 ### UI Components (ShadCN)
 - Base components in `src/components/ui/`
-- Feature-specific components in `src/features/<feature>/components/`
+- Components organized by purpose: `src/components/forms/`, `src/components/lists/`, `src/components/cards/`, etc.
 - **ALWAYS use official ShadCN components when adding new UI** - install via `npx shadcn@latest add <component-name>`
-- **ALWAYS create Skeleton components for any dynamic data** to provide loading states
+- **ALWAYS create Skeleton components for any dynamic data** in `src/components/skeletons/`
 - Consistent theming via CSS variables
 - Responsive design with Tailwind CSS
+
+## Design System
+
+**📖 [Complete Design System Documentation](./docs/design-system.md)**
+
+TasteBase follows a comprehensive design system for consistent, maintainable UI development:
+
+### Core Design Principles
+- **Clean & Minimal**: No heavy borders, generous white space, focused content
+- **Theme-Aware**: All colors via CSS variables, automatic light/dark mode adaptation
+- **ShadCN-First**: Always use official ShadCN components, extend with className
+- **Consistent Interactions**: 200ms transitions, predictable behavior patterns
+
+### Quick Reference
+```tsx
+// ✅ Correct color usage
+<Badge variant="outline">Private</Badge>
+<div className="bg-muted text-foreground border-border">Content</div>
+<Button className="hover:bg-primary/90">Action</Button>
+
+// ❌ Never use hard-coded colors
+<Badge className="bg-red-600 text-white">Status</Badge>
+<div className="border-blue-500 text-green-800">Content</div>
+```
+
+### Key Guidelines
+- **Colors**: Only CSS variables (`bg-muted`, `text-foreground`, `border-border`)
+- **Spacing**: `p-6` for main areas, `p-4` for cards, `space-y-8` between sections
+- **Typography**: `text-sm` default, `text-muted-foreground` for secondary text
+- **Icons**: `h-4 w-4` standard, `h-5 w-5` for headers, consistent with text color
+
+**📋 [Design Patterns & Examples](./docs/design-patterns.md)**
+
+Common implementation patterns for forms, lists, cards, loading states, and interactive components.
 
 ## Environment Variables
 
@@ -316,16 +353,41 @@ DATABASE_URL=
 # Authentication
 BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=
+
+# API Key Encryption (Required for AI features)
+ENCRYPTION_SECRET=           # 64-character secret for encrypting AI API keys
+CURRENT_ENCRYPTION_VERSION=  # Version for key rotation (default: 1)
 ```
+
+### Generating Secure Encryption Keys
+
+For production deployment, generate a secure encryption key:
+
+```bash
+# Generate 64-character encryption secret
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Or use the built-in helper (once app is running)
+node -e "console.log(require('./src/lib/crypto/encryption').generateSecureSecret(64))"
+```
+
+**Security Requirements:**
+- `ENCRYPTION_SECRET` must be different from `BETTER_AUTH_SECRET`
+- Must be exactly 64 characters with good entropy
+- Must include uppercase, lowercase, numbers, AND special characters
+- Use quotes around the value in .env files to handle special characters
+- Store securely and never commit to version control
 
 ## Adding New Features
 
 Follow this step-by-step process to add new features consistently:
 
-1. **Create Feature Directory Structure:**
+1. **Create Component Directories (as needed):**
    ```bash
-   mkdir -p src/features/<feature-name>/components/skeletons
-   mkdir -p src/features/<feature-name>/server
+   mkdir -p src/components/forms
+   mkdir -p src/components/lists
+   mkdir -p src/components/cards
+   mkdir -p src/components/skeletons
    ```
 
 2. **Add Database Schema (if needed):**
@@ -350,7 +412,7 @@ Follow this step-by-step process to add new features consistently:
 
 5. **Create Server Actions:**
    ```typescript
-   // src/features/<feature>/server/actions.ts
+   // src/lib/server-actions/<feature>-actions.ts
    "use server";
    import { headers } from "next/headers";
    import { auth } from "@/lib/auth/auth";
@@ -359,15 +421,16 @@ Follow this step-by-step process to add new features consistently:
 
 6. **Create Components with Skeletons:**
    ```typescript
-   // src/features/<feature>/components/<feature>-form.tsx
-   // src/features/<feature>/components/skeletons/<feature>-form-skeleton.tsx
+   // src/components/forms/recipe-form.tsx
+   // src/components/lists/recipe-list.tsx
+   // src/components/cards/recipe-card.tsx
+   // src/components/skeletons/recipe-form-skeleton.tsx
    ```
 
-7. **Add Types and Validations (if shared):**
+7. **Add Types and Validations:**
    ```typescript
-   // src/lib/utils/<feature>-types.ts (if used across multiple areas)
-   // src/lib/utils/<feature>-validations.ts (if used across multiple areas)
-   // OR keep them co-located with related functionality
+   // src/lib/types/<feature>-types.ts
+   // src/lib/validations/<feature>-schemas.ts
    ```
 
 8. **Add Route Page:**
@@ -391,27 +454,40 @@ Follow this step-by-step process to add new features consistently:
 **Tastebase is designed for local Docker deployment:**
 
 - **Docker-first**: Use `docker-compose up -d` for simple deployment
-- **Local SQLite**: Database stored in Docker volumes for persistence
+- **Minimal runtime**: Optimized Alpine-based image with Node.js 24 for best performance
+- **Local SQLite**: Database stored in Docker volumes for persistence (`/app/data`)
+- **Image uploads**: Recipe images stored in separate volume (`/app/uploads`)
 - **No cloud dependencies**: Everything runs on your local machine
 - **Data ownership**: Your recipes stay on your computer
 - **Persistent storage**: Docker volumes ensure data survives container restarts
 - **Simple updates**: Pull new versions without losing data
 
+### Docker Image Optimization
+
+The Dockerfile uses multi-stage builds for maximum efficiency:
+- **Base stage**: Node.js 24 Alpine (minimal base image)
+- **Dependencies**: Separate dev and production dependency stages
+- **Builder**: Compiles application with all build tools
+- **Runtime**: Minimal production image with only necessary files
+- **Security**: Non-root user, proper signal handling with dumb-init
+- **Volumes**: Persistent mounts for database (`/app/data`) and uploads (`/app/uploads`)
+
 ## Common Workflows
 
 **Adding a CRUD resource:**
 1. Follow the "Adding New Features" process above
-2. Create server actions with Zod validation in `src/features/<resource>/server/actions.ts`
-3. Build UI components (list, form, detail views) in `src/features/<resource>/components/`
-4. Create skeleton components in `src/features/<resource>/components/skeletons/`
+2. Create server actions with Zod validation in `src/lib/server-actions/<resource>-actions.ts`
+3. Build UI components organized by purpose: forms in `src/components/forms/`, lists in `src/components/lists/`, etc.
+4. Create skeleton components in `src/components/skeletons/`
 5. Add routes (ONLY page.tsx files) and navigation
 6. Write tests for the new functionality
 
 **Key Principles:**
 - Keep route directories minimal (only page.tsx files)
-- All business logic goes in `/src/features/`
+- Components go in `/src/components/` organized by generic purpose (forms, lists, cards, etc.)
+- Server actions go in `/src/lib/server-actions/`
 - Shared utilities go in `/src/lib/`
-- Always create skeleton components for loading states
+- Always create skeleton components for loading states in `/src/components/skeletons/`
 - Use TypeScript path aliases (@/) for all imports
 
 **Modifying recipe management:**
@@ -427,6 +503,8 @@ Follow this step-by-step process to add new features consistently:
 4. Update profile management components
 
 ## Development Preferences
+
+**CRITICAL**: Never run dev server (`pnpm run dev`) or build commands (`pnpm run build`) automatically. Only run these if explicitly requested by the user. Focus on implementing functionality and let the user control when to start/build the server.
 
 **IMPORTANT**: Do not run type checking, linting, formatting, or build commands unless explicitly requested by the user. Focus on implementing functionality and let the user decide when to run quality checks.
 
@@ -501,13 +579,51 @@ To ensure efficient code analysis and minimal context consumption, follow these 
 - **ALWAYS use TypeScript type-only imports** - Use `import type { SomeType } from "@/types/something"` for type-only imports
 
 ### Code Standards
-- Never use the TypeScript variable any or unknown
+- **NEVER use TypeScript `any`, `unknown`, or `undefined` types** - This is absolutely forbidden. Always define proper types, interfaces, or use specific union types. Use `null` for nullable values, not `undefined`. This is a critical requirement for type safety and code quality.
+- **NEVER use inline union types with string literals** - This is absolutely forbidden. Always use enums or type aliases from `/src/lib/types/index.ts`. Examples of what to NEVER do:
+  ```typescript
+  // ❌ FORBIDDEN - Inline union types
+  type Status = "pending" | "approved" | "rejected";
+  interface Props { variant: "primary" | "secondary" | "destructive"; }
+  const theme: "light" | "dark" | "system" = "light";
+  
+  // ✅ REQUIRED - Use enums or type aliases
+  enum Status { PENDING = "pending", APPROVED = "approved", REJECTED = "rejected" }
+  interface Props { variant: ButtonVariant; }
+  const theme: Theme = Theme.LIGHT;
+  ```
+- **ALWAYS create enums for business logic values** - Any set of string literal values used in business logic must be defined as an enum in `/src/lib/types/index.ts`:
+  ```typescript
+  // ✅ Correct approach for any string literal values
+  export enum RecipeStatus {
+    DRAFT = "draft",
+    PUBLISHED = "published", 
+    ARCHIVED = "archived"
+  }
+  
+  // ✅ Then use throughout codebase
+  interface Recipe { status: RecipeStatus; }
+  const recipe = { status: RecipeStatus.PUBLISHED };
+  ```
+- **ALWAYS create type aliases for Pick/Omit patterns** - Never use inline Pick/Omit types. Create reusable type aliases:
+  ```typescript
+  // ❌ FORBIDDEN - Inline Pick/Omit
+  function updateUser(data: Pick<User, "name" | "email">) {}
+  function createPost(data: Omit<Post, "id" | "createdAt">) {}
+  
+  // ✅ REQUIRED - Type aliases in /src/lib/types/index.ts
+  export type UserUpdateData = Pick<User, "name" | "email">;
+  export type PostCreateData = Omit<Post, "id" | "createdAt">;
+  
+  // ✅ Then use throughout codebase
+  function updateUser(data: UserUpdateData) {}
+  function createPost(data: PostCreateData) {}
+  ```
 - **NEVER use static methods on classes** - This causes biome linting issues. Use regular exported functions instead of class static methods
 - **NEVER ADD ANY COMMENTS IN UI/JSX CODE** - This is a strict requirement. No comments in JSX, components, or UI code.
 - **NO COMMENTS IN COMPONENTS** - Do not add explanatory comments like `{/* Header */}` or `{/* Main content */}` in React components
-- When creating UI, keep components small as possible, use ShadCN, and wrap every dynamic data loading in a Suspense component with a fallback of a Skeleton component. Please separate out server actions to their own files.
+- **ALWAYS use Suspense for data loading** - For locally hosted apps, prioritize Suspense + streaming over server-side rendering for better perceived performance and user experience. Wrap every dynamic data loading component in a Suspense component with a Skeleton fallback.
 - When creating a fixed size of elements in the UI, use [0,1,..] instead of Array.from()
-- When refactoring an admin dashboard page, use the @src/app/(dashboard)/dashboard/admin/security/page.tsx as a reference for the UI.
 - Always check the @src/components/ui/ folder before installing new ShadCN components
 - **Error Handling**: Always use `.catch(() => undefined)` on Promise.all calls to ensure graceful failure handling:
 ```typescript
@@ -515,6 +631,45 @@ const [data1, data2] = await Promise.all([
   getData1().catch(() => undefined),
   getData2().catch(() => undefined),
 ]);
+```
+- **parseInt Usage**: Always include a radix parameter of 10 when using parseInt to avoid unexpected behavior with leading zeros or hex values:
+```typescript
+// ✅ Correct
+const num = parseInt(value, 10);
+
+// ❌ Incorrect - may cause unexpected behavior
+const num = parseInt(value);
+```
+- **ALWAYS use React useId() for dynamic IDs** - NEVER use static string IDs in React components. This prevents DOM ID conflicts when components are used multiple times:
+```typescript
+// ✅ Correct - Dynamic IDs with useId()
+import { useId } from "react";
+
+function MyComponent() {
+  const nameId = useId();
+  const emailId = useId();
+  
+  return (
+    <div>
+      <Label htmlFor={nameId}>Name</Label>
+      <Input id={nameId} />
+      <Label htmlFor={emailId}>Email</Label>
+      <Input id={emailId} />
+    </div>
+  );
+}
+
+// ❌ Incorrect - Static IDs cause conflicts
+function BadComponent() {
+  return (
+    <div>
+      <Label htmlFor="name">Name</Label>
+      <Input id="name" />
+      <Label htmlFor="email">Email</Label>
+      <Input id="email" />
+    </div>
+  );
+}
 ```
 
 ### **CRITICAL: Skeleton Component Key Patterns**
@@ -549,6 +704,87 @@ const [data1, data2] = await Promise.all([
 - **Keys**: ALWAYS use descriptive template literals like `history-item-${index}` or `plan-skeleton-${i + 1}`
 - **NEVER use generic keys** like `skeleton-${i}` - be descriptive about what you're skeletoning
 
+## Suspense + Streaming Pattern (REQUIRED)
+
+**For locally hosted apps like TasteBase, ALWAYS prefer Suspense streaming over full server-side rendering.**
+
+### ✅ Correct Suspense Pattern
+
+**Page Structure:**
+```typescript
+// src/app/dashboard/page.tsx
+import { Suspense } from "react";
+import { DashboardStats } from "@/components/cards/dashboard-stats";
+import { DashboardStatsSkeleton } from "@/components/skeletons/dashboard-stats-skeleton";
+
+export default async function DashboardPage() {
+  // Only do AUTH on server (fast ~50ms)
+  const session = await auth.api.getSession();
+  if (!session) redirect("/auth/sign-in");
+
+  return (
+    <DashboardLayout user={session.user}>
+      <h1>Welcome back, {session.user.name}!</h1>
+      
+      {/* Database queries stream in progressively */}
+      <Suspense fallback={<DashboardStatsSkeleton />}>
+        <DashboardStats />
+      </Suspense>
+    </DashboardLayout>
+  );
+}
+```
+
+**Data Component (Async Server Component):**
+```typescript
+// src/components/cards/dashboard-stats.tsx
+import { getDashboardStats } from "@/lib/server-actions";
+
+async function DashboardStats() {
+  // Database query happens here (~200ms)
+  const statsResult = await getDashboardStats();
+  const stats = statsResult.success ? statsResult.data : null;
+
+  return (
+    <div className="grid gap-6 md:grid-cols-4">
+      {/* Render stats */}
+    </div>
+  );
+}
+
+export { DashboardStats };
+```
+
+**Skeleton Component:**
+```typescript
+// src/components/skeletons/dashboard-stats-skeleton.tsx
+import { Skeleton } from "@/components/ui/skeleton";
+
+export function DashboardStatsSkeleton() {
+  return (
+    <div className="grid gap-6 md:grid-cols-4">
+      {[0, 1, 2, 3].map((index) => (
+        <div key={`dashboard-stat-skeleton-${index}`} className="p-4 border rounded-lg">
+          <Skeleton className="h-5 w-24 mb-2" />
+          <Skeleton className="h-8 w-12 mb-2" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Performance Benefits:
+- **Faster perceived performance**: Page shell loads in ~50ms vs ~250ms
+- **Better UX**: Users see content immediately, data streams in
+- **Development friendly**: Easier debugging, instant feedback
+- **Scalable**: Add more dashboard widgets without blocking initial render
+
+### When to Use Each Pattern:
+- **✅ Suspense + Streaming**: Local apps, dashboards, admin interfaces, development
+- **❌ Full SSR**: Public websites (SEO critical), slow networks, simple single-fetch pages
+
 ## File Organization Rules
 
 ### ✅ DO - Correct Patterns
@@ -556,16 +792,20 @@ const [data1, data2] = await Promise.all([
 ✅ Route files (minimal):
 src/app/profile/page.tsx
 
-✅ Feature components:
-src/components/profile/profile-form.tsx
-src/components/profile/password-form.tsx
+✅ Components organized by purpose:
+src/components/forms/profile-form.tsx
+src/components/forms/password-form.tsx
+src/components/cards/user-card.tsx
+src/components/lists/user-list.tsx
+src/components/skeletons/profile-form-skeleton.tsx
 
 ✅ Server actions:
+src/lib/server-actions/profile-actions.ts
 src/lib/auth/auth-actions.ts
 
-✅ Shared utilities:
-src/lib/utils/profile-types.ts
-src/lib/utils/profile-validations.ts
+✅ Types and validations:
+src/lib/types/profile-types.ts
+src/lib/validations/profile-schemas.ts
 ```
 
 ### ❌ DON'T - Anti-Patterns  
@@ -577,31 +817,49 @@ src/app/profile/components/profile-form.tsx
 src/app/profile/lib/utils.ts
 src/app/profile/server/actions.ts
 
-❌ Wrong categorization in lib:
-src/lib/profile-form.tsx (should be in components)
-src/lib/auth-config.ts (should be in lib/auth/)
+❌ Feature-based component organization:
+src/components/profile/profile-form.tsx (should be src/components/forms/profile-form.tsx)
+src/components/recipes/recipe-list.tsx (should be src/components/lists/recipe-list.tsx)
+
+❌ Wrong categorization:
+src/lib/profile-form.tsx (should be in components/forms/)
+src/components/profile-actions.ts (should be in lib/server-actions/)
 ```
 
 ### Directory Decision Tree
 **When adding new code, ask:**
 
 1. **Is this a reusable UI component?** → `src/components/ui/`
-2. **Is this dashboard layout related?** → `src/components/dashboard/` 
-3. **Is this feature-specific?** → `src/components/<feature>/`
-4. **Is this auth/user related?** → `src/lib/auth/`
-5. **Is this configuration?** → `src/lib/config/`
-6. **Is this logging related?** → `src/lib/logging/`
-7. **Is this a general utility?** → `src/lib/utils/`
-8. **Is this a route?** → `src/app/<route>/page.tsx` or `src/app/(public)/<route>/page.tsx` (ONLY)
+2. **Is this dashboard layout related?** → `src/components/layout/`
+3. **Is this an authentication component?** → `src/components/auth/`
+4. **Is this a form component?** → `src/components/forms/`
+5. **Is this a list or table component?** → `src/components/lists/`
+6. **Is this a card component?** → `src/components/cards/`
+7. **Is this a modal or dialog?** → `src/components/modals/`
+8. **Is this a navigation component?** → `src/components/navigation/`
+9. **Is this a skeleton/loading component?** → `src/components/skeletons/`
+10. **Is this a server action?** → `src/lib/server-actions/`
+11. **Is this auth/user related?** → `src/lib/auth/`
+12. **Is this a type definition?** → `src/lib/types/`
+13. **Is this a validation schema?** → `src/lib/validations/`
+14. **Is this configuration?** → `src/lib/config/`
+15. **Is this logging related?** → `src/lib/logging/`
+16. **Is this a general utility?** → `src/lib/utils/`
+17. **Is this a route?** → `src/app/<route>/page.tsx` or `src/app/(public)/<route>/page.tsx` (ONLY)
 
 ### Import Examples
 ```typescript
 // ✅ Correct imports
-import { ProfileFormSection } from "@/components/profile/profile-form-section";
-import { updateUserProfile } from "@/lib/auth/auth-actions";
-import type { ProfileFormData } from "@/lib/utils/profile-types";
+import { ProfileForm } from "@/components/forms/profile-form";
+import { RecipeCard } from "@/components/cards/recipe-card";
+import { RecipeList } from "@/components/lists/recipe-list";
+import { ProfileFormSkeleton } from "@/components/skeletons/profile-form-skeleton";
+import { updateUserProfile } from "@/lib/server-actions/profile-actions";
+import type { ProfileFormData } from "@/lib/types/profile-types";
+import { profileSchema } from "@/lib/validations/profile-schemas";
 
 // ❌ Incorrect imports  
-import { ProfileFormSection } from "../components/profile-form-section";
-import { ProfileFormSection } from "./profile-form-section";
+import { ProfileForm } from "../components/forms/profile-form";
+import { ProfileForm } from "./profile-form";
+import { RecipeCard } from "@/components/recipes/recipe-card"; // Should be cards/
 ```

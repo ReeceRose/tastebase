@@ -33,11 +33,11 @@ Use this command when you have files that are:
 
 ### Single File Refactoring
 ```
-Refactor large file `src/features/admin/components/user-table.tsx` using 3-phase architecture-first workflow:
+Refactor large file `src/components/user-table.tsx` using 3-phase architecture-first workflow:
 
-1) PHASE 1 - Analysis: Use Task tool with system-architect agent: "Analyze file `src/features/admin/components/user-table.tsx` for large file refactoring. DOCUMENTATION ONLY - Create context file `docs/context/refactoring/user-table-analysis-2025-08-31-1430.md` with file size analysis, complexity assessment, dependency mapping, and refactoring strategy."
+1) PHASE 1 - Analysis: Use Task tool with system-architect agent: "Analyze file `src/components/user-table.tsx` for large file refactoring. DOCUMENTATION ONLY - Create context file `docs/context/refactoring/user-table-analysis-2025-08-31-1430.md` with file size analysis, complexity assessment, dependency mapping, and refactoring strategy."
 
-2) PHASE 2 - Architecture: Use Task tool with system-architect agent: "Create detailed refactoring architecture plan for `src/features/admin/components/user-table.tsx`. DOCUMENTATION ONLY - Create context file `docs/context/refactoring/user-table-architecture-2025-08-31-1430.md` with component breakdown, extraction strategy, interface definitions, and step-by-step implementation plan."
+2) PHASE 2 - Architecture: Use Task tool with system-architect agent: "Create detailed refactoring architecture plan for `src/components/user-table.tsx`. DOCUMENTATION ONLY - Create context file `docs/context/refactoring/user-table-architecture-2025-08-31-1430.md` with component breakdown, extraction strategy, interface definitions, and step-by-step implementation plan."
 
 3) PHASE 3 - Implementation: Main agent reads both context files and executes ALL refactoring following documented plan exactly.
 ```
@@ -128,7 +128,7 @@ The command integrates with your existing health monitoring:
 
 ### Before Refactoring
 ```
-src/features/admin/components/user-management.tsx (850 lines)
+src/components/user-management.tsx (850 lines)
 - Mixed data fetching, UI, and business logic
 - 15 different responsibilities 
 - Complex nested rendering
@@ -137,7 +137,7 @@ src/features/admin/components/user-management.tsx (850 lines)
 
 ### After Refactoring  
 ```
-src/features/admin/components/user-management/
+src/components/user-management/
 ├── index.ts
 ├── user-management.tsx (120 lines) 
 ├── user-table.tsx (95 lines)
@@ -147,7 +147,7 @@ src/features/admin/components/user-management/
     ├── user-table-skeleton.tsx
     └── user-form-skeleton.tsx
 
-src/features/admin/server/
+src/lib/server-actions/
 └── user-management-actions.ts (140 lines)
 ```
 

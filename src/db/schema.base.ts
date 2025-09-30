@@ -8,6 +8,15 @@ export const users = sqliteTable("users", {
     .default(false)
     .notNull(),
   image: text("image"),
+  preferredTemperatureUnit: text("preferred_temperature_unit")
+    .default("fahrenheit")
+    .notNull(),
+  preferredWeightUnit: text("preferred_weight_unit")
+    .default("imperial")
+    .notNull(),
+  preferredVolumeUnit: text("preferred_volume_unit")
+    .default("imperial")
+    .notNull(),
   createdAt: integer("created_at", { mode: "timestamp" })
     .defaultNow()
     .notNull(),
@@ -77,4 +86,3 @@ export const verificationTokens = sqliteTable("verifications", {
 export type User = typeof users.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
-export type VerificationToken = typeof verificationTokens.$inferSelect;

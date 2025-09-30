@@ -18,7 +18,7 @@ Implement comprehensive search and organization features that make the recipe co
 - ✅ Intelligent tag management with AI-suggested categorization
 - ✅ Recipe collections and organizational systems
 - ✅ Quick access features and recently used recipes
-- ✅ Recipe recommendation system based on user behavior
+- [ ] Recipe recommendation system based on user behavior
 - ✅ Export and sharing preparation for recipes
 
 ---

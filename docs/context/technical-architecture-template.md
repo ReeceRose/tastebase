@@ -80,7 +80,7 @@ ComponentB
 ### Extraction and Organization Plan
 ```markdown
 #### New Server Action Structure
-src/features/[feature]/server/
+src/lib/server-actions/
 ├── actions.ts           # Main CRUD operations
 ├── validations.ts       # Zod schemas and validation
 ├── types.ts            # TypeScript interfaces
@@ -123,10 +123,12 @@ interface ComponentActionError {
    - Optimize dependency arrays in useEffect/useMemo
    - Implement proper prop drilling alternatives
 
-2. **Loading State Optimization**
-   - Implement Suspense boundaries to prevent layout shifts
-   - Optimize skeleton component rendering
-   - Minimize loading state flicker
+2. **Loading State Optimization (REQUIRED: Suspense + Streaming)**
+   - **ALWAYS implement Suspense + streaming pattern** for locally hosted apps
+   - **Page structure**: Auth only (fast ~50ms) → Suspense wrapper → Data components
+   - **Create skeleton components** in `/src/components/skeletons/` for all data loading
+   - **Separate data components** from page components to enable progressive streaming
+   - **Performance target**: Page shell loads in <100ms, data streams in progressively
 
 3. **Bundle Size Optimization**
    - Identify unused imports and dependencies
@@ -170,8 +172,9 @@ ComponentName:
 #### Phase 1: Foundation (Low Risk)
 - Extract shared utilities and basic components
 - Set up new file structure
-- Implement server action extraction
-- Create skeleton components
+- Implement server action extraction  
+- **Create skeleton components** in `/src/components/skeletons/` for all data loading
+- **Implement Suspense boundaries** for each data-heavy component
 
 #### Phase 2: Core Components (Medium Risk)
 - Refactor business logic components

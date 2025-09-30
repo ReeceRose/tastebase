@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
+
 export default function ErrorPage({
   error,
   reset,
@@ -20,13 +22,13 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="max-w-2xl w-full mx-auto p-8">
         <Card className="text-center">
           <CardHeader className="space-y-4">
             <div className="flex justify-center">
-              <div className="p-4 bg-red-100 dark:bg-red-900/20 rounded-full">
-                <AlertTriangle className="w-10 h-10 text-red-600 dark:text-red-400" />
+              <div className="p-4 bg-destructive/10 rounded-full">
+                <AlertTriangle className="w-10 h-10 text-destructive" />
               </div>
             </div>
 
@@ -51,7 +53,7 @@ export default function ErrorPage({
               </AlertDescription>
             </Alert>
 
-            {process.env.NODE_ENV === "development" && (
+            {IS_DEVELOPMENT && (
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
@@ -88,7 +90,7 @@ export default function ErrorPage({
                 size="lg"
                 className="flex items-center gap-2"
               >
-                <Link href="/dashboard">
+                <Link href="/">
                   <Home className="w-5 h-5" />
                   Go home
                 </Link>

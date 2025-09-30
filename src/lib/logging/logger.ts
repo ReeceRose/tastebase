@@ -1,8 +1,9 @@
 import pino from "pino";
-import { env } from "@/lib/config/env";
 
-const isDevelopment = env.NODE_ENV === "development";
-const isProduction = env.NODE_ENV === "production";
+// Use process.env directly for logger since it can be imported in client components
+// and we need this to work at module evaluation time
+const isDevelopment = process.env.NODE_ENV === "development";
+const isProduction = process.env.NODE_ENV === "production";
 
 export const logger = pino({
   level: isProduction ? "info" : "debug",

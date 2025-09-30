@@ -9,13 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="max-w-md w-full mx-auto p-8">
         <Card className="text-center">
           <CardHeader>
             <div className="flex justify-center mb-4">
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-full">
-                <FileQuestion className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+              <div className="p-3 bg-primary/10 rounded-full">
+                <FileQuestion className="w-8 h-8 text-primary" />
               </div>
             </div>
 
@@ -55,7 +55,7 @@ export default function NotFound() {
                 variant="default"
                 className="flex items-center gap-2"
               >
-                <Link href="/dashboard">
+                <Link href="/">
                   <Home className="w-4 h-4" />
                   Go home
                 </Link>

@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Theme } from "@/lib/types";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -31,21 +32,21 @@ export function ThemeToggle() {
         className="border-2 border-primary/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
         <DropdownMenuItem
-          onClick={() => setTheme("light")}
+          onClick={() => setTheme(Theme.LIGHT)}
           className={`cursor-pointer ${theme === "light" ? "bg-primary/10 text-primary" : ""}`}
         >
           <Sun className="mr-2 h-4 w-4" />
           <span>Light</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => setTheme("dark")}
+          onClick={() => setTheme(Theme.DARK)}
           className={`cursor-pointer ${theme === "dark" ? "bg-primary/10 text-primary" : ""}`}
         >
           <Moon className="mr-2 h-4 w-4" />
           <span>Dark</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => setTheme("system")}
+          onClick={() => setTheme(Theme.SYSTEM)}
           className={`cursor-pointer ${theme === "system" ? "bg-primary/10 text-primary" : ""}`}
         >
           <Monitor className="mr-2 h-4 w-4" />

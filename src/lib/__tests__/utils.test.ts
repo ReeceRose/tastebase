@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cn, isNextRedirectError } from "@/lib/utils/utils";
+import { cn, isNextRedirectError } from "@/lib/utils";
 
 describe("utils", () => {
   describe("cn", () => {

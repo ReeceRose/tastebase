@@ -1,16 +1,21 @@
-import { cn } from "@/lib/utils/utils";
+import { ComponentSize } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface LoadingProps {
-  size?: "sm" | "md" | "lg";
+  size?: ComponentSize;
   text?: string;
   className?: string;
 }
 
-export function Loading({ size = "md", text, className }: LoadingProps) {
+export function Loading({
+  size = ComponentSize.MD,
+  text,
+  className,
+}: LoadingProps) {
   const sizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-8 w-8",
-    lg: "h-12 w-12",
+    [ComponentSize.SM]: "h-4 w-4",
+    [ComponentSize.MD]: "h-8 w-8",
+    [ComponentSize.LG]: "h-12 w-12",
   };
 
   return (
@@ -36,7 +41,7 @@ export function LoadingPage() {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center space-y-4">
-        <Loading size="lg" />
+        <Loading size={ComponentSize.LG} />
         <p className="text-lg text-muted-foreground">Loading...</p>
       </div>
     </div>

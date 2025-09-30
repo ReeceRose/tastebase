@@ -7,7 +7,7 @@
 ## Usage
 
 ```
-/ux-refactor src/features/billing/components
+/ux-refactor src/components
 /ux-refactor src/app/(dashboard)/settings
 /ux-refactor src/components/ui
 ```
@@ -207,7 +207,7 @@ text-indigo-700, bg-emerald-200, text-orange-600
 
 **Before**: Large monolithic component with custom UI
 ```typescript
-// src/features/billing/components/billing-dashboard.tsx (500+ lines)
+// src/components/billing-dashboard.tsx (500+ lines)
 export function BillingDashboard() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
@@ -220,7 +220,7 @@ export function BillingDashboard() {
 
 **After**: Modular components with modern UX
 ```typescript
-// src/features/billing/components/billing-dashboard.tsx (50 lines)
+// src/components/billing-dashboard.tsx (50 lines)
 export function BillingDashboard() {
   return (
     <div className="space-y-6">
@@ -234,10 +234,10 @@ export function BillingDashboard() {
   )
 }
 
-// src/features/billing/components/billing-header.tsx
-// src/features/billing/components/billing-table.tsx
-// src/features/billing/components/skeletons/billing-header-skeleton.tsx
-// src/features/billing/server/actions.ts
+// src/components/billing-header.tsx
+// src/components/billing-table.tsx
+// src/components/skeletons/billing-header-skeleton.tsx
+// src/lib/server-actions/actions.ts
 ```
 
 ## Command Execution

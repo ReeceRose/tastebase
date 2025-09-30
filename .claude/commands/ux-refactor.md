@@ -98,12 +98,12 @@ Replace `{DIRECTORY_PATH}` with your target directory and `{TIMESTAMP}` with cur
 
 ### Example 1: Refactoring Billing Components
 ```
-I need you to refactor the directory `src/features/billing/components` using a 3-phase context-based workflow:
+I need you to refactor the directory `src/components organized by purpose` using a 3-phase context-based workflow:
 
 **PHASE 1: UX Analysis & Design Documentation**
 Use the Task tool to launch the ux-ui-designer agent with the following task:
 
-"Analyze the directory `src/features/billing/components` and create comprehensive UX/UI design specifications. 
+"Analyze the directory `src/components organized by purpose` and create comprehensive UX/UI design specifications. 
 
 **CRITICAL: Your task is DOCUMENTATION ONLY - do not implement any code changes.**
 
@@ -114,7 +114,7 @@ Create a context file: `docs/context/design-specifications-20250116-1430.md`
 **PHASE 2: Technical Architecture Planning**
 Use the Task tool to launch the system-architect agent with the following task:
 
-"Read the design specifications from Phase 1 and create a detailed technical architecture plan for `src/features/billing/components`.
+"Read the design specifications from Phase 1 and create a detailed technical architecture plan for `src/components organized by purpose`.
 
 [... rest of Phase 2 task ...]
 

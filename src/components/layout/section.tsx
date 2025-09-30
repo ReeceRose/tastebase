@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils/utils";
+import { SectionSpacing } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface SectionProps {
   title?: string;
@@ -12,7 +13,7 @@ interface SectionProps {
     onClick?: () => void;
     icon?: React.ComponentType<{ className?: string }>;
   };
-  spacing?: "compact" | "default" | "spacious";
+  spacing?: SectionSpacing;
   className?: string;
   headerClassName?: string;
 }
@@ -22,14 +23,14 @@ export function Section({
   description,
   children,
   action,
-  spacing = "default",
+  spacing = SectionSpacing.DEFAULT,
   className,
   headerClassName,
 }: SectionProps) {
   const spacingClass = {
-    compact: "space-y-3",
-    default: "space-y-4",
-    spacious: "space-y-6",
+    [SectionSpacing.COMPACT]: "space-y-3",
+    [SectionSpacing.DEFAULT]: "space-y-4",
+    [SectionSpacing.SPACIOUS]: "space-y-6",
   }[spacing];
 
   return (

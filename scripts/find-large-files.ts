@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
+import { statSync } from "node:fs";
 import { execSync } from "child_process";
-import { statSync } from "fs";
 
 type LargeFile = {
   path: string;
@@ -552,7 +552,7 @@ const thresholdArg = args.find(
 );
 if (thresholdArg) {
   const value = parseInt(thresholdArg.split("=")[1], 10);
-  if (!isNaN(value) && value >= 0) {
+  if (!Number.isNaN(value) && value >= 0) {
     minThreshold = value;
   }
 }

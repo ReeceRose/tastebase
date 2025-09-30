@@ -74,7 +74,7 @@ class ArchitectureValidator {
                 type: "route-structure",
                 severity: "critical",
                 message: `Business logic found in route directory: ${fileName}`,
-                suggestion: `Move to src/features/<feature>/components/ or src/features/<feature>/server/`
+                suggestion: `Move to src/components/ or src/lib/server-actions/`
               });
             }
           }

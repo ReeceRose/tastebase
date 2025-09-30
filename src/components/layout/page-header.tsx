@@ -1,7 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils/utils";
+import { ButtonVariant, StatStatus, type StatType } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
   title: string;
@@ -11,19 +12,13 @@ interface PageHeaderProps {
     icon?: React.ComponentType<{ className?: string }>;
     href?: string;
     onClick?: () => void;
-    variant?:
-      | "default"
-      | "secondary"
-      | "destructive"
-      | "outline"
-      | "link"
-      | "ghost";
+    variant?: ButtonVariant;
   }>;
   stats?: Array<{
     label: string;
     value: string | number;
-    type: "metric" | "status" | "progress";
-    status?: "success" | "warning" | "info" | "muted";
+    type: StatType;
+    status?: StatStatus;
   }>;
   breadcrumbs?: Array<{
     label: string;
@@ -86,7 +81,7 @@ export function PageHeader({
             {actions.map((action, index) => (
               <Button
                 key={`action-${action.label}-${index}`}
-                variant={action.variant || "secondary"}
+                variant={action.variant || ButtonVariant.SECONDARY}
                 size="sm"
                 asChild={!!action.href}
                 onClick={action.onClick}
@@ -119,11 +114,11 @@ export function PageHeader({
               <span
                 className={cn(
                   "text-sm font-medium",
-                  stat.status === "success"
+                  stat.status === StatStatus.SUCCESS
                     ? "text-chart-1"
-                    : stat.status === "warning"
+                    : stat.status === StatStatus.WARNING
                       ? "text-chart-3"
-                      : stat.status === "info"
+                      : stat.status === StatStatus.INFO
                         ? "text-chart-4"
                         : "text-foreground",
                 )}
