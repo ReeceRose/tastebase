@@ -58,7 +58,7 @@ import {
   getProviderDisplayName,
   requiresApiKey,
 } from "@/lib/ai";
-import { maskApiKey } from "@/lib/crypto/encryption";
+import { maskApiKey } from "@/lib/crypto/utils";
 import {
   deleteAIProviderConfig,
   getAIUsageStats,

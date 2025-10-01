@@ -2,11 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   decrypt,
   encrypt,
-  maskApiKey,
   safeDecrypt,
   safeEncrypt,
-  validateApiKey,
 } from "@/lib/crypto/encryption";
+import { maskApiKey, validateApiKey } from "@/lib/crypto/utils";
 
 describe("Encryption Functions", () => {
   describe("encrypt and decrypt", () => {
