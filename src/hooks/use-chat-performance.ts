@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ChatPerformanceOptions {
   debounceMs?: number;
@@ -18,7 +18,7 @@ export function useChatPerformance(options: ChatPerformanceOptions = {}) {
   } = options;
 
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const messageCountRef = useRef(0);
+  const [messageCount, setMessageCount] = useState(0);
 
   // Debounced function for expensive operations
   const debouncedOperation = useCallback(
@@ -63,26 +63,27 @@ export function useChatPerformance(options: ChatPerformanceOptions = {}) {
   // Memory cleanup for old message references
   const cleanupMessages = useCallback(() => {
     // Force garbage collection of old message objects
-    if (messageCountRef.current > maxMessageHistory) {
+    if (messageCount > maxMessageHistory) {
       // This helps prevent memory leaks in long conversations
       if ("gc" in window && typeof window.gc === "function") {
         window.gc();
       }
     }
-  }, [maxMessageHistory]);
+  }, [maxMessageHistory, messageCount]);
 
   // Track message count for performance monitoring
   const trackMessage = useCallback(() => {
-    messageCountRef.current += 1;
+    setMessageCount((prev) => {
+      const newCount = prev + 1;
 
-    // Log performance warning if too many messages
-    if (messageCountRef.current % 50 === 0) {
-      console.warn(
-        `Chat performance: ${messageCountRef.current} messages processed`,
-      );
-      cleanupMessages();
-    }
-  }, [cleanupMessages]);
+      // Log performance warning if too many messages
+      if (newCount % 50 === 0) {
+        console.warn(`Chat performance: ${newCount} messages processed`);
+      }
+
+      return newCount;
+    });
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -99,6 +100,6 @@ export function useChatPerformance(options: ChatPerformanceOptions = {}) {
     batchMessages,
     trackMessage,
     cleanupMessages,
-    messageCount: messageCountRef.current,
+    messageCount,
   };
 }

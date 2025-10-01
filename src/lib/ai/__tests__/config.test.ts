@@ -141,7 +141,7 @@ describe("AI Config Functions", () => {
       expect(requirements).toEqual({
         requiresApiKey: true,
         requiresOllamaHost: false,
-        defaultModel: "gpt-4o-mini",
+        defaultModel: "gpt-5-mini",
         supportedTasks: [
           "recipe-parsing",
           "chat-conversation",
@@ -157,7 +157,7 @@ describe("AI Config Functions", () => {
       expect(requirements).toEqual({
         requiresApiKey: true,
         requiresOllamaHost: false,
-        defaultModel: "claude-3-5-sonnet-20241022",
+        defaultModel: "claude-sonnet-4-latest",
         supportedTasks: [
           "recipe-parsing",
           "chat-conversation",
@@ -173,7 +173,7 @@ describe("AI Config Functions", () => {
       expect(requirements).toEqual({
         requiresApiKey: true,
         requiresOllamaHost: false,
-        defaultModel: "gemini-1.5-flash",
+        defaultModel: "gemini-2.5-flash",
         supportedTasks: [
           "recipe-parsing",
           "chat-conversation",

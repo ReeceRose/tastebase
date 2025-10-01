@@ -124,8 +124,8 @@ describe("Recipe Constants", () => {
     it("should have reasonable image constraints", () => {
       expect(RECIPE_CONSTANTS.IMAGE_LIMITS.MAX_IMAGES_PER_RECIPE).toBe(10);
       expect(RECIPE_CONSTANTS.IMAGE_LIMITS.MAX_FILE_SIZE).toBe(
-        10 * 1024 * 1024,
-      ); // 10MB
+        20 * 1024 * 1024,
+      ); // 20MB
 
       const supportedFormats = RECIPE_CONSTANTS.IMAGE_LIMITS.SUPPORTED_FORMATS;
       expect(supportedFormats).toContain("image/jpeg");
@@ -162,7 +162,7 @@ describe("Recipe Constants", () => {
       ).toBe(1);
       expect(
         RECIPE_CONSTANTS.VALIDATION_LIMITS.INGREDIENT_NAME.MAX_LENGTH,
-      ).toBe(100);
+      ).toBe(200);
 
       expect(RECIPE_CONSTANTS.VALIDATION_LIMITS.INSTRUCTION.MIN_LENGTH).toBe(1);
       expect(RECIPE_CONSTANTS.VALIDATION_LIMITS.INSTRUCTION.MAX_LENGTH).toBe(

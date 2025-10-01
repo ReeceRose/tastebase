@@ -36,6 +36,16 @@ export default defineConfig({
       DATABASE_URL: "postgresql://test:test@localhost:5432/test",
       // Mock public env vars
       NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+      // Mock auth secret for encryption tests
+      BETTER_AUTH_SECRET:
+        "test-secret-key-that-is-at-least-32-characters-long-with-variety!@#123",
+      BETTER_AUTH_URL: "http://localhost:3000",
+      // Mock encryption secrets
+      ENCRYPTION_SECRET:
+        "test-encryption-key-32chars-long-with-variety-UpperLower123!@#$%",
+      CURRENT_ENCRYPTION_VERSION: "1",
+      // Mock Ollama URL
+      OLLAMA_BASE_URL: "http://localhost:11434",
     },
   },
   resolve: {

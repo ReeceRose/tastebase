@@ -5,6 +5,7 @@ import {
   type AIProviderConfig,
   type AIProviderValue,
   type AITask,
+  DEFAULT_MODELS,
   DEFAULT_TASK_TOKEN_LIMITS,
   type TaskSpecificTokenLimits,
 } from "@/lib/types";
@@ -244,35 +245,35 @@ export function getProviderRequirements(provider: AIProviderValue): {
       return {
         requiresApiKey: true,
         requiresOllamaHost: false,
-        defaultModel: "gpt-4o-mini",
+        defaultModel: DEFAULT_MODELS[AIProvider.OPENAI],
         supportedTasks: defaultTasks,
       };
     case AIProvider.ANTHROPIC:
       return {
         requiresApiKey: true,
         requiresOllamaHost: false,
-        defaultModel: "claude-3-5-sonnet-20241022",
+        defaultModel: DEFAULT_MODELS[AIProvider.ANTHROPIC],
         supportedTasks: defaultTasks,
       };
     case AIProvider.GOOGLE:
       return {
         requiresApiKey: true,
         requiresOllamaHost: false,
-        defaultModel: "gemini-1.5-flash",
+        defaultModel: DEFAULT_MODELS[AIProvider.GOOGLE],
         supportedTasks: defaultTasks,
       };
     case AIProvider.OLLAMA:
       return {
         requiresApiKey: false,
         requiresOllamaHost: true,
-        defaultModel: "llama3.2",
+        defaultModel: DEFAULT_MODELS[AIProvider.OLLAMA],
         supportedTasks: defaultTasks,
       };
     case AIProvider.NONE:
       return {
         requiresApiKey: false,
         requiresOllamaHost: false,
-        defaultModel: "",
+        defaultModel: DEFAULT_MODELS[AIProvider.NONE],
         supportedTasks: [],
       };
     default:

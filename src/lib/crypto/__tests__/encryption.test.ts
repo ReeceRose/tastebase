@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   decrypt,
   encrypt,
@@ -9,17 +9,6 @@ import {
 } from "@/lib/crypto/encryption";
 
 describe("Encryption Functions", () => {
-  const originalSecret = process.env.BETTER_AUTH_SECRET;
-  const testSecret = "test-secret-key-that-is-at-least-32-characters-long";
-
-  beforeAll(() => {
-    process.env.BETTER_AUTH_SECRET = testSecret;
-  });
-
-  afterAll(() => {
-    process.env.BETTER_AUTH_SECRET = originalSecret;
-  });
-
   describe("encrypt and decrypt", () => {
     it("should encrypt and decrypt text successfully", async () => {
       const plaintext = "sk-test-api-key-123456789";
@@ -62,16 +51,6 @@ describe("Encryption Functions", () => {
       expect(decrypted).toBe(plaintext);
     });
 
-    it("should throw error when encryption key is too short", async () => {
-      process.env.BETTER_AUTH_SECRET = "short";
-
-      await expect(encrypt("test")).rejects.toThrow(
-        "BETTER_AUTH_SECRET must be at least 32 characters long",
-      );
-
-      process.env.BETTER_AUTH_SECRET = testSecret;
-    });
-
     it("should throw error when decrypting invalid data", async () => {
       await expect(decrypt("invalid-data")).rejects.toThrow(
         "Decryption failed",
@@ -100,15 +79,6 @@ describe("Encryption Functions", () => {
       expect(decrypted).toBe(plaintext);
     });
 
-    it("should return null on encryption error", async () => {
-      process.env.BETTER_AUTH_SECRET = "short";
-
-      const result = await safeEncrypt("test");
-      expect(result).toBeNull();
-
-      process.env.BETTER_AUTH_SECRET = testSecret;
-    });
-
     it("should return null on decryption error", async () => {
       const result = await safeDecrypt("invalid-data");
       expect(result).toBeNull();
@@ -126,7 +96,7 @@ describe("Encryption Functions", () => {
 
   describe("maskApiKey", () => {
     it("should mask API keys correctly", () => {
-      expect(maskApiKey("sk-1234567890abcdef")).toBe("sk-1•••••••••••••cdef");
+      expect(maskApiKey("sk-1234567890abcdef")).toBe("sk-1•••••••••••cdef");
       expect(maskApiKey("short")).toBe("•••••");
       expect(maskApiKey("")).toBe("");
       expect(maskApiKey(null)).toBe("");

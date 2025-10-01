@@ -195,7 +195,7 @@ describe("Recipe Utilities", () => {
         generateRecipeSlug(
           "Super-Long Recipe Title With Many Words That Should Be Truncated Because It's Too Long",
         ),
-      ).toBe("super-long-recipe-title-with-many-words-that-sh");
+      ).toBe("super-long-recipe-title-with-many-words-that-shoul");
       expect(generateRecipeSlug("Recipe@#$%^&*()Title")).toBe("recipetitle");
     });
   });

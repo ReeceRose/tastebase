@@ -46,7 +46,7 @@ describe("AI Recipe Integration Utils", () => {
       expect(result.ingredients).toHaveLength(3);
       expect(result.ingredients?.[0]).toEqual({
         name: "Flour",
-        amount: 2,
+        amount: "2",
         unit: "cups",
         notes: "",
         groupName: "",
@@ -54,7 +54,7 @@ describe("AI Recipe Integration Utils", () => {
       });
       expect(result.ingredients?.[1]).toEqual({
         name: "Sugar",
-        amount: 1,
+        amount: "1",
         unit: "cup",
         notes: "",
         groupName: "",

@@ -66,9 +66,9 @@ export function parseIngredientAmount(amountString: string): {
     "7/8": 0.875,
   };
 
-  // Try to parse number + unit pattern
+  // Try to parse number + unit pattern (including fractions and mixed numbers)
   const match = amountString.match(
-    /^(\d+(?:\.\d+)?|\d+\/\d+|\d+\s+\d+\/\d+)\s*(.*)$/,
+    /^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?)\s*(.*)$/,
   );
   if (!match) return { unit: amountString };
 
@@ -78,7 +78,7 @@ export function parseIngredientAmount(amountString: string): {
   if (amountPart.includes(" ")) {
     const [whole, fraction] = amountPart.split(" ");
     const wholeNum = parseInt(whole, 10);
-    const fractionNum = fractionMap[fraction] || 0;
+    const fractionNum = fractionMap[fraction] || parseFraction(fraction) || 0;
     return {
       amount: wholeNum + fractionNum,
       unit: unitPart.trim() || undefined,
@@ -86,11 +86,14 @@ export function parseIngredientAmount(amountString: string): {
   }
 
   // Handle simple fractions
-  if (fractionMap[amountPart]) {
-    return {
-      amount: fractionMap[amountPart],
-      unit: unitPart.trim() || undefined,
-    };
+  if (amountPart.includes("/")) {
+    const fractionValue = fractionMap[amountPart] || parseFraction(amountPart);
+    if (fractionValue) {
+      return {
+        amount: fractionValue,
+        unit: unitPart.trim() || undefined,
+      };
+    }
   }
 
   // Handle decimal/integer numbers
@@ -103,6 +106,22 @@ export function parseIngredientAmount(amountString: string): {
   }
 
   return { unit: amountString };
+}
+
+function parseFraction(fraction: string): number | null {
+  const parts = fraction.split("/");
+  if (parts.length === 2) {
+    const numerator = parseFloat(parts[0]);
+    const denominator = parseFloat(parts[1]);
+    if (
+      !Number.isNaN(numerator) &&
+      !Number.isNaN(denominator) &&
+      denominator !== 0
+    ) {
+      return numerator / denominator;
+    }
+  }
+  return null;
 }
 
 export function formatIngredientAmount(ingredient: RecipeIngredient): string {
