@@ -158,7 +158,6 @@ UPLOAD_DIR="./uploads"
 MAX_FILE_SIZE="10485760"
 
 # App Configuration
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NODE_ENV="development"
 ```
 
@@ -183,7 +182,6 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 - `DATABASE_URL` - SQLite database file path
 - `BETTER_AUTH_SECRET` - Authentication secret key
 - `BETTER_AUTH_URL` - Application URL for auth callbacks
-- `NEXT_PUBLIC_APP_URL` - Public application URL
 
 **Required for AI features:**
 - `ENCRYPTION_SECRET` - Secure API key encryption

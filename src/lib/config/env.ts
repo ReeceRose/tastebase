@@ -72,7 +72,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_APP_URL: z.url(),
+    // We use BETTER_AUTH_URL on both server and client
   },
 
   /**
@@ -85,7 +85,6 @@ export const env = createEnv({
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
     BETTER_AUTH_TELEMETRY: process.env.BETTER_AUTH_TELEMETRY,
     NODE_ENV: process.env.NODE_ENV,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL,
     ENCRYPTION_SECRET: process.env.ENCRYPTION_SECRET,
     CURRENT_ENCRYPTION_VERSION: process.env.CURRENT_ENCRYPTION_VERSION,

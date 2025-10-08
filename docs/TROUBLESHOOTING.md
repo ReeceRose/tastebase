@@ -95,7 +95,6 @@ Sign up error: [SqliteError: NOT NULL constraint failed: accounts.type]
 
 ```bash
 # Generate BetterAuth schema
-DATABASE_URL="tastebase.db" BETTER_AUTH_SECRET="your-secret" BETTER_AUTH_URL="http://localhost:3000" NEXT_PUBLIC_APP_URL="http://localhost:3000" npx @better-auth/cli generate --yes
 
 # Update your schema files with the generated schema
 # Then run migrations

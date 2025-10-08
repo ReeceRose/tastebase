@@ -7,7 +7,7 @@ import { Theme } from "@/lib/types";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
+  metadataBase: new URL(env.BETTER_AUTH_URL),
   title:
     "Tastebase - Your Personal Recipe Collection | AI-Powered Recipe Management",
   description:

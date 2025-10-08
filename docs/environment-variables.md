@@ -49,7 +49,6 @@ BETTER_AUTH_URL="http://localhost:3000"
 
 ### App Configuration
 ```bash
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 - **Purpose**: Base URL for the application
 - **Visibility**: Public (exposed to browser)
@@ -165,7 +164,6 @@ SKIP_ENV_VALIDATION=true
 DATABASE_URL="file:./tastebase.db"
 BETTER_AUTH_SECRET="your-secret-key-here"
 BETTER_AUTH_URL="http://localhost:3000"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 # AI Services (choose one)
 OPENAI_API_KEY="sk-..."
@@ -183,7 +181,6 @@ MAX_FILE_SIZE="10485760"
 DATABASE_URL="file:./tastebase.db"
 BETTER_AUTH_SECRET="dev-secret-key-at-least-32-characters-long"
 BETTER_AUTH_URL="http://localhost:3000"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
 OPENAI_API_KEY="sk-proj-your-dev-key-here"
 UPLOAD_DIR="./uploads"
 MAX_FILE_SIZE="10485760"
@@ -195,7 +192,6 @@ MAX_FILE_SIZE="10485760"
 DATABASE_URL="file:/app/data/recipes.db"
 BETTER_AUTH_SECRET="production-secret-key-at-least-32-characters-long"
 BETTER_AUTH_URL="https://yourdomain.com"
-NEXT_PUBLIC_APP_URL="https://yourdomain.com"
 OPENAI_API_KEY="sk-proj-your-production-key-here"
 UPLOAD_DIR="/app/uploads"
 MAX_FILE_SIZE="20971520"
@@ -229,7 +225,6 @@ export const env = createEnv({
     MAX_FILE_SIZE: z.string().default("10485760"),
   },
   client: {
-    NEXT_PUBLIC_APP_URL: z.string().url(),
   },
   runtimeEnv: process.env,
 });
@@ -243,7 +238,6 @@ export const env = createEnv({
 DATABASE_URL="file:./tastebase.db"
 BETTER_AUTH_SECRET="your-secret-key-at-least-32-characters-long"
 BETTER_AUTH_URL="http://localhost:3000"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
 ### Full Feature Setup (With AI Parsing)
@@ -256,7 +250,6 @@ BETTER_AUTH_SECRET="your-secret-key-at-least-32-characters-long"
 BETTER_AUTH_URL="http://localhost:3000"
 
 # App
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 # AI Services (choose one)
 OPENAI_API_KEY="sk-proj-abc123def456ghi789..."

@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
     "pino",
     "pino-pretty",
     "better-sqlite3",
+    "drizzle-orm",
   ],
   images: {
     remotePatterns: [],

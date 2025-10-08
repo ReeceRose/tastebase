@@ -71,7 +71,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint-and-type-check, test]
     env:
-      NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SKIP_ENV_VALIDATION: true
     steps:

@@ -1,5 +1,4 @@
 import { createAuthClient } from "better-auth/react";
 
-export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002",
-});
+// BetterAuth client auto-detects the baseURL from window.location in the browser
+export const authClient = createAuthClient();

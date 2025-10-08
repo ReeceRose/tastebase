@@ -204,7 +204,6 @@ UPLOAD_DIR=./uploads
 MAX_FILE_SIZE=10485760
 
 # App Configuration
-NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
 ```
 

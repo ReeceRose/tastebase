@@ -51,7 +51,6 @@ If you want to modify the code or contribute:
    DATABASE_URL="tastebase.db"
    
    # App Configuration
-   NEXT_PUBLIC_APP_URL="http://localhost:3000"
    
    # Authentication
    BETTER_AUTH_SECRET="your-super-secret-key-at-least-32-chars-long"
