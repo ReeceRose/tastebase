@@ -137,11 +137,12 @@ docker-compose pull       # Update to latest version
 
 ## CI/CD Integration
 
-The codebase includes comprehensive health monitoring integrated into GitHub Actions workflows for automated quality gates:
+The codebase includes comprehensive health monitoring and build verification integrated into GitHub Actions workflows for automated quality gates:
 
-### GitHub Actions Workflow
+### GitHub Actions Workflows
 
-The `.github/workflows/codebase-health.yml` workflow provides:
+**Codebase Health** (`.github/workflows/codebase-health.yml`):
+The health check workflow provides:
 
 - **Matrix Strategy**: Parallel execution of all health checks for fast feedback
 - **Critical vs Non-Critical**: Distinguishes between blocking and informational issues
@@ -150,12 +151,35 @@ The `.github/workflows/codebase-health.yml` workflow provides:
 - **Artifact Generation**: Comprehensive health reports uploaded as CI artifacts
 - **PR Comments**: Automated health report comments on pull requests
 
+**Docker Build Verification** (`.github/workflows/docker-build-verify.yml`):
+Verifies Docker builds on every PR and main branch push:
+
+- **Fast Verification**: Single platform build (amd64) for quick feedback
+- **No Registry Push**: Builds locally without polluting Docker Hub
+- **Build Caching**: GitHub Actions cache for faster subsequent builds
+- **PR Protection**: Prevents merging PRs with broken Docker builds
+- **Triggers**: Runs on PRs to main, pushes to main, and manual dispatch
+
+**Docker Release** (`.github/workflows/docker-build.yml`):
+Builds and publishes production Docker images on version tags:
+
+- **Multi-Platform**: Builds for linux/amd64 and linux/arm64
+- **Semantic Versioning**: Automatically tags images based on version tags
+- **Docker Hub**: Pushes to reecerose/tastebase registry
+- **Metadata Updates**: Syncs README.md to Docker Hub description
+- **Triggers**: Only runs on version tags (v1.0.0, v2.1.3, etc.) and manual dispatch
+
 ### Workflow Jobs
 
+**Codebase Health Jobs:**
 1. **health-check**: Matrix job running all health monitors in parallel
 2. **health-report**: Generates comprehensive health report artifacts
 3. **quick-health**: Fast critical-only checks for immediate PR feedback
 4. **security-health**: Security and dependency analysis
+
+**Docker Build Jobs:**
+1. **verify-build**: Verifies Docker build succeeds (PRs and main)
+2. **build**: Builds and pushes multi-platform images (version tags only)
 
 ### Quality Gates
 
@@ -163,14 +187,16 @@ The `.github/workflows/codebase-health.yml` workflow provides:
 - Code Quality: Debug code (console.log, debugger statements)
 - Architecture: Relative imports, route structure violations
 - Import Issues: Circular dependencies, import violations
+- Docker Build: Container build must succeed
 
 **Non-Critical Checks (Informational):**
 - Performance: Optimization opportunities
-- Test Coverage: Missing tests and coverage gaps  
+- Test Coverage: Missing tests and coverage gaps
 - Unused Code: Dead code and unused exports
 
 ### Local CI Testing
 
+**Health Checks:**
 ```bash
 # Run all health checks (matches CI)
 pnpm run health-check:ci
@@ -185,14 +211,28 @@ pnpm run health-check:verbose
 pnpm run health-check:failed
 ```
 
+**Docker Build Verification:**
+```bash
+# Test Docker build locally (matches CI verification)
+docker build -t tastebase:test .
+
+# Test with buildx (matches CI exactly)
+docker buildx build --platform linux/amd64 -t tastebase:test .
+
+# Full multi-platform test (matches release build)
+docker buildx build --platform linux/amd64,linux/arm64 -t tastebase:test .
+```
+
 ### CI Integration Benefits
 
 - **Fast Feedback**: Quick checks run in <5 minutes for PR feedback
 - **Parallel Execution**: All checks run simultaneously for efficiency
+- **Docker Verification**: Catches broken builds before merging
 - **Smart Failure Handling**: Critical vs non-critical failure distinction
 - **Rich Reporting**: Detailed health reports with actionable insights
 - **Artifact Storage**: 30-day retention of health reports for analysis
 - **PR Integration**: Automated health report comments on pull requests
+- **Release Automation**: Tag-based releases with multi-platform Docker builds
 
 ## Architecture Patterns
 
@@ -471,6 +511,47 @@ The Dockerfile uses multi-stage builds for maximum efficiency:
 - **Runtime**: Minimal production image with only necessary files
 - **Security**: Non-root user, proper signal handling with dumb-init
 - **Volumes**: Persistent mounts for database (`/app/data`) and uploads (`/app/uploads`)
+
+### Release Process
+
+**Tastebase uses Git tags for releases** (not branches). This provides immutable version history and integrates seamlessly with Docker Hub.
+
+**Creating a Release:**
+
+```bash
+# 1. Ensure you're on main and up to date
+git checkout main
+git pull origin main
+
+# 2. Create and push a version tag (triggers Docker build)
+git tag -a v1.0.0 -m "Release v1.0.0: Description of changes"
+git push origin v1.0.0
+
+# 3. GitHub Actions automatically:
+#    - Builds multi-platform Docker image (amd64, arm64)
+#    - Pushes to Docker Hub with tags: v1.0.0, 1.0, 1, latest
+#    - Updates Docker Hub description from README.md
+```
+
+**Version Tag Format:**
+- Use semantic versioning: `v1.0.0`, `v2.1.3`, etc.
+- Tags must start with `v` to trigger the workflow
+- Major releases: `v1.0.0`, `v2.0.0` (breaking changes)
+- Minor releases: `v1.1.0`, `v1.2.0` (new features)
+- Patch releases: `v1.0.1`, `v1.0.2` (bug fixes)
+
+**Docker Image Tags Generated:**
+```bash
+# For tag v1.2.3, these images are created:
+reecerose/tastebase:v1.2.3    # Full version
+reecerose/tastebase:1.2        # Minor version
+reecerose/tastebase:1          # Major version
+reecerose/tastebase:latest     # Latest release
+reecerose/tastebase:sha-abc123 # Git commit SHA
+```
+
+**Manual Workflow Trigger:**
+The Docker build can also be triggered manually from GitHub Actions if needed.
 
 ## Common Workflows
 

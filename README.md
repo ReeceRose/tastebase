@@ -79,10 +79,9 @@ A simple, local-first recipe management application designed for shared instance
 
 **The easiest way to run Tastebase is with Docker:**
 
-1. **Clone and start:**
+1. **Pull and run the latest release:**
    ```bash
-   git clone <repository-url> tastebase
-   cd tastebase
+   docker pull reecerose/tastebase:latest
    docker-compose up -d
    ```
 
@@ -91,6 +90,29 @@ A simple, local-first recipe management application designed for shared instance
 
 3. **Your data is safe:**
    All recipes and images are stored in Docker volumes and persist between restarts.
+
+### Docker Image Versions
+
+Tastebase releases follow semantic versioning with multiple tag options:
+
+```bash
+# Latest stable release (recommended)
+docker pull reecerose/tastebase:latest
+
+# Specific version (for pinning)
+docker pull reecerose/tastebase:v1.0.0
+docker pull reecerose/tastebase:1.0    # Minor version
+docker pull reecerose/tastebase:1      # Major version
+
+# Specific commit (for testing)
+docker pull reecerose/tastebase:sha-abc123
+```
+
+**Updating to a new release:**
+```bash
+docker-compose pull  # Pull latest images
+docker-compose up -d # Restart with new version
+```
 
 ### Why Docker?
 
