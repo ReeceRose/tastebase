@@ -71,8 +71,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint-and-type-check, test]
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SKIP_ENV_VALIDATION: true
+      DATABASE_URL: "file:/tmp/test.db"
+      BETTER_AUTH_SECRET: "test-secret-at-least-32-chars-long"
+      BETTER_AUTH_URL: "http://localhost:3000"
+      OLLAMA_BASE_URL: "http://localhost:11434"
+      ENCRYPTION_SECRET: "test-encryption-secret-must-be-exactly-64-chars-long-12345678901"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
