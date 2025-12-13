@@ -2,9 +2,14 @@ import { getSessionCookie } from "better-auth/cookies";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const publicRoutes = ["/auth/sign-in", "/auth/sign-up", "/api/auth"];
+const publicRoutes = [
+  "/auth/sign-in",
+  "/auth/sign-up",
+  "/auth/reset-password",
+  "/api/auth",
+];
 
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Handle public routes - only auth routes are public, root requires authentication
@@ -25,9 +30,6 @@ export default async function middleware(req: NextRequest) {
 
   return NextResponse.next();
 }
-
-// Use Node.js runtime instead of Edge Runtime for SQLite compatibility
-export const runtime = "nodejs";
 
 export const config = {
   matcher: [

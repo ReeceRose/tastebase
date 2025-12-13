@@ -120,7 +120,15 @@ export function SignInForm({
               </div>
 
               <div className="grid gap-3">
-                <Label htmlFor={passwordId}>Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor={passwordId}>Password</Label>
+                  <Link
+                    href="/auth/reset-password"
+                    className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id={passwordId}
                   type="password"
