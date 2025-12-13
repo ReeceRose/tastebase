@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loading } from "@/components/ui/loading";
+import { authClient } from "@/lib/auth/auth-client";
 import { ComponentSize } from "@/lib/types";
 
 const passwordResetSchema = z.object({
@@ -49,19 +50,15 @@ export function PasswordResetForm() {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/forget-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: data.email }),
+      const result = await authClient.requestPasswordReset({
+        email: data.email,
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
-      if (response.ok) {
-        setSuccess(true);
+      if (result.error) {
+        setError(result.error.message || "Failed to send reset email");
       } else {
-        const result = await response.json();
-        setError(result.error || "Failed to send reset email");
+        setSuccess(true);
       }
     } catch (err) {
       console.error("Password reset error:", err);
@@ -106,38 +103,52 @@ export function PasswordResetForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor={emailId}>Email</Label>
-            <Input
-              id={emailId}
-              type="email"
-              placeholder="m@example.com"
-              disabled={isLoading}
-              {...register("email")}
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="flex flex-col gap-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
+
+            <div className="grid gap-3">
+              <Label htmlFor={emailId}>Email</Label>
+              <Input
+                id={emailId}
+                type="email"
+                placeholder="m@example.com"
+                disabled={isLoading}
+                required
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loading size={ComponentSize.SM} />
+                    Sending reset link...
+                  </div>
+                ) : (
+                  "Send reset link"
+                )}
+              </Button>
+            </div>
           </div>
-
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <Loading size={ComponentSize.SM} />
-                Sending reset link...
-              </div>
-            ) : (
-              "Send reset link"
-            )}
-          </Button>
         </form>
+
+        <div className="mt-4 text-center text-sm">
+          Remember your password?{" "}
+          <Link href="/auth/sign-in" className="underline underline-offset-4">
+            Sign in
+          </Link>
+        </div>
 
         <div className="mt-4 text-center text-sm">
           Remember your password?{" "}

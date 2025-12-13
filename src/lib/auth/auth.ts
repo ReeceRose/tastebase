@@ -1,6 +1,12 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
+import {
+  accounts,
+  sessions,
+  users,
+  verificationTokens,
+} from "@/db/schema.base";
 import { env } from "@/lib/config/env";
 import { createOperationLogger } from "@/lib/logging/logger";
 
@@ -22,6 +28,12 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "sqlite",
     usePlural: true,
+    schema: {
+      users,
+      sessions,
+      accounts,
+      verifications: verificationTokens,
+    },
   }),
   emailAndPassword: {
     enabled: true,
