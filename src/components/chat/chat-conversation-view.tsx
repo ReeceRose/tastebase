@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { useChatPerformance } from "@/hooks/use-chat-performance";
 import { useMobileChat } from "@/hooks/use-mobile-chat";
 import { getConversationHistory } from "@/lib/server-actions/conversation-actions";
-import { MessageRole } from "@/lib/types";
+import { CHAT_LOADING_MESSAGES, MessageRole } from "@/lib/types";
 
 interface ChatConversationViewProps {
   userId: string;
@@ -85,12 +85,6 @@ export function ChatConversationView({
 
   // Progressive loading messages
   const [loadingMessage, setLoadingMessage] = useState("");
-  const loadingMessages = [
-    "Thinking about your request...",
-    "Exploring recipe possibilities...",
-    "Generating culinary ideas...",
-    "Crafting the perfect suggestions...",
-  ];
 
   // Load conversation history
   useEffect(() => {
@@ -119,12 +113,12 @@ export function ChatConversationView({
   useEffect(() => {
     if (showLoadingIndicators) {
       let messageIndex = 0;
-      setLoadingMessage(loadingMessages[0]);
+      setLoadingMessage(CHAT_LOADING_MESSAGES[0]);
 
       const interval = setInterval(() => {
-        messageIndex = (messageIndex + 1) % loadingMessages.length;
-        setLoadingMessage(loadingMessages[messageIndex]);
-      }, 1500); // Change message every 1.5 seconds
+        messageIndex = (messageIndex + 1) % CHAT_LOADING_MESSAGES.length;
+        setLoadingMessage(CHAT_LOADING_MESSAGES[messageIndex]);
+      }, 1500);
 
       return () => clearInterval(interval);
     } else {

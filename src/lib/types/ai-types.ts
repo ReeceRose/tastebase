@@ -84,6 +84,13 @@ export const COMMON_MODELS = {
   [AIProvider.NONE]: {},
 } as const;
 
+export const CHAT_LOADING_MESSAGES = [
+  "Thinking about your request...",
+  "Exploring recipe possibilities...",
+  "Generating culinary ideas...",
+  "Crafting the perfect suggestions...",
+] as const;
+
 export type AITask =
   | "recipe-parsing"
   | "chat-conversation"
