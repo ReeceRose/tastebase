@@ -135,9 +135,9 @@ const TimelineView = ({
 
       {chartData.length > 0 ? (
         <div className="space-y-2">
-          {chartData.map((point, index) => (
+          {chartData.map((point) => (
             <div
-              key={`chart-${point.date.toISOString()}-${index}`}
+              key={`chart-${point.date.toISOString()}`}
               className="flex items-center gap-2"
             >
               <div className="w-20 text-xs text-muted-foreground">

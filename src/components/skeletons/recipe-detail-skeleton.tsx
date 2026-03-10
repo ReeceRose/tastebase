@@ -109,9 +109,9 @@ export function RecipeDetailSkeleton({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {Array.from({ length: 8 }, (_, i) => (
+              {[...Array(8).keys()].map((k) => (
                 <div
-                  key={`ingredient-skeleton-${i + 1}`}
+                  key={`ingredient-skeleton-${k + 1}`}
                   className="flex items-start gap-3"
                 >
                   <Skeleton className="h-4 w-4 mt-0.5" />
@@ -136,9 +136,9 @@ export function RecipeDetailSkeleton({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Array.from({ length: 6 }, (_, i) => (
+              {[...Array(6).keys()].map((k) => (
                 <div
-                  key={`instruction-skeleton-${i + 1}`}
+                  key={`instruction-skeleton-${k + 1}`}
                   className="flex gap-3"
                 >
                   <Skeleton className="h-6 w-6 rounded-full flex-shrink-0 mt-1" />
@@ -172,9 +172,9 @@ export function RecipeDetailSkeleton({
 
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              {Array.from({ length: 2 }, (_, i) => (
+              {[...Array(2).keys()].map((k) => (
                 <Card
-                  key={`note-skeleton-${i + 1}`}
+                  key={`note-skeleton-${k + 1}`}
                   className="transition-colors"
                 >
                   <CardContent className="pt-4">
@@ -185,7 +185,7 @@ export function RecipeDetailSkeleton({
                             <div className="flex items-center gap-0.5">
                               {[0, 1, 2, 3, 4].map((starIndex) => (
                                 <Skeleton
-                                  key={`note-star-skeleton-${i}-${starIndex + 1}`}
+                                  key={`note-star-skeleton-${k}-${starIndex + 1}`}
                                   className="h-4 w-4"
                                 />
                               ))}

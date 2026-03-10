@@ -195,9 +195,9 @@ export function RecipeCardMessage({ content }: RecipeCardMessageProps) {
       {/* Recipe cards */}
       {hasRecipes && (
         <div className="space-y-3">
-          {recipes.map((recipe, index) => (
+          {recipes.map((recipe) => (
             <Card
-              key={`recipe-card-${recipe.name.replace(/\s+/g, "-").toLowerCase()}-${index}`}
+              key={`recipe-card-${recipe.name.replace(/\s+/g, "-").toLowerCase()}`}
               className="border-l-4 border-l-primary bg-muted shadow-md hover:shadow-lg transition-all duration-200"
             >
               <CardHeader className="pb-3">

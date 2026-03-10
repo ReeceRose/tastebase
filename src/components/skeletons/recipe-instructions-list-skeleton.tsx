@@ -28,11 +28,8 @@ export function RecipeInstructionsListSkeleton({
 
       <CardContent className="space-y-4">
         <div className="space-y-4">
-          {Array.from({ length: instructionCount }, (_, index) => (
-            <div
-              key={`instruction-skeleton-${index + 1}`}
-              className="flex gap-4"
-            >
+          {[...Array(instructionCount).keys()].map((k) => (
+            <div key={`instruction-skeleton-${k + 1}`} className="flex gap-4">
               <div className="flex-shrink-0 flex flex-col items-center">
                 {showCheckboxes ? (
                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
@@ -42,7 +39,7 @@ export function RecipeInstructionsListSkeleton({
                   <Skeleton className="w-8 h-8 rounded-full" />
                 )}
 
-                {index < instructionCount - 1 && (
+                {k < instructionCount - 1 && (
                   <Skeleton className="w-px h-5 mt-2" />
                 )}
               </div>
@@ -52,14 +49,14 @@ export function RecipeInstructionsListSkeleton({
                   <Skeleton className="h-4 w-12" />
 
                   <div className="flex items-center gap-2">
-                    {index % 3 === 0 && (
+                    {k % 3 === 0 && (
                       <div className="flex items-center gap-1">
                         <Skeleton className="h-3 w-3" />
                         <Skeleton className="h-3 w-8" />
                       </div>
                     )}
 
-                    {index % 4 === 0 && (
+                    {k % 4 === 0 && (
                       <div className="flex items-center gap-1">
                         <Skeleton className="h-3 w-3" />
                         <Skeleton className="h-3 w-10" />
@@ -71,10 +68,10 @@ export function RecipeInstructionsListSkeleton({
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-4/5" />
-                  {index % 2 === 0 && <Skeleton className="h-4 w-3/4" />}
+                  {k % 2 === 0 && <Skeleton className="h-4 w-3/4" />}
                 </div>
 
-                {index % 3 === 0 && (
+                {k % 3 === 0 && (
                   <div className="mt-2">
                     <Skeleton className="h-3 w-1/2" />
                   </div>

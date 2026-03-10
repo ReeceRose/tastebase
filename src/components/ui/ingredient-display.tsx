@@ -235,9 +235,9 @@ export function IngredientListDisplay({
               </h4>
             )}
             <ul className="space-y-2">
-              {groupIngredients.map((ingredient, index) => (
+              {groupIngredients.map((ingredient) => (
                 <li
-                  key={`${groupName}-${ingredient.id || ingredient.name}-${index}`}
+                  key={`${groupName}-${ingredient.id || ingredient.name}`}
                   className="flex items-start"
                 >
                   <span className="text-muted-foreground mr-2">•</span>

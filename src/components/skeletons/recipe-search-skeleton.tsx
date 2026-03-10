@@ -97,9 +97,9 @@ export function RecipeSearchSkeleton({
                 <div>
                   <Skeleton className="h-4 w-20 mb-3" />
                   <div className="grid grid-cols-2 gap-2 max-h-32">
-                    {Array.from({ length: 8 }, (_, i) => (
+                    {[...Array(8).keys()].map((k) => (
                       <div
-                        key={`cuisine-skeleton-${i + 1}`}
+                        key={`cuisine-skeleton-${k + 1}`}
                         className="flex items-center space-x-2"
                       >
                         <Skeleton className="h-4 w-4" />

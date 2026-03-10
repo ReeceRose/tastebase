@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.2/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -87,6 +87,16 @@
         "rules": {
           "performance": {
             "noImgElement": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/components/ui/slider.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noArrayIndexKey": "off"
           }
         }
       }

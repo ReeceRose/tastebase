@@ -70,9 +70,9 @@ export function RecipeNotesSkeleton({
           <Skeleton className="h-5 w-32 mb-4" />
 
           <div className="space-y-4">
-            {Array.from({ length: noteCount }, (_, i) => (
+            {[...Array(noteCount).keys()].map((k) => (
               <Card
-                key={`note-skeleton-${i + 1}`}
+                key={`note-skeleton-${k + 1}`}
                 className="transition-colors"
               >
                 <CardContent className="pt-4">
@@ -83,7 +83,7 @@ export function RecipeNotesSkeleton({
                           <div className="flex items-center gap-0.5">
                             {[0, 1, 2, 3, 4].map((starIndex) => (
                               <Skeleton
-                                key={`star-skeleton-${i}-${starIndex + 1}`}
+                                key={`star-skeleton-${k}-${starIndex + 1}`}
                                 className="h-4 w-4"
                               />
                             ))}

@@ -31,18 +31,19 @@ export function HighlightedText({
   // Split text by search query matches
   const parts = text.split(regex);
 
+  let charOffset = 0;
   return (
     <span>
-      {parts.map((part, index) => {
-        // Check if this part matches the search query (case-insensitive)
+      {parts.map((part) => {
+        const key = `part-${charOffset}`;
+        charOffset += part.length;
         const isMatch = part.toLowerCase() === searchQuery.toLowerCase();
-
         return isMatch ? (
-          <mark key={`highlight-${index}-${part}`} className={className}>
+          <mark key={key} className={className}>
             {part}
           </mark>
         ) : (
-          <span key={`text-${index}-${part}`}>{part}</span>
+          <span key={key}>{part}</span>
         );
       })}
     </span>
@@ -218,6 +219,7 @@ export function HighlightMultipleTerms({
   // Split text by all search terms and render as safe React components
   const renderHighlightedText = (): (string | JSX.Element)[] => {
     let parts: (string | JSX.Element)[] = [text];
+    let elementKey = 0;
 
     searchTerms.forEach((term) => {
       if (!term.trim()) return;
@@ -228,34 +230,30 @@ export function HighlightMultipleTerms({
 
       const newParts: (string | JSX.Element)[] = [];
 
-      parts.forEach((part, partIndex) => {
+      parts.forEach((part) => {
         if (typeof part === "string") {
           const splitParts = part.split(regex);
 
           splitParts.forEach((splitPart) => {
             if (splitPart && regex.test(splitPart)) {
-              // Create highlighted component for matching text
               newParts.push(
                 <mark
-                  key={`highlight-${term}-${partIndex}-${splitPart}`}
+                  key={`highlight-${elementKey++}`}
                   className={`${className} ${colorClass}`}
                 >
                   {splitPart}
                 </mark>,
               );
             } else if (splitPart) {
-              // Keep plain text as string
               newParts.push(splitPart);
             }
           });
         } else {
-          // Keep existing JSX elements
           newParts.push(part);
         }
       });
 
       parts = newParts;
-      // Reset regex lastIndex to avoid issues with global flag
       regex.lastIndex = 0;
     });
 

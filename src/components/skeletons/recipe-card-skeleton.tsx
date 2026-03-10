@@ -45,8 +45,8 @@ export function RecipeCardSkeleton() {
 export function RecipeCardGridSkeleton({ count = 6 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {Array.from({ length: count }, (_, i) => (
-        <RecipeCardSkeleton key={`recipe-card-skeleton-${i + 1}`} />
+      {[...Array(count).keys()].map((k) => (
+        <RecipeCardSkeleton key={`recipe-card-skeleton-${k + 1}`} />
       ))}
     </div>
   );

@@ -42,7 +42,7 @@ export function PageHeader({
           <ol className="flex items-center space-x-2">
             {breadcrumbs.map((crumb, index) => (
               <li
-                key={`breadcrumb-${crumb.label}-${index}`}
+                key={`breadcrumb-${crumb.label}`}
                 className="flex items-center"
               >
                 {index > 0 && (
@@ -78,9 +78,9 @@ export function PageHeader({
 
         {actions.length > 0 && (
           <div className="flex items-center gap-2">
-            {actions.map((action, index) => (
+            {actions.map((action) => (
               <Button
-                key={`action-${action.label}-${index}`}
+                key={`action-${action.label}`}
                 variant={action.variant || ButtonVariant.SECONDARY}
                 size="sm"
                 asChild={!!action.href}
