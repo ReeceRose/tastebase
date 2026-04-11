@@ -86,7 +86,7 @@ export async function generateRecipeImageAction(
       userConfig = allConfigsResult.data.activeConfiguration;
     }
 
-    if (!userConfig || !userConfig.apiKey) {
+    if (!userConfig?.apiKey) {
       return {
         success: false,
         error: "No valid AI configuration found for image generation",
