@@ -38,7 +38,7 @@ export interface FileUploadResult {
   variants?: Record<ImageSize, string>;
 }
 
-export enum FileValidationErrorCode {
+enum FileValidationErrorCode {
   FILE_TOO_LARGE = "FILE_TOO_LARGE",
   INVALID_TYPE = "INVALID_TYPE",
   INVALID_FILE = "INVALID_FILE",
@@ -51,7 +51,7 @@ export interface FileValidationError {
 }
 
 // Initialize storage directories
-export function initializeStorage() {
+function initializeStorage() {
   try {
     if (!existsSync(STORAGE_CONFIG.uploadsDir)) {
       mkdirSync(STORAGE_CONFIG.uploadsDir, { recursive: true });
@@ -69,7 +69,7 @@ export function initializeStorage() {
 }
 
 // Validate file before processing
-export function validateFile(file: File): FileValidationError | null {
+function validateFile(file: File): FileValidationError | null {
   // Check file size
   if (file.size > STORAGE_CONFIG.maxFileSize) {
     return {
@@ -102,7 +102,7 @@ export function validateFile(file: File): FileValidationError | null {
 }
 
 // Generate unique filename with extension
-export function generateFilename(originalName: string): string {
+function generateFilename(originalName: string): string {
   const extension = path.extname(originalName).toLowerCase();
   const uniqueId = randomUUID();
   return `${uniqueId}${extension}`;
@@ -256,39 +256,4 @@ export function getRecipeImagePath(filename: string, size?: ImageSize): string {
   }
 
   return path.join(STORAGE_CONFIG.recipeImagesDir, filename);
-}
-
-// Cleanup orphaned files (files not in database)
-export async function cleanupOrphanedFiles(
-  validFilenames: string[],
-): Promise<number> {
-  try {
-    const fs = await import("node:fs/promises");
-    const files = await fs.readdir(STORAGE_CONFIG.recipeImagesDir);
-
-    let deletedCount = 0;
-
-    for (const file of files) {
-      // Skip files that are in the valid list or are variants of valid files
-      const isValid = validFilenames.some((validFile) => {
-        const baseName = path.parse(validFile).name;
-        return file.startsWith(baseName);
-      });
-
-      if (!isValid) {
-        const filePath = path.join(STORAGE_CONFIG.recipeImagesDir, file);
-        await fs.unlink(filePath);
-        deletedCount++;
-      }
-    }
-
-    logger.info(
-      { deletedCount, totalFiles: files.length },
-      "Cleanup orphaned files completed",
-    );
-    return deletedCount;
-  } catch (error) {
-    logError(logger, "Failed to cleanup orphaned files", error);
-    return 0;
-  }
 }

@@ -10,7 +10,7 @@ import { createOperationLogger, logError } from "@/lib/logging/logger";
 
 const logger = createOperationLogger("recipe-favorites-actions");
 
-export async function addToFavorites(recipeId: string) {
+async function addToFavorites(recipeId: string) {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -80,7 +80,7 @@ export async function addToFavorites(recipeId: string) {
   }
 }
 
-export async function removeFromFavorites(recipeId: string) {
+async function removeFromFavorites(recipeId: string) {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),

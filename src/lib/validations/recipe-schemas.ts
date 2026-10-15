@@ -159,12 +159,6 @@ export const updateRecipeSchema = createRecipeSchema.partial().extend({
   id: z.string().min(1, "Recipe ID is required"),
 });
 
-export const updateRecipeWithSlugSchema = createRecipeWithSlugSchema
-  .partial()
-  .extend({
-    id: z.string().min(1, "Recipe ID is required"),
-  });
-
 export const createRecipeNoteSchema = z.object({
   recipeId: z.string().min(1, "Recipe ID is required"),
   content: z
@@ -258,72 +252,3 @@ export type UpdateRecipeNoteInput = z.infer<typeof updateRecipeNoteSchema>;
 export type RecipeSearchParams = z.infer<typeof recipeSearchSchema>;
 export type UploadRecipeImageInput = z.infer<typeof uploadRecipeImageSchema>;
 export type UpdateRecipeImageInput = z.infer<typeof updateRecipeImageSchema>;
-
-// Individual ingredient schemas
-export const createIngredientSchema = recipeIngredientSchema.extend({
-  recipeId: z.string().min(1, "Recipe ID is required"),
-});
-
-export const updateIngredientSchema = recipeIngredientSchema.partial().extend({
-  id: z.string().min(1, "Ingredient ID is required"),
-});
-
-// Individual instruction schemas
-export const createInstructionSchema = recipeInstructionSchema.extend({
-  recipeId: z.string().min(1, "Recipe ID is required"),
-});
-
-export const updateInstructionSchema = recipeInstructionSchema
-  .partial()
-  .extend({
-    id: z.string().min(1, "Instruction ID is required"),
-  });
-
-export type CreateIngredientInput = z.infer<typeof createIngredientSchema>;
-export type UpdateIngredientInput = z.infer<typeof updateIngredientSchema>;
-export type CreateInstructionInput = z.infer<typeof createInstructionSchema>;
-export type UpdateInstructionInput = z.infer<typeof updateInstructionSchema>;
-
-// AI Recipe Parsing Schema - for validating AI-parsed recipe data
-export const RECIPE_PARSING_SCHEMA = z.object({
-  title: z.string().max(200).nullable().optional(),
-  description: z.string().max(1000).nullable().optional(),
-  servings: z.number().min(1).max(100).nullable().optional(),
-  prepTime: z.number().min(0).max(1440).nullable().optional(),
-  cookTime: z.number().min(0).max(1440).nullable().optional(),
-  ingredients: z
-    .array(
-      z.object({
-        name: z.string().max(200),
-        quantity: z.string().max(50).nullable().optional(),
-        unit: z.string().max(20).nullable().optional(),
-      }),
-    )
-    .max(50)
-    .nullable()
-    .optional(),
-  instructions: z
-    .array(
-      z.object({
-        step: z.number().min(1).max(50),
-        instruction: z.string().max(1000),
-        timeMinutes: z.number().min(0).max(1440).nullable().optional(),
-        temperature: z.string().max(50).nullable().optional(),
-      }),
-    )
-    .max(50)
-    .nullable()
-    .optional(),
-  tags: z.array(z.string().max(30)).max(20).nullable().optional(),
-  difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
-  cuisine: z.string().max(50).nullable().optional(),
-});
-
-export type AIRecipeParsingResult = z.infer<typeof RECIPE_PARSING_SCHEMA>;
-
-// Slug validation schema for URL parameters
-export const recipeSlugSchema = z.object({
-  slug: slugSchema,
-});
-
-export type RecipeSlugParams = z.infer<typeof recipeSlugSchema>;

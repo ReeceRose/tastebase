@@ -272,7 +272,6 @@ export async function searchRecipes(
     }
 
     // Get detailed recipe data with ingredients, instructions, etc.
-    const _recipeIds = searchResults.map((r) => r.id);
     const detailedRecipes: RecipeWithDetails[] = [];
 
     for (const recipe of searchResults) {

@@ -3,7 +3,7 @@ import { SortOrder } from "@/lib/types";
 import { TEMPLATE_CATEGORIES } from "@/lib/types/template-types";
 
 // Base template validation schema
-export const templateBaseSchema = z.object({
+const templateBaseSchema = z.object({
   name: z
     .string()
     .min(1, "Template name is required")
@@ -81,31 +81,6 @@ export const bulkTemplateActionSchema = z.object({
   newCategory: z.enum(TEMPLATE_CATEGORIES).optional(), // For updateCategory action
 });
 
-// Template import/export schemas
-export const templateExportSchema = z.object({
-  templateIds: z.array(z.string().min(1)),
-  includeUsageStats: z.boolean().default(false),
-  format: z.enum(["json", "csv"]).default("json"),
-});
-
-export const templateImportSchema = z.object({
-  templates: z.array(templateBaseSchema),
-  overwriteExisting: z.boolean().default(false),
-});
-
-// Template search/suggestion schema
-export const templateSearchSchema = z.object({
-  query: z.string().min(1).max(200).trim(),
-  category: z.enum(TEMPLATE_CATEGORIES).optional(),
-  limit: z.number().min(1).max(50).default(10),
-});
-
-// Template placeholder replacement schema
-export const templatePlaceholderSchema = z.object({
-  templateId: z.string().min(1),
-  placeholders: z.record(z.string(), z.string()),
-});
-
 // Type exports for TypeScript
 export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
 export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>;
@@ -113,38 +88,3 @@ export type TemplateFormInput = z.infer<typeof templateFormSchema>;
 export type TemplateFiltersInput = z.infer<typeof templateFiltersSchema>;
 export type TemplateUsageInput = z.infer<typeof templateUsageSchema>;
 export type BulkTemplateActionInput = z.infer<typeof bulkTemplateActionSchema>;
-export type TemplateExportInput = z.infer<typeof templateExportSchema>;
-export type TemplateImportInput = z.infer<typeof templateImportSchema>;
-export type TemplateSearchInput = z.infer<typeof templateSearchSchema>;
-export type TemplatePlaceholderInput = z.infer<
-  typeof templatePlaceholderSchema
->;
-
-// Validation helper functions
-export const validateTemplateName = (name: string): boolean => {
-  try {
-    templateBaseSchema.pick({ name: true }).parse({ name });
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-export const validateTemplateContent = (content: string): boolean => {
-  try {
-    templateBaseSchema.pick({ content: true }).parse({ content });
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-export const sanitizeTemplateInput = (
-  input: unknown,
-): Partial<CreateTemplateInput> => {
-  try {
-    return createTemplateSchema.partial().parse(input);
-  } catch {
-    return {};
-  }
-};

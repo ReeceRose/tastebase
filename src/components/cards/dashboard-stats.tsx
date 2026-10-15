@@ -1,4 +1,4 @@
-import { getDashboardStats } from "@/lib/server-actions";
+import { getDashboardStats } from "@/lib/server-actions/dashboard-stats-actions";
 
 async function DashboardStats() {
   const statsResult = await getDashboardStats();

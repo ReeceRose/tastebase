@@ -31,7 +31,7 @@ export interface NoteTemplate {
   tags: string[];
 }
 
-export const NOTE_TEMPLATES: NoteTemplate[] = [
+const NOTE_TEMPLATES: NoteTemplate[] = [
   // General Notes Templates
   {
     id: "general-first-time",

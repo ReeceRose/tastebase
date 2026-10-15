@@ -10,14 +10,10 @@ import {
 
 export type UserPreferences = UserPreferencesSubset;
 
-export interface UserDisplayPreferences extends UserPreferences {
-  measurementSystem: MeasurementUnit;
-}
-
 /**
  * Get user's measurement system preference based on their unit preferences
  */
-export function getUserMeasurementSystem(
+function getUserMeasurementSystem(
   preferences: UserPreferences,
 ): MeasurementUnit {
   // If either weight or volume preference is metric, consider the user metric-preferred
@@ -32,21 +28,9 @@ export function getUserMeasurementSystem(
 }
 
 /**
- * Get enhanced display preferences including derived measurement system
- */
-export function getUserDisplayPreferences(
-  preferences: UserPreferences,
-): UserDisplayPreferences {
-  return {
-    ...preferences,
-    measurementSystem: getUserMeasurementSystem(preferences),
-  };
-}
-
-/**
  * Default preferences for new users or when preferences are not available
  */
-export const defaultUserPreferences: UserPreferences = {
+const defaultUserPreferences: UserPreferences = {
   preferredTemperatureUnit: TemperatureUnit.FAHRENHEIT,
   preferredWeightUnit: MeasurementUnit.IMPERIAL,
   preferredVolumeUnit: MeasurementUnit.IMPERIAL,
@@ -127,107 +111,6 @@ export function getUserPreferencesWithFallback(
       user.preferredWeightUnit || defaultUserPreferences.preferredWeightUnit,
     preferredVolumeUnit:
       user.preferredVolumeUnit || defaultUserPreferences.preferredVolumeUnit,
-  };
-}
-
-/**
- * Check if user has customized their preferences from defaults
- */
-export function hasCustomPreferences(preferences: UserPreferences): boolean {
-  return (
-    preferences.preferredTemperatureUnit !==
-      defaultUserPreferences.preferredTemperatureUnit ||
-    preferences.preferredWeightUnit !==
-      defaultUserPreferences.preferredWeightUnit ||
-    preferences.preferredVolumeUnit !==
-      defaultUserPreferences.preferredVolumeUnit
-  );
-}
-
-/**
- * Get human-readable preference labels for UI display
- */
-export function getPreferenceLabels(preferences: UserPreferences) {
-  return {
-    temperature:
-      preferences.preferredTemperatureUnit === TemperatureUnit.FAHRENHEIT
-        ? "Fahrenheit (°F)"
-        : "Celsius (°C)",
-    weight:
-      preferences.preferredWeightUnit === MeasurementUnit.IMPERIAL
-        ? "Imperial (oz, lbs)"
-        : "Metric (g, kg)",
-    volume:
-      preferences.preferredVolumeUnit === MeasurementUnit.IMPERIAL
-        ? "Imperial (tsp, cups)"
-        : "Metric (ml, L)",
-    system:
-      getUserMeasurementSystem(preferences) === MeasurementUnit.IMPERIAL
-        ? "Imperial System"
-        : "Metric System",
-  };
-}
-
-/**
- * Smart preference suggestions based on user's location/browser
- */
-export function suggestPreferencesFromLocale(): UserPreferences {
-  // Try to detect user's locale preferences
-  if (typeof window !== "undefined") {
-    const locale = navigator.language || "en-US";
-
-    // Countries that primarily use metric system
-    const metricCountries = [
-      "CA",
-      "GB",
-      "AU",
-      "DE",
-      "FR",
-      "IT",
-      "ES",
-      "NL",
-      "SE",
-      "NO",
-      "DK",
-    ];
-    const country = locale.split("-")[1];
-
-    if (country && metricCountries.includes(country)) {
-      return {
-        preferredTemperatureUnit: TemperatureUnit.CELSIUS,
-        preferredWeightUnit: MeasurementUnit.METRIC,
-        preferredVolumeUnit: MeasurementUnit.METRIC,
-      };
-    }
-  }
-
-  // Default to imperial (US standard)
-  return defaultUserPreferences;
-}
-
-/**
- * Convert preference values for form inputs
- */
-export function preferencesToFormValues(preferences: UserPreferences) {
-  return {
-    temperatureUnit: preferences.preferredTemperatureUnit,
-    weightUnit: preferences.preferredWeightUnit,
-    volumeUnit: preferences.preferredVolumeUnit,
-  };
-}
-
-/**
- * Convert form values back to preference format
- */
-export function formValuesToPreferences(formValues: {
-  temperatureUnit: string;
-  weightUnit: string;
-  volumeUnit: string;
-}): UserPreferences {
-  return {
-    preferredTemperatureUnit: formValues.temperatureUnit as TemperatureUnit,
-    preferredWeightUnit: formValues.weightUnit as MeasurementUnit,
-    preferredVolumeUnit: formValues.volumeUnit as MeasurementUnit,
   };
 }
 

@@ -1,5 +1,4 @@
 export {
-  CardSkeleton,
   PageHeaderSkeleton,
   SectionSkeleton,
-} from "./page-skeletons";
+} from "@/components/skeletons/page-skeletons";

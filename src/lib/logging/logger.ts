@@ -5,7 +5,7 @@ import pino from "pino";
 const isDevelopment = process.env.NODE_ENV === "development";
 const isProduction = process.env.NODE_ENV === "production";
 
-export const logger = pino({
+const logger = pino({
   level: isProduction ? "info" : "debug",
   ...(isDevelopment && {
     transport: {
@@ -44,14 +44,6 @@ export const logger = pino({
   },
 });
 
-export function createUserLogger(userId: string) {
-  return logger.child({ userId });
-}
-
-export function createOrganizationLogger(organizationId: string) {
-  return logger.child({ organizationId });
-}
-
 export function createOperationLogger(
   operation: string,
   context?: Record<string, unknown>,
@@ -62,7 +54,7 @@ export function createOperationLogger(
 /**
  * Utility to serialize errors for logging
  */
-export function serializeError(error: unknown): string {
+function serializeError(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
@@ -86,5 +78,3 @@ export function logError(
     message,
   );
 }
-
-export default logger;

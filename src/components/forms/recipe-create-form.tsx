@@ -194,9 +194,7 @@ export function RecipeCreateForm({
         return { success: false, error: "Auto-save failed" };
       }
     },
-    onSuccess: () => {
-      console.log("Draft auto-saved");
-    },
+    onSuccess: () => {},
   });
 
   const addTag = () => {
@@ -217,12 +215,9 @@ export function RecipeCreateForm({
   };
 
   const onSubmit = async (data: RecipeFormData) => {
-    console.log("🚀 Form submission started", { data });
-    console.log("🔍 Current form errors:", errors);
     setIsSubmitting(true);
 
     try {
-      console.log("📝 Validating form data...");
       const validation = validateRecipeFormData(data);
       if (!validation.isValid) {
         console.error("❌ Validation failed:", validation.errors);
@@ -231,15 +226,10 @@ export function RecipeCreateForm({
         });
         return;
       }
-      console.log("✅ Validation passed");
 
-      console.log("🔄 Transforming form data...");
       const createData = transformFormDataToCreateData(data);
-      console.log("📤 Transformed data:", createData);
 
-      console.log("🌐 Calling createRecipe server action...");
       const result = await createRecipe(createData);
-      console.log("📨 Server response:", result);
 
       if (result.success && result.data) {
         // Clear the draft after successful creation

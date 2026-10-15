@@ -1,6 +1,10 @@
 "use client";
 
 import { Grid3X3, LayoutGrid, List } from "lucide-react";
+import {
+  type ActiveFilter,
+  ActiveFilterChips,
+} from "@/components/forms/active-filter-chips";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -11,7 +15,6 @@ import {
 } from "@/components/ui/select";
 import type { ViewMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { type ActiveFilter, ActiveFilterChips } from "./active-filter-chips";
 
 const CUISINE_OPTIONS = [
   { value: "italian", label: "Italian" },

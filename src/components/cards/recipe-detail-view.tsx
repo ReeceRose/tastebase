@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ModernUnitReset } from "@/components/ui/modern-unit-display";
 import { RatingDisplay } from "@/components/ui/rating-display";
+import { RecipeFavoriteButton } from "@/components/ui/recipe-favorite-button";
 import { VisibilityBadge } from "@/components/ui/visibility-badge";
 import { useIngredientUnitToggle } from "@/hooks/use-ingredient-unit-toggle";
 import { deleteRecipe } from "@/lib/server-actions/recipe-actions";
@@ -57,6 +58,7 @@ import type { RecipeWithRelations } from "@/lib/types/recipe-types";
 interface RecipeDetailViewProps {
   recipe: RecipeWithRelations;
   canEdit?: boolean;
+  isFavorited?: boolean;
   onRecipeChange?: () => void;
   className?: string;
   user?: {
@@ -69,6 +71,7 @@ interface RecipeDetailViewProps {
 export function RecipeDetailView({
   recipe,
   canEdit = true,
+  isFavorited = false,
   onRecipeChange,
   className,
   user,
@@ -247,39 +250,45 @@ export function RecipeDetailView({
                 )}
               </div>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant={ButtonVariant.OUTLINE} size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  {canEdit && (
-                    <DropdownMenuItem asChild>
-                      <Link href={`/recipes/${recipe.slug}/edit`}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Recipe
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={handleShareRecipe}>
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share Recipe
-                  </DropdownMenuItem>
-                  {canEdit && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => setShowDeleteDialog(true)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Recipe
+              <div className="flex gap-2">
+                <RecipeFavoriteButton
+                  recipeId={recipe.id}
+                  initialIsFavorited={isFavorited}
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant={ButtonVariant.OUTLINE} size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    {canEdit && (
+                      <DropdownMenuItem asChild>
+                        <Link href={`/recipes/${recipe.slug}/edit`}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Recipe
+                        </Link>
                       </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    )}
+                    <DropdownMenuItem onClick={handleShareRecipe}>
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share Recipe
+                    </DropdownMenuItem>
+                    {canEdit && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setShowDeleteDialog(true)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Recipe
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </CardHeader>
         </Card>

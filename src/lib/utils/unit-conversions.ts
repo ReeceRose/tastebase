@@ -3,10 +3,10 @@
  * All data is stored in canonical imperial units and converted for display
  */
 
-import { MeasurementUnit, TemperatureUnit } from "@/lib/types";
+import { TemperatureUnit } from "@/lib/types";
 
 // Canonical storage units (what we store in the database)
-export const CANONICAL_UNITS = {
+const CANONICAL_UNITS = {
   volume: "fl oz",
   weight: "oz",
   temperature: "°F",
@@ -128,7 +128,7 @@ export const UNIT_CATEGORIES = {
 } as const;
 
 // Conversion factors to canonical imperial units
-export const CONVERSION_FACTORS = {
+const CONVERSION_FACTORS = {
   volume: {
     // Imperial to fl oz
     tsp: 1 / 6,
@@ -196,42 +196,10 @@ export const CONVERSION_FACTORS = {
   },
 } as const;
 
-// Display unit preferences based on user settings
-export const DISPLAY_UNITS = {
-  imperial: {
-    volume: {
-      tiny: "tsp", // < 0.5 fl oz
-      small: "tbsp", // 0.5 - 2 fl oz
-      medium: "fl oz", // 2 - 8 fl oz
-      large: "cup", // 8+ fl oz
-      huge: "qt", // 32+ fl oz
-    },
-    weight: {
-      small: "oz", // < 16 oz
-      large: "lb", // 16+ oz
-    },
-    temperature: "°F",
-  },
-  metric: {
-    volume: {
-      tiny: "ml", // < 15 ml
-      small: "ml", // 15 - 60 ml
-      medium: "ml", // 60 - 250 ml
-      large: "ml", // 250 - 1000 ml
-      huge: "l", // 1000+ ml
-    },
-    weight: {
-      small: "g", // < 500 g
-      large: "kg", // 500+ g
-    },
-    temperature: "°C",
-  },
-} as const;
-
 /**
  * Normalize unit string - handles case, spacing, punctuation variations
  */
-export function normalizeUnit(unit: string): string {
+function normalizeUnit(unit: string): string {
   if (!unit) return "";
 
   // Remove extra spaces, convert to lowercase, remove periods
@@ -427,7 +395,7 @@ export function convertToCanonical(
 /**
  * Convert temperature between Fahrenheit and Celsius
  */
-export function convertTemperature(
+function convertTemperature(
   temp: number,
   fromUnit: string,
   toUnit: string,
@@ -446,82 +414,6 @@ export function convertTemperature(
   }
 
   return temp;
-}
-
-/**
- * Get the best display unit based on amount and user preferences
- */
-export function getBestDisplayUnit(
-  amount: number,
-  canonicalUnit: string,
-  userSystem: MeasurementUnit,
-): { amount: number; unit: string } {
-  const category = getUnitCategory(canonicalUnit);
-
-  if (!category || category === "count" || category === "temperature") {
-    return { amount, unit: canonicalUnit };
-  }
-
-  const displayUnits =
-    DISPLAY_UNITS[userSystem][category as keyof typeof DISPLAY_UNITS.imperial];
-
-  if (category === "weight") {
-    const units = displayUnits as typeof DISPLAY_UNITS.imperial.weight;
-
-    if (userSystem === MeasurementUnit.IMPERIAL) {
-      // Convert from oz to best imperial unit
-      if (amount >= 16) {
-        return {
-          amount: Math.round((amount / 16) * 100) / 100,
-          unit: units.large,
-        };
-      }
-      return { amount, unit: units.small };
-    } else {
-      // Convert from oz to best metric unit
-      const grams = amount / 0.035274;
-      if (grams >= 500) {
-        return {
-          amount: Math.round((grams / 1000) * 100) / 100,
-          unit: units.large,
-        };
-      }
-      return { amount: Math.round(grams * 10) / 10, unit: units.small };
-    }
-  }
-
-  if (category === "volume") {
-    const units = displayUnits as typeof DISPLAY_UNITS.imperial.volume;
-
-    if (userSystem === MeasurementUnit.IMPERIAL) {
-      // Convert from fl oz to best imperial unit
-      if (amount >= 32)
-        return {
-          amount: Math.round((amount / 32) * 100) / 100,
-          unit: units.huge,
-        };
-      if (amount >= 8)
-        return {
-          amount: Math.round((amount / 8) * 100) / 100,
-          unit: units.large,
-        };
-      if (amount >= 2) return { amount, unit: units.medium };
-      if (amount >= 0.5) return { amount: amount * 2, unit: units.small };
-      return { amount: amount * 6, unit: units.tiny };
-    } else {
-      // Convert from fl oz to best metric unit
-      const ml = amount / 0.033814;
-      if (ml >= 1000) {
-        return {
-          amount: Math.round((ml / 1000) * 100) / 100,
-          unit: units.huge,
-        };
-      }
-      return { amount: Math.round(ml), unit: units.large };
-    }
-  }
-
-  return { amount, unit: canonicalUnit };
 }
 
 /**
@@ -585,28 +477,6 @@ export function formatAmount(amount: number): string {
   if (amount >= 100) return Math.round(amount).toString();
   if (amount >= 10) return (Math.round(amount * 10) / 10).toString();
   return (Math.round(amount * 100) / 100).toString().replace(/\.?0+$/, "");
-}
-
-/**
- * Complete ingredient formatting with user preferences
- */
-export function formatIngredientForDisplay(
-  amount: string,
-  unit: string,
-  userSystem: MeasurementUnit,
-): { amount: string; unit: string } {
-  const numericAmount = parseAmount(amount);
-  const canonical = convertToCanonical(numericAmount, unit);
-  const display = getBestDisplayUnit(
-    canonical.amount,
-    canonical.unit,
-    userSystem,
-  );
-
-  return {
-    amount: formatAmount(display.amount),
-    unit: display.unit,
-  };
 }
 
 /**

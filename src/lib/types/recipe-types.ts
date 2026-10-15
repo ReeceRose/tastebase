@@ -9,22 +9,13 @@ import type {
 import type { RecipeDifficulty, SortOrder } from "@/lib/types";
 
 export type Recipe = typeof recipes.$inferSelect;
-export type CreateRecipeInput = typeof recipes.$inferInsert;
-export type UpdateRecipeInput = Partial<CreateRecipeInput>;
-
 export type RecipeIngredient = typeof recipeIngredients.$inferSelect;
 export type RecipeInstruction = typeof recipeInstructions.$inferSelect;
 
 export type RecipeTag = typeof recipeTags.$inferSelect;
 
 export type RecipeImage = typeof recipeImages.$inferSelect;
-export type CreateRecipeImageInput = typeof recipeImages.$inferInsert;
-export type UpdateRecipeImageInput = Partial<CreateRecipeImageInput>;
-
 export type RecipeNote = typeof recipeNotes.$inferSelect;
-export type CreateRecipeNoteInput = typeof recipeNotes.$inferInsert;
-export type UpdateRecipeNoteInput = Partial<CreateRecipeNoteInput>;
-
 export interface RecipeWithRelations extends Recipe {
   ingredients: RecipeIngredient[];
   instructions: RecipeInstruction[];
@@ -46,7 +37,7 @@ export interface RecipeListItem extends Recipe {
   viewCount?: number;
 }
 
-export interface RecipeFormIngredient {
+interface RecipeFormIngredient {
   name: string;
   amount?: string;
   unit?: string;
@@ -55,7 +46,7 @@ export interface RecipeFormIngredient {
   isOptional: boolean;
 }
 
-export interface RecipeFormInstruction {
+interface RecipeFormInstruction {
   instruction: string;
   timeMinutes?: number;
   temperature?: string;

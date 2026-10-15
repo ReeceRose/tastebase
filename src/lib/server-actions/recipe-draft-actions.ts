@@ -69,32 +69,6 @@ export async function saveRecipeDraft(draftData: RecipeDraftInput) {
   }
 }
 
-export async function getRecipeDraft() {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    if (!session?.user?.id) {
-      return { success: false, error: "Authentication required" };
-    }
-
-    const draftKey = `recipe-draft-${session.user.id}`;
-
-    if (typeof localStorage !== "undefined") {
-      const draftData = localStorage.getItem(draftKey);
-      if (draftData) {
-        const draft = JSON.parse(draftData) as RecipeDraft;
-        return { success: true, data: draft };
-      }
-    }
-
-    return { success: true, data: null };
-  } catch (error) {
-    logError(logger, "Failed to get recipe draft", error);
-    return { success: false, error: "Failed to get draft" };
-  }
-}
-
 export async function clearRecipeDraft() {
   try {
     const session = await auth.api.getSession({
