@@ -1,6 +1,10 @@
 packages:
   - "."
 
+allowBuilds:
+  esbuild: false
+  tesseract.js: false
+
 ignoredBuiltDependencies:
   - better-sqlite3
   - esbuild
