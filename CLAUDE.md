@@ -12,7 +12,8 @@ The architecture is component-based with all components organized in `/src/compo
 
 ## Tech Stack
 
-- **Framework**: Next.js 15.5+ with App Router and Server Actions
+- **Framework**: Next.js 16 with App Router and Server Actions
+- **AI (optional)**: Vercel AI SDK 7, used only as a fallback for recipe import (`src/lib/ai/`). Import works without it (`src/lib/import/`)
 - **Authentication**: BetterAuth (email/password authentication)
 - **Database**: Local SQLite + Drizzle ORM with better-sqlite3
 - **UI**: Tailwind CSS + ShadCN/UI components
@@ -433,7 +434,7 @@ Follow this step-by-step process to add new features consistently:
 2. **Add Database Schema (if needed):**
    ```typescript
    // db/schema.<feature>.ts
-   export const <feature>Table = pgTable('<feature>', {
+   export const <feature>Table = sqliteTable('<feature>', {
      id: text('id').primaryKey(),
      // ... other fields
    });

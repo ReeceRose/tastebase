@@ -11,6 +11,7 @@ import {
 } from "@/db/schema.ai";
 import { requiresApiKey, testProviderConnection } from "@/lib/ai/providers";
 import { auth } from "@/lib/auth/auth";
+import { env } from "@/lib/config/env";
 import { safeDecrypt, safeEncrypt } from "@/lib/crypto/encryption";
 import { maskApiKey } from "@/lib/crypto/utils";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
@@ -19,7 +20,6 @@ import {
   AIProvider,
   type AIProviderSettings,
   type AIProviderSettingsInput,
-  DEFAULT_OLLAMA_HOST,
   ImageProcessingMethod,
   type ProviderConnectionResult,
 } from "@/lib/types/ai-types";
@@ -108,7 +108,7 @@ function normalizeInput(input: AIProviderSettingsInput) {
     modelName: data.modelName || null,
     ollamaHost:
       data.provider === AIProvider.OLLAMA
-        ? data.ollamaHost || DEFAULT_OLLAMA_HOST
+        ? data.ollamaHost || env.OLLAMA_BASE_URL
         : null,
   };
 }

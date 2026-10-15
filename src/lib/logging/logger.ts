@@ -44,6 +44,10 @@ const logger = pino({
   },
 });
 
+export function createUserLogger(userId: string) {
+  return logger.child({ userId });
+}
+
 export function createOperationLogger(
   operation: string,
   context?: Record<string, unknown>,

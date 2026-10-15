@@ -33,16 +33,6 @@ const logger = createUserLogger(userId);
 logger.info({ action: "profile_update" }, "User updated profile");
 ```
 
-### 3. Organization Logger
-For organization-specific operations:
-
-```typescript
-import { createOrganizationLogger } from "@/lib/logging/logger";
-
-const logger = createOrganizationLogger(organizationId);
-logger.info({ memberCount: 5 }, "Organization settings updated");
-```
-
 ## Error Logging
 
 Use the `logError` utility for consistent error handling:

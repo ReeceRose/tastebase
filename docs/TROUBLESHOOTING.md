@@ -61,7 +61,7 @@ chmod 755 ./
 
 **Problem**: Build or runtime errors related to Node.js features.
 
-**Solution**: Ensure you're using Node.js 18.17+ or 20.5+:
+**Solution**: Ensure you're using Node.js 22 or newer (24 recommended):
 
 ```bash
 node --version

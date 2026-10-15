@@ -2,12 +2,12 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { aiProviderConfigurations } from "@/db/schema.ai";
 import { resolveModelName } from "@/lib/ai/models";
+import { env } from "@/lib/config/env";
 import { safeDecrypt } from "@/lib/crypto/encryption";
 import { createOperationLogger } from "@/lib/logging/logger";
 import {
   AIProvider,
   type AIProviderConfig,
-  DEFAULT_OLLAMA_HOST,
   ImageProcessingMethod,
 } from "@/lib/types/ai-types";
 
@@ -45,7 +45,7 @@ export async function getActiveAIConfig(
     provider: row.provider,
     apiKey: await safeDecrypt(row.encryptedApiKey),
     modelName: resolvedModel,
-    ollamaHost: row.ollamaHost || DEFAULT_OLLAMA_HOST,
+    ollamaHost: row.ollamaHost || env.OLLAMA_BASE_URL,
     imageProcessingMethod:
       row.imageProcessingMethod ?? ImageProcessingMethod.AUTO,
   };

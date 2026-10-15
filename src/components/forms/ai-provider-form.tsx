@@ -80,9 +80,7 @@ export function AIProviderForm({
       ? (existing?.modelName ?? "")
       : "",
   );
-  const [ollamaHost, setOllamaHost] = useState(
-    existing?.ollamaHost ?? DEFAULT_OLLAMA_HOST,
-  );
+  const [ollamaHost, setOllamaHost] = useState(existing?.ollamaHost ?? "");
   const [imageMethod, setImageMethod] = useState(
     existing?.imageProcessingMethod === ImageProcessingMethod.OCR
       ? ImageProcessingMethod.OCR
@@ -182,7 +180,8 @@ export function AIProviderForm({
             placeholder={DEFAULT_OLLAMA_HOST}
           />
           <p className="text-sm text-muted-foreground">
-            Runs models on your own hardware. Nothing leaves your network.
+            Runs models on your own hardware. Leave blank to use the server's
+            OLLAMA_BASE_URL setting.
           </p>
         </div>
       ) : (

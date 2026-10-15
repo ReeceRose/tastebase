@@ -8,6 +8,54 @@
 
 AI stays only as an **optional fallback for recipe import**. Everything else that uses AI is removed: the discovery chat, cooking help, recipe modification chat, image analysis chat, image generation and saved conversations. Import first tries methods that need no AI: structured recipe data in the page (JSON-LD), a rule-based text parser and local OCR. It uses AI only when those fail and the user has set up a provider.
 
+## Status (2026-10-14)
+
+| # | Workstream | Status |
+|---|---|---|
+| 1 | Baseline | Done. Before changes: 116 tests passing, 2 type errors, lint clean |
+| 2 | Remove AI extras | Done, plus a repo-wide dead-code pass (knip + `tsc --noUnusedLocals`) |
+| 3 | Import without AI first | Done. Verified against BBC Good Food, Budget Bytes and NYT Cooking (JSON-LD, no AI) and OCR on a generated image |
+| 4 | Non-AI deps | Done (package upgrade already in the working tree, committed as-is) |
+| 5 | AI fallback on AI SDK 7 | Done. Not yet tried against real provider keys |
+| 6 | Model catalog | Done. Migration 0016 tested on a copy of a real database |
+| 7 | Issues, docs, tests | Done. 139 tests; all three TODOs resolved |
+| 8 | Verify and release | Open: Docker build, manual test with real keys, `v0.2.0` tag |
+
+Also fixed along the way:
+- AI settings sent decrypted API keys to the browser
+- OCR rewrote digits to letters ("1 cup" became "I cup") and ignored the user's AI settings
+- Favorites couldn't be added from the UI; the Recent page never had data
+- Debug `console.log` in recipe creation logged full recipes on the server
+
+### Still open
+
+- **Docker image not verified.** Docker wasn't available while this was done. Check that the standalone build includes `tesseract.js` and `ai-sdk-ollama`, and that OCR can download its language data on first use (cached in the temp directory). For fully offline installs, bake `eng.traineddata` into the image and set `langPath`.
+- **Real provider keys.** Run a link, text and photo import with each provider, and confirm the OCR-only setting never calls the AI.
+- **DNS rebinding.** The fetcher checks the resolved address before connecting, but `fetch` resolves again. Pinning the address needs an undici dispatcher with a custom `lookup`.
+- **Ollama host.** Any user on a shared instance can point their Ollama host at an internal address. Low risk for a household instance; an admin-only host setting would close it.
+- **Ingredient edge cases.** Lines like "2 cups minus 2 tablespoons flour" keep the extra amount in the name.
+
+## Next: paywalled and bot-blocked sites
+
+Two separate problems produce the same error today:
+- **Subscription paywalls** (you pay, but the server has no session).
+- **Bot blocking.** Allrecipes and Serious Eats return HTTP 402 to any non-browser request, whatever the user agent.
+
+The server can't fix either honestly. Both are solved by having the user's own browser, which is already signed in, send the page to Tastebase.
+
+Recommended order:
+
+1. **Import from saved HTML.** Add an "Upload page" option that accepts a saved `.html` file or pasted page source, and run it through `extractJsonLdRecipe` and the existing text pipeline (`importRecipeFromHtml(html, url)`). This is small, works today with any browser, and is also the fallback for everything below.
+2. **Bookmarklet: "Send to Tastebase".** It posts `document.documentElement.outerHTML` and `location.href` to an authenticated endpoint on the user's Tastebase server, then opens the review screen. It needs:
+   - a per-user import token, since cookies don't cross sites
+   - a CORS-limited `POST /api/import/html` route
+   - size limits
+
+   Some sites' Content Security Policy blocks bookmarklets, which is why step 3 exists.
+3. **Browser extension (optional).** Same endpoint, no CSP problems, and could work from a share menu on mobile Safari or Chrome.
+
+Not recommended: storing site cookies or passwords on the server. Sessions expire, it likely breaks the sites' terms, and it puts subscription credentials on a shared server.
+
 ## Goals
 
 - Import works fully without AI for most recipe URLs, and for tidy pasted text
@@ -136,14 +184,14 @@ The server fetches any URL a user types in. Block private, loopback and link-loc
 
 One file, `src/lib/ai/models.ts`, replaces `DEFAULT_MODELS`, `COMMON_MODELS`, the display-name map in `providers.ts` and the two hardcoded form lists. For each model it records the ID, display name, `vision`, `temperature` and `status` (`current` / `legacy`).
 
-Confirm the non-Anthropic IDs against the official provider pages at implementation time; they come from web searches and are not confirmed.
+Checked against the providers' model lists on 2026-10-14:
 
-| Provider | Default | Also offer |
+| Provider | Default | Also offered |
 |---|---|---|
-| Anthropic | `claude-haiku-5-5` (cheap, fast, vision; enough for parsing) | `claude-sonnet-5-5` |
-| OpenAI | cheapest current GPT model with vision (*verify*) | one stronger model (*verify*) |
-| Google | current Gemini Flash (*verify*) | current Flash-Lite (*verify*) |
-| Ollama | a current local model that supports structured output (*verify*) | free-text model ID entry |
+| Anthropic | `claude-haiku-5-5` | `claude-sonnet-5-5` |
+| OpenAI | `gpt-6-luna` | `gpt-6.1-sol` |
+| Google | `gemini-3.8-flash` | `gemini-3.5-flash-lite` |
+| Ollama | `qwen3` | `gemma3` (reads images), or any model ID |
 
 - Every provider also accepts a custom model ID.
 - When a config is loaded, a saved `model_name` that is `legacy` or unknown falls back to the provider default and logs a warning. A one-time migration rewrites retired IDs in `ai_provider_configurations`.

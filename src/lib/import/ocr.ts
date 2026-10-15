@@ -1,3 +1,5 @@
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import sharp from "sharp";
 import { createWorker, OEM, type Worker } from "tesseract.js";
 import { createOperationLogger } from "@/lib/logging/logger";
@@ -5,6 +7,10 @@ import { createOperationLogger } from "@/lib/logging/logger";
 const logger = createOperationLogger("recipe-ocr");
 
 const MIN_OCR_WIDTH = 1600;
+// Tesseract downloads its English language data on first use and caches it.
+// The default cache is the working directory, which isn't writable in the
+// Docker image, so keep it in the temp directory instead.
+const OCR_CACHE_DIR = join(tmpdir(), "tastebase-ocr");
 const MAX_OCR_WIDTH = 3000;
 
 export interface OcrResult {
@@ -16,7 +22,9 @@ let workerPromise: Promise<Worker> | null = null;
 
 function getWorker(): Promise<Worker> {
   if (!workerPromise) {
-    workerPromise = createWorker("eng", OEM.LSTM_ONLY).catch((error) => {
+    workerPromise = createWorker("eng", OEM.LSTM_ONLY, {
+      cachePath: OCR_CACHE_DIR,
+    }).catch((error) => {
       workerPromise = null;
       throw error;
     });

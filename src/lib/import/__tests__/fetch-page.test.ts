@@ -96,7 +96,7 @@ describe("fetchRecipePage", () => {
     );
 
     await expect(fetchRecipePage("https://example.com/paid")).rejects.toThrow(
-      "paywall",
+      "blocks automated imports",
     );
   });
 });

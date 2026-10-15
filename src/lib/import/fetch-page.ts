@@ -144,7 +144,7 @@ export async function fetchRecipePage(input: string): Promise<FetchedPage> {
       response.status === 403
     ) {
       throw new PageFetchError(
-        "The site refused the request. It may be behind a login or paywall; copy the recipe text and paste it instead.",
+        "This site blocks automated imports or needs a login or subscription. Open the recipe in your browser, copy the text and paste it instead.",
       );
     }
     if (!response.ok) {

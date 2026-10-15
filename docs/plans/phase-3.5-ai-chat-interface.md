@@ -1,5 +1,7 @@
 # Phase 3.5: AI Chat Interface & Conversational Recipe Assistant
 
+> **Superseded (2026-10-14):** The AI chat interface was removed in Phase 7. AI is now only an optional fallback for recipe import. See `docs/plans/phase-7-modernization.md`.
+
 **Duration:** 3-5 days  
 **Priority:** Medium-High (User Experience Enhancement)  
 **Prerequisites:** Phase 3 (AI Integration & Parsing) completed with extensibility improvements  
