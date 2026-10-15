@@ -1,5 +1,5 @@
 "use client";
 
-import ErrorPage from "./error";
+import ErrorPage from "@/app/error";
 
 export default ErrorPage;

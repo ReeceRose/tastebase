@@ -1,6 +1,4 @@
-import type { RecipeDisplayInfo } from "@/lib/types";
 import type {
-  CreateRecipeData,
   RecipeFormData,
   RecipeIngredient,
   RecipeInstruction,
@@ -195,37 +193,6 @@ export function generateRecipeSlug(title: string): string {
     .substring(0, 50);
 }
 
-export function extractRecipeKeywords(recipe: RecipeDisplayInfo): string[] {
-  const keywords = new Set<string>();
-
-  // Extract from title
-  if (recipe.title) {
-    recipe.title
-      .toLowerCase()
-      .split(/\s+/)
-      .forEach((word) => {
-        if (word.length > 2) keywords.add(word);
-      });
-  }
-
-  // Extract from description
-  if (recipe.description) {
-    recipe.description
-      .toLowerCase()
-      .split(/\s+/)
-      .forEach((word) => {
-        if (word.length > 3) keywords.add(word);
-      });
-  }
-
-  // Add cuisine
-  if (recipe.cuisine) {
-    keywords.add(recipe.cuisine.toLowerCase());
-  }
-
-  return Array.from(keywords).slice(0, 10);
-}
-
 export function validateRecipeFormData(data: RecipeFormData): {
   isValid: boolean;
   errors: string[];
@@ -328,39 +295,6 @@ export function transformFormDataToCreateData(formData: RecipeFormData) {
       groupName: instruction.groupName ?? undefined,
     })),
     tags: formData.tags,
-  };
-}
-
-export function transformCreateDataToFormData(
-  createData: CreateRecipeData,
-): RecipeFormData {
-  return {
-    title: createData.title,
-    description: createData.description,
-    servings: createData.servings,
-    prepTimeMinutes: createData.prepTimeMinutes,
-    cookTimeMinutes: createData.cookTimeMinutes,
-    difficulty: createData.difficulty,
-    cuisine: createData.cuisine,
-    sourceUrl: createData.sourceUrl,
-    sourceName: createData.sourceName,
-    isPublic: createData.isPublic ?? false,
-    ingredients: createData.ingredients.map((ingredient) => ({
-      name: ingredient.name,
-      amount: ingredient.amount ?? undefined,
-      unit: ingredient.unit ?? undefined,
-      notes: ingredient.notes ?? undefined,
-      groupName: ingredient.groupName ?? undefined,
-      isOptional: ingredient.isOptional,
-    })),
-    instructions: createData.instructions.map((instruction) => ({
-      instruction: instruction.instruction,
-      timeMinutes: instruction.timeMinutes ?? undefined,
-      temperature: instruction.temperature ?? undefined,
-      notes: instruction.notes ?? undefined,
-      groupName: instruction.groupName ?? undefined,
-    })),
-    tags: createData.tags,
   };
 }
 

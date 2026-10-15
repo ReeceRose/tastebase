@@ -25,7 +25,6 @@ interface SecurityMetrics {
   passwordLastChanged: string;
   accountCreated: string;
   activeSessions: number;
-  loginAttempts: number;
 }
 
 function parseUserAgent(userAgent: string): {
@@ -179,7 +178,6 @@ export async function getSecurityMetrics(): Promise<
       passwordLastChanged: user.updatedAt.toISOString(), // Approximate - password changes update user record
       accountCreated: user.createdAt.toISOString(),
       activeSessions: userSessions.length,
-      loginAttempts: 0, // TODO: Implement failed login tracking if needed
     };
 
     logger.info(

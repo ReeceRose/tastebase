@@ -9,7 +9,7 @@ This guide walks you through setting up Tastebase, a local-first personal recipe
 - Git
 
 **For development setup:**
-- Node.js 18.17+ or 20.5+
+- Node.js 22 or newer (24 recommended)
 - pnpm (recommended) or npm
 - Git
 

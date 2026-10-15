@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function RecipeCardSkeleton() {
+function RecipeCardSkeleton() {
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <div className="aspect-video bg-muted">

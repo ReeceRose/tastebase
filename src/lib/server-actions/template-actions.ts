@@ -12,8 +12,6 @@ import type {
   UserNoteTemplate,
 } from "@/lib/types/template-types";
 import {
-  type BulkTemplateActionInput,
-  bulkTemplateActionSchema,
   type CreateTemplateInput,
   createTemplateSchema,
   type TemplateFiltersInput,
@@ -500,117 +498,6 @@ export async function duplicateTemplate(
     return {
       success: false,
       error: "Failed to duplicate template",
-    };
-  }
-}
-
-// Bulk template operations
-export async function bulkTemplateAction(
-  input: BulkTemplateActionInput,
-): Promise<ActionResult<{ processed: number }>> {
-  const logger = createOperationLogger("bulk-template-action");
-
-  try {
-    // Validate input
-    const validatedInput = bulkTemplateActionSchema.parse(input);
-
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session?.user) {
-      return { success: false, error: "Authentication required" };
-    }
-
-    logger.info(
-      {
-        userId: session.user.id,
-        action: validatedInput.action,
-        templateIds: validatedInput.templateIds,
-      },
-      "Performing bulk template action",
-    );
-
-    // Verify all templates belong to the user
-    const userTemplates = await db
-      .select()
-      .from(userNoteTemplates)
-      .where(
-        and(
-          eq(userNoteTemplates.userId, session.user.id),
-          sql`${userNoteTemplates.id} IN ${validatedInput.templateIds}`,
-        ),
-      );
-
-    if (userTemplates.length !== validatedInput.templateIds.length) {
-      return {
-        success: false,
-        error: "Some templates not found or access denied",
-      };
-    }
-
-    let processed = 0;
-
-    switch (validatedInput.action) {
-      case "delete":
-        await db
-          .delete(userNoteTemplates)
-          .where(
-            and(
-              eq(userNoteTemplates.userId, session.user.id),
-              sql`${userNoteTemplates.id} IN ${validatedInput.templateIds}`,
-            ),
-          );
-        processed = validatedInput.templateIds.length;
-        break;
-
-      case "updateCategory":
-        if (!validatedInput.newCategory) {
-          return {
-            success: false,
-            error: "New category is required for category update",
-          };
-        }
-        await db
-          .update(userNoteTemplates)
-          .set({
-            category: validatedInput.newCategory,
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(userNoteTemplates.userId, session.user.id),
-              sql`${userNoteTemplates.id} IN ${validatedInput.templateIds}`,
-            ),
-          );
-        processed = validatedInput.templateIds.length;
-        break;
-
-      default:
-        return { success: false, error: "Unsupported bulk action" };
-    }
-
-    logger.info(
-      {
-        userId: session.user.id,
-        action: validatedInput.action,
-        processed,
-      },
-      "Bulk template action completed",
-    );
-
-    return {
-      success: true,
-      data: { processed },
-    };
-  } catch (error) {
-    logError(logger, "Failed to perform bulk template action", error, {
-      input,
-    });
-    return {
-      success: false,
-      error: "Failed to perform bulk operation",
     };
   }
 }

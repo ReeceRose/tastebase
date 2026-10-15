@@ -2,6 +2,9 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import * as schema from "@/db/schema";
+import { createOperationLogger, logError } from "@/lib/logging/logger";
+
+const logger = createOperationLogger("database");
 
 // For local SQLite files, we can use a simple file path
 const DATABASE_URL = process.env.DATABASE_URL || "tastebase.db";
@@ -16,9 +19,9 @@ export const db = drizzle(sqlite, { schema });
 if (process.env.NODE_ENV !== "test") {
   try {
     migrate(db, { migrationsFolder: "./src/db/migrations" });
-    console.log("✅ Database migrations applied successfully");
+    logger.info("Database migrations applied");
   } catch (error) {
-    console.error("❌ Database migration failed:", error);
+    logError(logger, "Database migration failed", error);
     // Don't exit - let the app handle the error
   }
 }

@@ -118,7 +118,7 @@ export function SettingsTabs({ user }: SettingsTabsProps) {
       <TabsContent value="ai" className="space-y-6">
         <Section
           title="AI Configuration"
-          description="Configure your AI providers and settings for recipe parsing and assistance"
+          description="Optional AI provider for cleaning up recipe imports"
         >
           <Suspense fallback={<SectionSkeleton />}>
             <AISettingsForm />

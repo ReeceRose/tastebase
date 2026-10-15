@@ -31,7 +31,7 @@ pnpm run dev
 ## Project Architecture
 
 ### Tech Stack Overview
-- **Framework**: Next.js 15.5+ with App Router
+- **Framework**: Next.js 16 with App Router
 - **Authentication**: BetterAuth (email/password)
 - **Database**: Local SQLite with better-sqlite3
 - **ORM**: Drizzle ORM with type-safe queries

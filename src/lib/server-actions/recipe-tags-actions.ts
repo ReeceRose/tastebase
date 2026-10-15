@@ -10,19 +10,6 @@ import { createOperationLogger, logError } from "@/lib/logging/logger";
 
 const logger = createOperationLogger("recipe-tags-actions");
 
-export interface TagWithUsage {
-  id: string;
-  name: string;
-  color: string | null;
-  category: string | null;
-  createdAt: Date;
-  recipeCount: number;
-}
-
-export interface TagsByCategory {
-  [category: string]: TagWithUsage[];
-}
-
 export async function getAllUserTags() {
   try {
     const session = await auth.api.getSession({
@@ -61,37 +48,6 @@ export async function getAllUserTags() {
   } catch (error) {
     logError(logger, "Failed to get user tags", error);
     return { success: false, error: "Failed to get user tags" };
-  }
-}
-
-export async function getTagsByCategory() {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    if (!session?.user?.id) {
-      return { success: false, error: "Authentication required" };
-    }
-
-    const tagsResult = await getAllUserTags();
-    if (!tagsResult.success || !tagsResult.data) {
-      return tagsResult;
-    }
-
-    const tagsByCategory: TagsByCategory = {};
-
-    tagsResult.data.forEach((tag) => {
-      const category = tag.category || "uncategorized";
-      if (!tagsByCategory[category]) {
-        tagsByCategory[category] = [];
-      }
-      tagsByCategory[category].push(tag);
-    });
-
-    return { success: true, data: tagsByCategory };
-  } catch (error) {
-    logError(logger, "Failed to get tags by category", error);
-    return { success: false, error: "Failed to get tags by category" };
   }
 }
 

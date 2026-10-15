@@ -6,6 +6,7 @@ A simple, local-first recipe management application designed for shared instance
 
 - **🏠 Local-First** - Everything stored on your computer, no cloud dependencies
 - **🍳 Recipe Management** - Create, edit, and organize your group's shared recipe collection
+- **📥 Recipe Import** - Import from recipe links, pasted text or photos. Works without AI; optionally add OpenAI, Anthropic, Google or a local Ollama model to clean up messy imports
 - **🔍 Search & Filter** - Find recipes quickly by name, ingredients, or tags
 - **📝 Personal Notes** - Add cooking tips, modifications, and personal notes
 - **🏷️ Organization** - Tag and categorize recipes your way
@@ -15,24 +16,26 @@ A simple, local-first recipe management application designed for shared instance
 - **👥 Sharing Controls** - Public recipes (shared with all users) or private recipes (personal only)
 - **💾 SQLite Database** - Reliable local storage with full data ownership
 - **🐳 Docker Deployment** - Run locally with one simple command
-- **⚡ Modern Stack** - Built with Next.js 15 and modern web technologies
+- **⚡ Modern Stack** - Built with Next.js 16 and modern web technologies
 - **🎨 Clean UI** - Beautiful, intuitive interface built with ShadCN/UI
 
 ## 🏗️ Tech Stack
 
-- **Framework**: Next.js 15+ with App Router and Server Actions
+- **Framework**: Next.js 16 with App Router and Server Actions
+- **AI (optional)**: Vercel AI SDK 7 for recipe import cleanup
 - **Authentication**: BetterAuth (simple email/password)
 - **Database**: SQLite + Drizzle ORM (local file storage)
 - **File Storage**: Local filesystem for recipe images
 - **UI**: Tailwind CSS + ShadCN/UI components
 - **Deployment**: Docker with persistent volumes
-- **Development**: TypeScript, Vitest, ESLint, Prettier
+- **Development**: TypeScript, Vitest, Biome
 
 ## 🛠️ Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ (recommend using pnpm)
+- Node.js 24 (22 or newer is required; the Docker image uses 24)
+- pnpm
 - Git
 
 ### Installation

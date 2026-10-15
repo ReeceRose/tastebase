@@ -1,5 +1,5 @@
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { users } from "./schema.base";
+import { users } from "@/db/schema.base";
 
 export const storageStats = sqliteTable("storage_stats", {
   id: text("id").primaryKey(),

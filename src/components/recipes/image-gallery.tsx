@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { AIGeneratedBadge } from "@/components/ui/recipe-image-generator";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { NavigationDirection } from "@/lib/types";
 import type { RecipeImage } from "@/lib/types/recipe-types";
@@ -19,14 +18,6 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
     null,
   );
   const [lightboxOpen, setLightboxOpen] = useState(false);
-
-  const isAIGenerated = (image: RecipeImage): boolean => {
-    if (!image.metadata || typeof image.metadata !== "object") {
-      return false;
-    }
-    const metadata = image.metadata as Record<string, unknown>;
-    return metadata.source === "ai-generated";
-  };
 
   if (images.length === 0) {
     return null;
@@ -72,11 +63,6 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
                 <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
               </div>
-              {isAIGenerated(heroImage) && (
-                <div className="absolute top-2 left-2">
-                  <AIGeneratedBadge className="text-xs" />
-                </div>
-              )}
             </div>
           </Card>
         )}
@@ -106,11 +92,6 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
                       <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                     </div>
-                    {isAIGenerated(image) && (
-                      <div className="absolute top-1 left-1">
-                        <AIGeneratedBadge className="text-xs scale-75" />
-                      </div>
-                    )}
                   </div>
                 </Card>
               );
@@ -166,12 +147,6 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
                   priority
                   unoptimized
                 />
-
-                {isAIGenerated(images[selectedImageIndex]) && (
-                  <div className="absolute top-4 left-4">
-                    <AIGeneratedBadge />
-                  </div>
-                )}
 
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
                   {selectedImageIndex + 1} / {images.length}

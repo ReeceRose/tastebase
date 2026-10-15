@@ -73,7 +73,7 @@ const COOKING_CONVERSIONS = {
  * Get enhanced cooking-friendly conversion
  * Prioritizes common cooking measurements over mathematical precision
  */
-export function getEnhancedConversion(
+function getEnhancedConversion(
   amount: string,
   unit: string,
   targetSystem: MeasurementUnit,
@@ -134,11 +134,6 @@ export function getEnhancedConversion(
 
   // Fall back to mathematical conversion
   const canonical = convertToCanonical(normalizedAmount, unit);
-  const _targetUnits =
-    targetSystem === MeasurementUnit.METRIC
-      ? { volume: "ml", weight: "g" }
-      : { volume: "fl oz", weight: "oz" };
-
   if (category === "volume") {
     const ml = canonical.amount / 0.033814; // fl oz to ml
     if (targetSystem === MeasurementUnit.METRIC) {
@@ -203,43 +198,4 @@ export function formatIngredientForDisplayEnhanced(
 
   // Try enhanced conversion first
   return getEnhancedConversion(amount, unit, userSystem);
-}
-
-/**
- * Get common cooking equivalents for educational purposes
- */
-export function getCookingEquivalents(
-  amount: string,
-  unit: string,
-): Array<{
-  amount: string;
-  unit: string;
-  system: "imperial" | "metric";
-  note?: string;
-}> {
-  const _equivalents = [];
-  const key = `${amount} ${unit}`;
-
-  // Add all relevant conversions for this measurement
-  const commonEquivalents = {
-    "1 tsp": [
-      { amount: "5", unit: "ml", system: "metric" as const },
-      { amount: "1/3", unit: "tbsp", system: "imperial" as const },
-    ],
-    "1 tbsp": [
-      { amount: "15", unit: "ml", system: "metric" as const },
-      { amount: "3", unit: "tsp", system: "imperial" as const },
-    ],
-    "1 cup": [
-      { amount: "250", unit: "ml", system: "metric" as const },
-      { amount: "16", unit: "tbsp", system: "imperial" as const },
-      { amount: "8", unit: "fl oz", system: "imperial" as const },
-    ],
-    "1 lb": [
-      { amount: "450", unit: "g", system: "metric" as const },
-      { amount: "16", unit: "oz", system: "imperial" as const },
-    ],
-  };
-
-  return commonEquivalents[key as keyof typeof commonEquivalents] || [];
 }

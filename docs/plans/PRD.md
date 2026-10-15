@@ -4,6 +4,8 @@
 **Date:** 2025-01-27  
 **Owner:** Reece Rose
 
+> **Status note (2026-10-14):** Tastebase is now multi-user: each user has public and private recipes on a shared instance (originally a non-goal). The AI chat and image generation features added in phases 3.2 and 3.5 were removed in Phase 7, so AI is again limited to recipe import, and import works without it.
+
 ---
 
 ## 1. Purpose

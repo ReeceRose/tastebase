@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     "pino-pretty",
     "better-sqlite3",
     "drizzle-orm",
+    "tesseract.js",
   ],
   images: {
     remotePatterns: [],

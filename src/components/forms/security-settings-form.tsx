@@ -57,7 +57,6 @@ interface SecurityMetrics {
   passwordLastChanged: string;
   accountCreated: string;
   activeSessions: number;
-  loginAttempts: number;
 }
 
 export function SecuritySettingsForm() {
@@ -324,18 +323,6 @@ export function SecuritySettingsForm() {
                   </div>
                   <p className="text-sm font-medium">
                     {securityMetrics.activeSessions} devices
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      Failed login attempts:
-                    </span>
-                  </div>
-                  <p className="text-sm font-medium text-chart-2">
-                    {securityMetrics.loginAttempts} (last 30 days)
                   </p>
                 </div>
               </div>

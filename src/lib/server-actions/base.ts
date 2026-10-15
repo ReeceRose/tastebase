@@ -3,8 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/auth";
-import { createOperationLogger, logError } from "@/lib/logging/logger";
-import type { AuthenticatedUser } from "./utils";
+import type { AuthenticatedUser } from "@/lib/server-actions/utils";
 
 export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
   const session = await auth.api.getSession({
@@ -16,23 +15,4 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
   }
 
   return session.user as AuthenticatedUser;
-}
-
-export async function withDatabaseTransaction<T>(
-  callback: () => Promise<T>,
-): Promise<T> {
-  const logger = createOperationLogger("database-transaction");
-
-  try {
-    logger.info("Starting database transaction");
-
-    const result = await callback();
-
-    logger.info("Database transaction completed successfully");
-    return result;
-  } catch (error) {
-    logger.error("Database transaction failed, rolling back");
-    logError(logger, "Transaction error", error);
-    throw error;
-  }
 }

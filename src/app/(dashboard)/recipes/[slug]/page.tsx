@@ -5,6 +5,8 @@ import { RecipeDetailView } from "@/components/cards/recipe-detail-view";
 import { RecipeDetailSkeleton } from "@/components/skeletons/recipe-detail-skeleton";
 import { auth } from "@/lib/auth/auth";
 import { getRecipeBySlug } from "@/lib/server-actions/recipe-actions";
+import { getRecipeFavoriteStatus } from "@/lib/server-actions/recipe-favorites-actions";
+import { trackRecipeView } from "@/lib/server-actions/recipe-tracking-actions";
 
 interface RecipeDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -27,8 +29,18 @@ async function RecipeDetailContent({
   }
 
   const canEdit = result.data.userId === currentUserId;
+  const [favoriteStatus] = await Promise.all([
+    getRecipeFavoriteStatus(result.data.id).catch(() => undefined),
+    trackRecipeView(result.data.id).catch(() => undefined),
+  ]);
 
-  return <RecipeDetailView recipe={result.data} canEdit={canEdit} />;
+  return (
+    <RecipeDetailView
+      recipe={result.data}
+      canEdit={canEdit}
+      isFavorited={favoriteStatus?.data?.isFavorited ?? false}
+    />
+  );
 }
 
 export default async function RecipeDetailPage({

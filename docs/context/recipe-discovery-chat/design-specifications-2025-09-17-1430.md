@@ -1,5 +1,7 @@
 # Recipe Discovery Chat Interface Redesign Specifications
 
+> **Superseded (2026-10-14):** The recipe discovery chat was removed in Phase 7. AI is now only an optional fallback for recipe import. See `docs/plans/phase-7-modernization.md`.
+
 **Project:** TasteBase Recipe Discovery Chat UX/UI Redesign
 **Date:** 2025-09-17
 **Version:** 1.0

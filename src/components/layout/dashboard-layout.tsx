@@ -2,7 +2,6 @@
 
 import {
   Book,
-  Bot,
   ChefHat,
   Clock,
   FileText,
@@ -66,13 +65,6 @@ const navigationItems: NavItem[] = [
     href: "/recipes/new",
     icon: Plus,
     description: "Create a new recipe",
-  },
-  {
-    title: "Recipe Discovery",
-    href: "/recipes/discover",
-    icon: Bot,
-    badge: "AI",
-    description: "Discover recipes with AI assistance",
   },
   {
     title: "Search",

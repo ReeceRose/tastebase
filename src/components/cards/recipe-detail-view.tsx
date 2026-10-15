@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ModernUnitReset } from "@/components/ui/modern-unit-display";
 import { RatingDisplay } from "@/components/ui/rating-display";
-import { RecipeImageGenerator } from "@/components/ui/recipe-image-generator";
+import { RecipeFavoriteButton } from "@/components/ui/recipe-favorite-button";
 import { VisibilityBadge } from "@/components/ui/visibility-badge";
 import { useIngredientUnitToggle } from "@/hooks/use-ingredient-unit-toggle";
 import { deleteRecipe } from "@/lib/server-actions/recipe-actions";
@@ -58,6 +58,7 @@ import type { RecipeWithRelations } from "@/lib/types/recipe-types";
 interface RecipeDetailViewProps {
   recipe: RecipeWithRelations;
   canEdit?: boolean;
+  isFavorited?: boolean;
   onRecipeChange?: () => void;
   className?: string;
   user?: {
@@ -70,6 +71,7 @@ interface RecipeDetailViewProps {
 export function RecipeDetailView({
   recipe,
   canEdit = true,
+  isFavorited = false,
   onRecipeChange,
   className,
   user,
@@ -248,75 +250,59 @@ export function RecipeDetailView({
                 )}
               </div>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant={ButtonVariant.OUTLINE} size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  {canEdit && (
-                    <DropdownMenuItem asChild>
-                      <Link href={`/recipes/${recipe.slug}/edit`}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Recipe
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={handleShareRecipe}>
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share Recipe
-                  </DropdownMenuItem>
-                  {canEdit && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => setShowDeleteDialog(true)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Recipe
+              <div className="flex gap-2">
+                <RecipeFavoriteButton
+                  recipeId={recipe.id}
+                  initialIsFavorited={isFavorited}
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant={ButtonVariant.OUTLINE} size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    {canEdit && (
+                      <DropdownMenuItem asChild>
+                        <Link href={`/recipes/${recipe.slug}/edit`}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Recipe
+                        </Link>
                       </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    )}
+                    <DropdownMenuItem onClick={handleShareRecipe}>
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share Recipe
+                    </DropdownMenuItem>
+                    {canEdit && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setShowDeleteDialog(true)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Recipe
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </CardHeader>
         </Card>
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                Images
-                {recipe.images && recipe.images.length > 0 && (
-                  <Badge variant={BadgeVariant.SECONDARY}>
-                    {recipe.images.length}
-                  </Badge>
-                )}
-              </CardTitle>
-              {canEdit && (
-                <RecipeImageGenerator
-                  recipeId={recipe.id}
-                  recipeData={{
-                    title: recipe.title,
-                    description: recipe.description || undefined,
-                    ingredients: recipe.ingredients || [],
-                    instructions: recipe.instructions || [],
-                    cuisineType: recipe.cuisine || undefined,
-                    tags: recipe.tags?.map((tag) => tag.name) || [],
-                    servings: recipe.servings || undefined,
-                    prepTime: recipe.prepTimeMinutes || undefined,
-                    cookTime: recipe.cookTimeMinutes || undefined,
-                  }}
-                  onImageGenerated={() => {
-                    router.refresh();
-                    onRecipeChange?.();
-                  }}
-                />
+            <CardTitle className="flex items-center gap-2">
+              Images
+              {recipe.images && recipe.images.length > 0 && (
+                <Badge variant={BadgeVariant.SECONDARY}>
+                  {recipe.images.length}
+                </Badge>
               )}
-            </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {recipe.images && recipe.images.length > 0 ? (
@@ -325,9 +311,7 @@ export function RecipeDetailView({
               <div className="text-center py-8 text-muted-foreground">
                 <p className="mb-4">No images yet</p>
                 {canEdit && (
-                  <p className="text-sm">
-                    Generate an AI image to get started!
-                  </p>
+                  <p className="text-sm">Edit the recipe to add images.</p>
                 )}
               </div>
             )}

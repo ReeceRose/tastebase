@@ -1,5 +1,7 @@
 # Phase 3.2: AI Recipe Image Generation
 
+> **Superseded (2026-10-14):** AI image generation was removed in Phase 7. AI is now only an optional fallback for recipe import. See `docs/plans/phase-7-modernization.md`.
+
 **Duration:** 4-5 hours
 **Priority:** Medium-High (AI Enhancement Feature)
 **Prerequisites:** Phase 3 (AI Integration) and Phase 3.1 (Dual Image Processing) completed
