@@ -3,466 +3,288 @@
 import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { headers } from "next/headers";
+import { z } from "zod";
 import { db } from "@/db";
 import {
-  aiModelPresets,
+  type AIProviderConfiguration,
   aiProviderConfigurations,
-  aiTaskHistory,
 } from "@/db/schema.ai";
-import {
-  getDefaultModelForProvider,
-  validateProvider,
-} from "@/lib/ai/providers";
+import { requiresApiKey, testProviderConnection } from "@/lib/ai/providers";
 import { auth } from "@/lib/auth/auth";
 import { safeDecrypt, safeEncrypt } from "@/lib/crypto/encryption";
+import { maskApiKey } from "@/lib/crypto/utils";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
+import type { ServerActionResult } from "@/lib/server-actions/utils";
 import {
   AIProvider,
-  type AIProviderConfig,
-  type AITask,
+  type AIProviderSettings,
+  type AIProviderSettingsInput,
+  DEFAULT_OLLAMA_HOST,
   ImageProcessingMethod,
-} from "@/lib/types";
+  type ProviderConnectionResult,
+} from "@/lib/types/ai-types";
 
 const logger = createOperationLogger("ai-config-actions");
 
-export async function getUserAIConfig(userId?: string) {
-  try {
-    const userHeaders = await headers();
-    const session = await auth.api.getSession({ headers: userHeaders });
+const settingsInputSchema = z.object({
+  provider: z.enum([
+    AIProvider.OPENAI,
+    AIProvider.ANTHROPIC,
+    AIProvider.GOOGLE,
+    AIProvider.OLLAMA,
+  ]),
+  apiKey: z.string().trim().max(500).nullable(),
+  modelName: z.string().trim().max(200).nullable(),
+  ollamaHost: z
+    .string()
+    .trim()
+    .url()
+    .refine((value) => /^https?:\/\//.test(value), "Use an http or https URL")
+    .nullable(),
+  imageProcessingMethod: z.enum([
+    ImageProcessingMethod.AUTO,
+    ImageProcessingMethod.AI_VISION,
+    ImageProcessingMethod.OCR,
+  ]),
+  isActive: z.boolean(),
+});
 
-    if (!session?.user) {
-      return { success: false, error: "Not authenticated" };
-    }
-
-    const targetUserId = userId || session.user.id;
-
-    // Only allow users to access their own config
-    if (targetUserId !== session.user.id) {
-      return { success: false, error: "Access denied" };
-    }
-
-    const configs = await db
-      .select()
-      .from(aiProviderConfigurations)
-      .where(eq(aiProviderConfigurations.userId, targetUserId))
-      .orderBy(desc(aiProviderConfigurations.createdAt));
-
-    // Decrypt API keys for the response
-    const decryptedConfigs = await Promise.all(
-      configs.map(async (config) => {
-        const decryptedApiKey = config.encryptedApiKey
-          ? await safeDecrypt(config.encryptedApiKey)
-          : null;
-
-        return {
-          ...config,
-          apiKey: decryptedApiKey,
-          encryptedApiKey: undefined, // Don't send encrypted data to client
-        };
-      }),
-    );
-
-    const activeConfig = decryptedConfigs.find((config) => config.isActive);
-
-    logger.info(
-      {
-        userId: targetUserId,
-        configCount: decryptedConfigs.length,
-        activeProvider: activeConfig?.provider,
-      },
-      "Retrieved user AI configuration",
-    );
-
-    return {
-      success: true,
-      data: {
-        configurations: decryptedConfigs,
-        activeConfiguration: activeConfig,
-      },
-    };
-  } catch (error) {
-    logError(logger, "Failed to get user AI config", error as Error);
-    return { success: false, error: "Failed to retrieve AI configuration" };
-  }
+async function requireUserId(): Promise<string | null> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  return session?.user?.id ?? null;
 }
 
-export async function saveAIProviderConfig(config: {
-  provider: AIProvider;
-  apiKey?: string;
-  modelName?: string;
-  maxTokens?: number;
-  temperature?: number;
-  taskSpecificTokenLimits?: string;
-  enabledTasks?: string;
-  ollamaHost?: string;
-  imageProcessingMethod?: ImageProcessingMethod;
-  isActive?: boolean;
-}) {
-  try {
-    const userHeaders = await headers();
-    const session = await auth.api.getSession({ headers: userHeaders });
-
-    if (!session?.user) {
-      return { success: false, error: "Not authenticated" };
-    }
-
-    // Encrypt API key if provided
-    const encryptedApiKey = config.apiKey
-      ? await safeEncrypt(config.apiKey)
-      : null;
-
-    // If this config is being set as active, deactivate others
-    if (config.isActive) {
-      await db
-        .update(aiProviderConfigurations)
-        .set({ isActive: false })
-        .where(eq(aiProviderConfigurations.userId, session.user.id));
-    }
-
-    const configData = {
-      id: nanoid(),
-      userId: session.user.id,
-      provider: config.provider,
-      encryptedApiKey,
-      modelName:
-        config.modelName || getDefaultModelForProvider(config.provider),
-      maxTokens: config.maxTokens || 4000,
-      taskSpecificTokenLimits: config.taskSpecificTokenLimits,
-      temperature: config.temperature || 0.7,
-      enabledTasks: config.enabledTasks || "recipe-parsing",
-      ollamaHost: config.ollamaHost || "http://localhost:11434",
-      imageProcessingMethod:
-        config.imageProcessingMethod || ImageProcessingMethod.AUTO,
-      isActive: config.isActive ?? true,
-    };
-
-    await db.insert(aiProviderConfigurations).values(configData);
-
-    logger.info(
-      {
-        userId: session.user.id,
-        provider: config.provider,
-        isActive: config.isActive,
-      },
-      "Saved AI provider configuration",
-    );
-
-    return { success: true, data: configData };
-  } catch (error) {
-    logError(logger, "Failed to save AI config", error as Error, {
-      provider: config.provider,
-    });
-    return { success: false, error: "Failed to save AI configuration" };
-  }
+async function toSettings(
+  row: AIProviderConfiguration,
+): Promise<AIProviderSettings> {
+  const apiKey = await safeDecrypt(row.encryptedApiKey);
+  return {
+    id: row.id,
+    provider: row.provider,
+    modelName: row.modelName,
+    ollamaHost: row.ollamaHost,
+    imageProcessingMethod:
+      row.imageProcessingMethod ?? ImageProcessingMethod.AUTO,
+    isActive: row.isActive,
+    hasApiKey: apiKey !== null,
+    maskedApiKey: apiKey ? maskApiKey(apiKey) : null,
+    createdAt: row.createdAt,
+  };
 }
 
-export async function updateAIProviderConfig(
+async function findOwnedConfig(
+  userId: string,
   configId: string,
-  updates: {
-    apiKey?: string;
-    modelName?: string;
-    maxTokens?: number;
-    temperature?: number;
-    taskSpecificTokenLimits?: string;
-    enabledTasks?: string;
-    ollamaHost?: string;
-    imageProcessingMethod?: ImageProcessingMethod;
-    isActive?: boolean;
-  },
-) {
+): Promise<AIProviderConfiguration | null> {
+  const [row] = await db
+    .select()
+    .from(aiProviderConfigurations)
+    .where(
+      and(
+        eq(aiProviderConfigurations.id, configId),
+        eq(aiProviderConfigurations.userId, userId),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+async function deactivateOtherConfigs(userId: string): Promise<void> {
+  await db
+    .update(aiProviderConfigurations)
+    .set({ isActive: false })
+    .where(eq(aiProviderConfigurations.userId, userId));
+}
+
+function normalizeInput(input: AIProviderSettingsInput) {
+  const parsed = settingsInputSchema.safeParse(input);
+  if (!parsed.success) {
+    return null;
+  }
+  const data = parsed.data;
+  return {
+    ...data,
+    apiKey: data.apiKey || null,
+    modelName: data.modelName || null,
+    ollamaHost:
+      data.provider === AIProvider.OLLAMA
+        ? data.ollamaHost || DEFAULT_OLLAMA_HOST
+        : null,
+  };
+}
+
+export async function getAISettingsAction(): Promise<
+  ServerActionResult<AIProviderSettings[]>
+> {
+  const userId = await requireUserId();
+  if (!userId) {
+    return { success: false, error: "Not authenticated" };
+  }
+
   try {
-    const userHeaders = await headers();
-    const session = await auth.api.getSession({ headers: userHeaders });
-
-    if (!session?.user) {
-      return { success: false, error: "Not authenticated" };
-    }
-
-    // Verify ownership
-    const existingConfig = await db
+    const rows = await db
       .select()
       .from(aiProviderConfigurations)
-      .where(
-        and(
-          eq(aiProviderConfigurations.id, configId),
-          eq(aiProviderConfigurations.userId, session.user.id),
-        ),
-      )
-      .limit(1);
+      .where(eq(aiProviderConfigurations.userId, userId))
+      .orderBy(desc(aiProviderConfigurations.createdAt));
+    return { success: true, data: await Promise.all(rows.map(toSettings)) };
+  } catch (error) {
+    logError(logger, "Failed to load AI settings", error, { userId });
+    return { success: false, error: "Failed to load AI settings" };
+  }
+}
 
-    if (existingConfig.length === 0) {
+export async function saveAIProviderSettingsAction(
+  configId: string | null,
+  input: AIProviderSettingsInput,
+): Promise<ServerActionResult<AIProviderSettings>> {
+  const userId = await requireUserId();
+  if (!userId) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  const data = normalizeInput(input);
+  if (!data) {
+    return {
+      success: false,
+      error: "Check the provider settings and try again",
+    };
+  }
+
+  try {
+    const existing = configId ? await findOwnedConfig(userId, configId) : null;
+    if (configId && !existing) {
       return { success: false, error: "Configuration not found" };
     }
 
-    // Encrypt API key if provided
-    const encryptedApiKey = updates.apiKey
-      ? await safeEncrypt(updates.apiKey)
-      : undefined;
+    const encryptedApiKey = data.apiKey
+      ? await safeEncrypt(data.apiKey)
+      : (existing?.encryptedApiKey ?? null);
 
-    // If this config is being set as active, deactivate others
-    if (updates.isActive) {
-      await db
-        .update(aiProviderConfigurations)
-        .set({ isActive: false })
-        .where(eq(aiProviderConfigurations.userId, session.user.id));
+    if (requiresApiKey(data.provider) && !encryptedApiKey) {
+      return { success: false, error: "An API key is required" };
     }
 
-    const updateData: typeof updates & { encryptedApiKey?: string | null } = {
-      ...updates,
+    if (data.isActive) {
+      await deactivateOtherConfigs(userId);
+    }
+
+    const values = {
+      provider: data.provider,
+      encryptedApiKey: requiresApiKey(data.provider) ? encryptedApiKey : null,
+      modelName: data.modelName,
+      ollamaHost: data.ollamaHost,
+      imageProcessingMethod: data.imageProcessingMethod,
+      isActive: data.isActive,
     };
 
-    if (encryptedApiKey !== undefined) {
-      updateData.encryptedApiKey = encryptedApiKey;
-      delete updateData.apiKey;
+    const id = existing?.id ?? nanoid();
+    if (existing) {
+      await db
+        .update(aiProviderConfigurations)
+        .set(values)
+        .where(eq(aiProviderConfigurations.id, id));
+    } else {
+      await db
+        .insert(aiProviderConfigurations)
+        .values({ id, userId, ...values });
     }
 
-    await db
-      .update(aiProviderConfigurations)
-      .set(updateData)
-      .where(eq(aiProviderConfigurations.id, configId));
+    const saved = await findOwnedConfig(userId, id);
+    if (!saved) {
+      return { success: false, error: "Failed to save AI settings" };
+    }
 
     logger.info(
-      {
-        userId: session.user.id,
-        configId,
-        updates: Object.keys(updates),
-      },
-      "Updated AI provider configuration",
+      { userId, provider: data.provider, isActive: data.isActive },
+      existing
+        ? "Updated AI provider settings"
+        : "Created AI provider settings",
     );
-
-    return { success: true };
+    return { success: true, data: await toSettings(saved) };
   } catch (error) {
-    logError(logger, "Failed to update AI config", error as Error, {
-      configId,
-    });
-    return { success: false, error: "Failed to update AI configuration" };
+    logError(logger, "Failed to save AI settings", error, { userId });
+    return { success: false, error: "Failed to save AI settings" };
   }
 }
 
-export async function deleteAIProviderConfig(configId: string) {
+export async function setActiveAIProviderAction(
+  configId: string | null,
+): Promise<ServerActionResult<null>> {
+  const userId = await requireUserId();
+  if (!userId) {
+    return { success: false, error: "Not authenticated" };
+  }
+
   try {
-    const userHeaders = await headers();
-    const session = await auth.api.getSession({ headers: userHeaders });
-
-    if (!session?.user) {
-      return { success: false, error: "Not authenticated" };
+    if (configId && !(await findOwnedConfig(userId, configId))) {
+      return { success: false, error: "Configuration not found" };
     }
+    await deactivateOtherConfigs(userId);
+    if (configId) {
+      await db
+        .update(aiProviderConfigurations)
+        .set({ isActive: true })
+        .where(eq(aiProviderConfigurations.id, configId));
+    }
+    return { success: true, data: null };
+  } catch (error) {
+    logError(logger, "Failed to change active AI provider", error, { userId });
+    return { success: false, error: "Failed to change the active provider" };
+  }
+}
 
+export async function deleteAIProviderSettingsAction(
+  configId: string,
+): Promise<ServerActionResult<null>> {
+  const userId = await requireUserId();
+  if (!userId) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  try {
     await db
       .delete(aiProviderConfigurations)
       .where(
         and(
           eq(aiProviderConfigurations.id, configId),
-          eq(aiProviderConfigurations.userId, session.user.id),
+          eq(aiProviderConfigurations.userId, userId),
         ),
       );
-
-    logger.info(
-      {
-        userId: session.user.id,
-        configId,
-      },
-      "Deleted AI provider configuration",
-    );
-
-    return { success: true };
+    return { success: true, data: null };
   } catch (error) {
-    logError(logger, "Failed to delete AI config", error as Error, {
-      configId,
-    });
-    return { success: false, error: "Failed to delete AI configuration" };
+    logError(logger, "Failed to delete AI settings", error, { userId });
+    return { success: false, error: "Failed to delete AI settings" };
   }
 }
 
-export async function validateAIProvider(config: AIProviderConfig) {
-  try {
-    const userHeaders = await headers();
-    const session = await auth.api.getSession({ headers: userHeaders });
-
-    if (!session?.user) {
-      return { success: false, error: "Not authenticated" };
-    }
-
-    const validation = await validateProvider(config);
-
-    logger.info(
-      {
-        userId: session.user.id,
-        provider: config.provider,
-        valid: validation.valid,
-      },
-      "Validated AI provider",
-    );
-
-    return { success: true, data: validation };
-  } catch (error) {
-    logError(logger, "Failed to validate AI provider", error as Error, {
-      provider: config.provider,
-    });
-    return { success: false, error: "Failed to validate AI provider" };
+export async function testAIProviderAction(
+  configId: string | null,
+  input: AIProviderSettingsInput,
+): Promise<ServerActionResult<ProviderConnectionResult>> {
+  const userId = await requireUserId();
+  if (!userId) {
+    return { success: false, error: "Not authenticated" };
   }
-}
 
-export async function recordAITaskUsage(data: {
-  taskType: AITask;
-  provider: AIProvider;
-  inputTokens?: number;
-  outputTokens?: number;
-  success: boolean;
-  errorMessage?: string;
-  responseTime?: number;
-}) {
-  try {
-    const userHeaders = await headers();
-    const session = await auth.api.getSession({ headers: userHeaders });
-
-    if (!session?.user) {
-      return { success: false, error: "Not authenticated" };
-    }
-
-    // Don't log task history for disabled provider
-    if (data.provider === AIProvider.NONE) {
-      return { success: true };
-    }
-
-    await db.insert(aiTaskHistory).values({
-      id: nanoid(),
-      userId: session.user.id,
-      taskType: data.taskType,
-      provider: data.provider,
-      inputTokens: data.inputTokens,
-      outputTokens: data.outputTokens,
-      success: data.success,
-      errorMessage: data.errorMessage,
-      responseTime: data.responseTime,
-    });
-
-    return { success: true };
-  } catch (error) {
-    logError(logger, "Failed to record AI task usage", error as Error);
-    return { success: false, error: "Failed to record usage" };
-  }
-}
-
-export async function getAIUsageStats(days = 30) {
-  try {
-    const userHeaders = await headers();
-    const session = await auth.api.getSession({ headers: userHeaders });
-
-    if (!session?.user) {
-      return { success: false, error: "Not authenticated" };
-    }
-
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    const stats = await db
-      .select()
-      .from(aiTaskHistory)
-      .where(eq(aiTaskHistory.userId, session.user.id))
-      .orderBy(desc(aiTaskHistory.createdAt))
-      .limit(1000);
-
-    const summary = {
-      totalTasks: stats.length,
-      successfulTasks: stats.filter((s) => s.success).length,
-      failedTasks: stats.filter((s) => !s.success).length,
-      totalInputTokens: stats.reduce((sum, s) => sum + (s.inputTokens || 0), 0),
-      totalOutputTokens: stats.reduce(
-        (sum, s) => sum + (s.outputTokens || 0),
-        0,
-      ),
-      averageResponseTime:
-        stats.reduce((sum, s) => sum + (s.responseTime || 0), 0) / stats.length,
-      tasksByType: stats.reduce(
-        (acc, s) => {
-          acc[s.taskType] = (acc[s.taskType] || 0) + 1;
-          return acc;
-        },
-        {} as Record<string, number>,
-      ),
-      tasksByProvider: stats.reduce(
-        (acc, s) => {
-          acc[s.provider] = (acc[s.provider] || 0) + 1;
-          return acc;
-        },
-        {} as Record<string, number>,
-      ),
+  const data = normalizeInput(input);
+  if (!data) {
+    return {
+      success: false,
+      error: "Check the provider settings and try again",
     };
-
-    return { success: true, data: { stats, summary } };
-  } catch (error) {
-    logError(logger, "Failed to get AI usage stats", error as Error);
-    return { success: false, error: "Failed to retrieve usage statistics" };
   }
-}
 
-export async function getAvailableModels() {
-  try {
-    const models = await db.select().from(aiModelPresets);
+  const existing = configId ? await findOwnedConfig(userId, configId) : null;
+  const apiKey =
+    data.apiKey ?? (await safeDecrypt(existing?.encryptedApiKey ?? null));
 
-    return { success: true, data: models };
-  } catch (error) {
-    logError(logger, "Failed to get available models", error as Error);
-    return { success: false, error: "Failed to retrieve available models" };
-  }
-}
-
-export async function checkAIEnabledAction(userId?: string) {
-  try {
-    const userHeaders = await headers();
-    const session = await auth.api.getSession({ headers: userHeaders });
-
-    if (!session?.user) {
-      return { success: false, error: "Not authenticated" };
-    }
-
-    const targetUserId = userId || session.user.id;
-
-    // Get the user's AI configuration
-    const result = await getUserAIConfig(targetUserId);
-
-    if (!result.success || !result.data) {
-      return { success: true, data: false };
-    }
-
-    const isEnabled =
-      result.data.activeConfiguration !== null &&
-      result.data.activeConfiguration !== undefined &&
-      result.data.activeConfiguration.provider !== AIProvider.NONE;
-
-    return { success: true, data: isEnabled };
-  } catch (error) {
-    logError(logger, "Failed to check AI enabled status", error as Error);
-    return { success: false, error: "Failed to check AI status" };
-  }
-}
-
-export async function getActiveAIConfigAction(userId?: string) {
-  try {
-    const userHeaders = await headers();
-    const session = await auth.api.getSession({ headers: userHeaders });
-
-    if (!session?.user) {
-      return { success: false, error: "Not authenticated" };
-    }
-
-    const targetUserId = userId || session.user.id;
-
-    // Get the user's AI configuration
-    const result = await getUserAIConfig(targetUserId);
-
-    if (!result.success || !result.data) {
-      return { success: true, data: null };
-    }
-
-    return { success: true, data: result.data.activeConfiguration };
-  } catch (error) {
-    logError(logger, "Failed to get active AI config", error as Error);
-    return { success: false, error: "Failed to get AI configuration" };
-  }
-}
-
-export async function getAIConfig() {
-  return getActiveAIConfigAction();
+  const result = await testProviderConnection({
+    provider: data.provider,
+    apiKey,
+    modelName: data.modelName,
+    ollamaHost: data.ollamaHost,
+    imageProcessingMethod: data.imageProcessingMethod,
+  });
+  return { success: true, data: result };
 }

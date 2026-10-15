@@ -1,14 +1,11 @@
-export * from "./ai-types";
-// Re-export specific enums for convenience
-export { ImageProcessingMethod } from "./ai-types";
-export * from "./image-processing-types";
-export * from "./recipe-types";
+export * from "@/lib/types/ai-types";
+export * from "@/lib/types/import-types";
+export * from "@/lib/types/recipe-types";
 
 import type { User } from "@/db/schema.base";
 import type { Recipe } from "@/db/schema.recipes";
 import type { RecipeDraft } from "@/lib/server-actions/recipe-draft-actions";
 import type { RecipeShareSettings } from "@/lib/sharing/recipe-sharing-types";
-import type { UserPreferences } from "@/lib/utils/user-preferences";
 
 // User preference enums
 export enum TemperatureUnit {
@@ -65,22 +62,6 @@ export enum SortOrder {
   DESC = "desc",
 }
 
-// Date range enums
-export enum DateRange {
-  ALL = "all",
-  WEEK = "week",
-  MONTH = "month",
-  QUARTER = "quarter",
-  YEAR = "year",
-}
-
-export enum TimeFilter {
-  ALL = "all",
-  DAY = "day",
-  WEEK = "week",
-  MONTH = "month",
-}
-
 // Message/feedback type enums
 export enum MessageType {
   SUCCESS = "success",
@@ -108,14 +89,6 @@ export enum RatingVariant {
   COMPACT = "compact",
   INLINE = "inline",
   DETAILED = "detailed",
-}
-
-// Action variant enum
-export enum ActionVariant {
-  DEFAULT = "default",
-  INLINE = "inline",
-  BUTTON = "button",
-  DROPDOWN = "dropdown",
 }
 
 // Form field types
@@ -149,39 +122,6 @@ export enum Theme {
   DARK = "dark",
   LIGHT = "light",
   SYSTEM = "system",
-}
-
-// Animation direction enum
-export enum AnimationDirection {
-  UP = "up",
-  DOWN = "down",
-  LEFT = "left",
-  RIGHT = "right",
-}
-
-// Sheet side enum
-export enum SheetSide {
-  TOP = "top",
-  RIGHT = "right",
-  BOTTOM = "bottom",
-  LEFT = "left",
-}
-
-// Image loading enum
-export enum ImageLoading {
-  LAZY = "lazy",
-  EAGER = "eager",
-}
-
-export enum ImagePlaceholder {
-  BLUR = "blur",
-  EMPTY = "empty",
-}
-
-// Carousel orientation
-export enum CarouselOrientation {
-  HORIZONTAL = "horizontal",
-  VERTICAL = "vertical",
 }
 
 // Page section spacing
@@ -218,20 +158,10 @@ export type UserPreferencesSubset = Pick<
   User,
   "preferredTemperatureUnit" | "preferredWeightUnit" | "preferredVolumeUnit"
 >;
-export type UserMeasurementPreferences = Pick<
-  User,
-  "preferredWeightUnit" | "preferredVolumeUnit"
->;
-export type UserTemperaturePreference = Pick<User, "preferredTemperatureUnit">;
 export type RecipeDisplayInfo = Pick<
   Recipe,
   "title" | "description" | "cuisine"
 >;
-export type UserPreferencesDisplay = Pick<
-  UserPreferences,
-  "preferredWeightUnit" | "preferredVolumeUnit"
->;
-
 // Common Omit patterns
 export type RecipeDraftInput = Omit<RecipeDraft, "id" | "lastSaved">;
 export type ShareSettingsInput = Omit<

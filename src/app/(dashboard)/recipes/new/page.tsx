@@ -29,7 +29,7 @@ export default async function NewRecipePage() {
         </div>
 
         <Suspense fallback={<RecipeFormSkeleton />}>
-          <RecipeCreationWorkflow userId={session.user.id} />
+          <RecipeCreationWorkflow />
         </Suspense>
       </div>
     </div>

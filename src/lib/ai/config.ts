@@ -1,287 +1,52 @@
+import { and, eq } from "drizzle-orm";
+import { db } from "@/db";
+import { aiProviderConfigurations } from "@/db/schema.ai";
+import { resolveModelName } from "@/lib/ai/models";
+import { safeDecrypt } from "@/lib/crypto/encryption";
 import { createOperationLogger } from "@/lib/logging/logger";
-import { getUserAIConfig } from "@/lib/server-actions/ai-config-actions";
 import {
   AIProvider,
   type AIProviderConfig,
-  type AIProviderValue,
-  type AITask,
-  DEFAULT_MODELS,
-  DEFAULT_TASK_TOKEN_LIMITS,
-  type TaskSpecificTokenLimits,
-} from "@/lib/types";
+  DEFAULT_OLLAMA_HOST,
+  ImageProcessingMethod,
+} from "@/lib/types/ai-types";
 
 const logger = createOperationLogger("ai-config");
 
-const configCache = new Map<
-  string,
-  {
-    config: AIProviderConfig | null;
-    timestamp: number;
-  }
->();
-
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-export async function getActiveConfig(
+// Server-only: returns the user's active AI configuration with the API key
+// decrypted. Never send the result of this function to the client.
+export async function getActiveAIConfig(
   userId: string,
-  taskType?: AITask,
 ): Promise<AIProviderConfig | null> {
-  // Check cache first
-  const cached = configCache.get(userId);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.config;
-  }
+  const [row] = await db
+    .select()
+    .from(aiProviderConfigurations)
+    .where(
+      and(
+        eq(aiProviderConfigurations.userId, userId),
+        eq(aiProviderConfigurations.isActive, true),
+      ),
+    )
+    .limit(1);
 
-  try {
-    const result = await getUserAIConfig(userId);
-
-    if (!result.success || !result.data) {
-      logger.warn({ userId }, "No AI configuration found for user");
-      configCache.set(userId, {
-        config: null,
-        timestamp: Date.now(),
-      });
-      return null;
-    }
-
-    const activeConfig = result.data.activeConfiguration;
-
-    if (!activeConfig) {
-      logger.warn({ userId }, "No active AI configuration found for user");
-      configCache.set(userId, {
-        config: null,
-        timestamp: Date.now(),
-      });
-      return null;
-    }
-
-    // Parse task-specific token limits
-    let taskSpecificLimits: TaskSpecificTokenLimits = {};
-    if (activeConfig.taskSpecificTokenLimits) {
-      try {
-        taskSpecificLimits = JSON.parse(activeConfig.taskSpecificTokenLimits);
-      } catch (error) {
-        logger.warn(
-          { userId, error },
-          "Failed to parse task-specific token limits",
-        );
-      }
-    }
-
-    // Determine max tokens based on task type
-    let maxTokens = activeConfig.maxTokens || 4000;
-    if (taskType && taskSpecificLimits[taskType] !== undefined) {
-      maxTokens = taskSpecificLimits[taskType];
-    } else if (taskType && DEFAULT_TASK_TOKEN_LIMITS[taskType] !== undefined) {
-      maxTokens = DEFAULT_TASK_TOKEN_LIMITS[taskType];
-    }
-
-    const config: AIProviderConfig = {
-      provider: activeConfig.provider as AIProviderValue,
-      apiKey: activeConfig.apiKey || undefined,
-      modelName: activeConfig.modelName || undefined,
-      maxTokens,
-      taskSpecificTokenLimits:
-        activeConfig.taskSpecificTokenLimits || undefined,
-      temperature: activeConfig.temperature || 0.7,
-      enabledTasks: activeConfig.enabledTasks || "recipe-parsing",
-      ollamaHost: activeConfig.ollamaHost || "http://localhost:11434",
-      isActive: activeConfig.isActive,
-    };
-
-    // Cache the result
-    configCache.set(userId, {
-      config,
-      timestamp: Date.now(),
-    });
-
-    logger.info(
-      {
-        userId,
-        provider: config.provider,
-        hasApiKey: !!config.apiKey,
-      },
-      "Retrieved active AI configuration",
-    );
-
-    return config;
-  } catch (error) {
-    logger.error({ userId, error }, "Failed to get active AI configuration");
+  if (!row || row.provider === AIProvider.NONE) {
     return null;
   }
-}
 
-export function invalidateCache(userId: string): void {
-  configCache.delete(userId);
-  logger.info({ userId }, "Invalidated AI config cache");
-}
-
-export function clearCache(): void {
-  configCache.clear();
-  logger.info("Cleared all AI config cache");
-}
-
-export async function isAIEnabled(userId: string): Promise<boolean> {
-  const config = await getActiveConfig(userId);
-  return config !== null && config.provider !== AIProvider.NONE;
-}
-
-export async function supportsTask(
-  userId: string,
-  taskType: string,
-): Promise<boolean> {
-  const config = await getActiveConfig(userId);
-
-  if (!config || config.provider === AIProvider.NONE) {
-    return false;
-  }
-
-  // Check if the task is enabled for this user
-  return (
-    config.enabledTasks?.split(",").includes(taskType as AIProvider) ?? false
-  );
-}
-
-export function getDefaultConfig(): AIProviderConfig {
-  return {
-    provider: AIProvider.NONE,
-    maxTokens: 4000,
-    temperature: 0.7,
-    enabledTasks: "recipe-parsing",
-    ollamaHost: "http://localhost:11434",
-    isActive: false,
-  };
-}
-
-export function getTaskSpecificTokenLimit(
-  config: AIProviderConfig | null,
-  taskType: AITask,
-): number {
-  if (!config) {
-    return DEFAULT_TASK_TOKEN_LIMITS[taskType] || 4000;
-  }
-
-  // Parse task-specific token limits
-  let taskSpecificLimits: TaskSpecificTokenLimits = {};
-  if (config.taskSpecificTokenLimits) {
-    try {
-      taskSpecificLimits = JSON.parse(config.taskSpecificTokenLimits);
-    } catch {
-      // Fall back to defaults on parse error
-    }
-  }
-
-  // Return in order of preference: user-specific > task default > global default
-  return (
-    taskSpecificLimits[taskType] ||
-    DEFAULT_TASK_TOKEN_LIMITS[taskType] ||
-    config.maxTokens ||
-    4000
-  );
-}
-
-export function validateConfig(config: Partial<AIProviderConfig>): {
-  isValid: boolean;
-  errors: string[];
-} {
-  const errors: string[] = [];
-
-  if (!config.provider) {
-    errors.push("Provider is required");
-  }
-
-  if (
-    config.provider &&
-    config.provider !== AIProvider.NONE &&
-    config.provider !== AIProvider.OLLAMA &&
-    !config.apiKey
-  ) {
-    errors.push(`API key is required for ${config.provider}`);
-  }
-
-  if (
-    config.maxTokens &&
-    (config.maxTokens < 100 || config.maxTokens > 200000)
-  ) {
-    errors.push("Max tokens must be between 100 and 200,000");
-  }
-
-  if (
-    config.temperature &&
-    (config.temperature < 0 || config.temperature > 2)
-  ) {
-    errors.push("Temperature must be between 0 and 2");
-  }
-
-  if (config.ollamaHost && config.provider === AIProvider.OLLAMA) {
-    try {
-      new URL(config.ollamaHost);
-    } catch {
-      errors.push("Invalid Ollama host URL");
-    }
+  const resolvedModel = resolveModelName(row.provider, row.modelName);
+  if (row.modelName && resolvedModel !== row.modelName) {
+    logger.warn(
+      { userId, savedModel: row.modelName, resolvedModel },
+      "Saved AI model is retired; using the provider default",
+    );
   }
 
   return {
-    isValid: errors.length === 0,
-    errors,
+    provider: row.provider,
+    apiKey: await safeDecrypt(row.encryptedApiKey),
+    modelName: resolvedModel,
+    ollamaHost: row.ollamaHost || DEFAULT_OLLAMA_HOST,
+    imageProcessingMethod:
+      row.imageProcessingMethod ?? ImageProcessingMethod.AUTO,
   };
-}
-
-export function getProviderRequirements(provider: AIProviderValue): {
-  requiresApiKey: boolean;
-  requiresOllamaHost: boolean;
-  defaultModel: string;
-  supportedTasks: string[];
-} {
-  const defaultTasks = [
-    "recipe-parsing",
-    "chat-conversation",
-    "recipe-discovery",
-    "cooking-assistance",
-  ];
-
-  switch (provider) {
-    case AIProvider.OPENAI:
-      return {
-        requiresApiKey: true,
-        requiresOllamaHost: false,
-        defaultModel: DEFAULT_MODELS[AIProvider.OPENAI],
-        supportedTasks: defaultTasks,
-      };
-    case AIProvider.ANTHROPIC:
-      return {
-        requiresApiKey: true,
-        requiresOllamaHost: false,
-        defaultModel: DEFAULT_MODELS[AIProvider.ANTHROPIC],
-        supportedTasks: defaultTasks,
-      };
-    case AIProvider.GOOGLE:
-      return {
-        requiresApiKey: true,
-        requiresOllamaHost: false,
-        defaultModel: DEFAULT_MODELS[AIProvider.GOOGLE],
-        supportedTasks: defaultTasks,
-      };
-    case AIProvider.OLLAMA:
-      return {
-        requiresApiKey: false,
-        requiresOllamaHost: true,
-        defaultModel: DEFAULT_MODELS[AIProvider.OLLAMA],
-        supportedTasks: defaultTasks,
-      };
-    case AIProvider.NONE:
-      return {
-        requiresApiKey: false,
-        requiresOllamaHost: false,
-        defaultModel: DEFAULT_MODELS[AIProvider.NONE],
-        supportedTasks: [],
-      };
-    default:
-      return {
-        requiresApiKey: false,
-        requiresOllamaHost: false,
-        defaultModel: "",
-        supportedTasks: [],
-      };
-  }
 }

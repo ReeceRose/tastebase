@@ -2,235 +2,176 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import type { LanguageModel } from "ai";
-import { createOllama } from "ollama-ai-provider";
-import { env } from "@/lib/config/env";
+import { createOllama } from "ai-sdk-ollama";
+import { resolveModelName } from "@/lib/ai/models";
+import { createOperationLogger, logError } from "@/lib/logging/logger";
 import {
   AIProvider,
   type AIProviderConfig,
   type AIProviderValue,
-  DEFAULT_MODELS,
-  IMAGE_GENERATION_MODELS,
+  DEFAULT_OLLAMA_HOST,
   PROVIDER_DISPLAY_NAMES,
-} from "@/lib/types";
+  type ProviderConnectionResult,
+} from "@/lib/types/ai-types";
 
-export interface ProviderError {
-  provider: AIProviderValue;
-  error: string;
-  isApiKeyError?: boolean;
-  isModelError?: boolean;
-  isConnectionError?: boolean;
-}
+const logger = createOperationLogger("ai-providers");
 
-export function getProvider(config: AIProviderConfig): LanguageModel {
-  const { provider, apiKey, modelName, ollamaHost } = config;
-
-  switch (provider) {
-    case AIProvider.OPENAI: {
-      if (!apiKey) {
-        throw new Error("OpenAI API key is required");
-      }
-      const model = modelName || DEFAULT_MODELS[AIProvider.OPENAI];
-      const client = createOpenAI({ apiKey });
-      return client(model);
-    }
-
-    case AIProvider.ANTHROPIC: {
-      if (!apiKey) {
-        throw new Error("Anthropic API key is required");
-      }
-      const model = modelName || DEFAULT_MODELS[AIProvider.ANTHROPIC];
-      const client = createAnthropic({ apiKey });
-      return client(model);
-    }
-
-    case AIProvider.GOOGLE: {
-      if (!apiKey) {
-        throw new Error("Google API key is required");
-      }
-      const model = modelName || DEFAULT_MODELS[AIProvider.GOOGLE];
-      const client = createGoogleGenerativeAI({ apiKey });
-      return client(model);
-    }
-
-    case AIProvider.OLLAMA: {
-      const host = ollamaHost || env.OLLAMA_BASE_URL;
-      const model = modelName || DEFAULT_MODELS[AIProvider.OLLAMA];
-      const client = createOllama({ baseURL: host });
-      return client(model) as unknown as LanguageModel;
-    }
-
-    case AIProvider.NONE:
-      throw new Error("AI provider is disabled");
-
-    default:
-      throw new Error(`Unsupported AI provider: ${provider}`);
-  }
-}
-
-export async function validateProvider(config: AIProviderConfig): Promise<{
-  valid: boolean;
-  error?: ProviderError;
-}> {
-  try {
-    const provider = getProvider(config);
-
-    // Test with a simple prompt to validate the provider
-    const testPrompt =
-      "Respond with just the word 'test' to confirm the connection.";
-
-    const { generateText } = await import("ai");
-
-    const result = await generateText({
-      model: provider,
-      prompt: testPrompt,
-      temperature: 0,
-    });
-
-    if (result.text.toLowerCase().includes("test")) {
-      return { valid: true };
-    }
-
-    return {
-      valid: false,
-      error: {
-        provider: config.provider,
-        error: "Provider test failed - unexpected response",
-        isConnectionError: true,
-      },
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-
-    let isApiKeyError = false;
-    let isModelError = false;
-    let isConnectionError = false;
-
-    if (
-      errorMessage.toLowerCase().includes("api key") ||
-      errorMessage.toLowerCase().includes("unauthorized") ||
-      errorMessage.toLowerCase().includes("authentication")
-    ) {
-      isApiKeyError = true;
-    } else if (
-      errorMessage.toLowerCase().includes("model") ||
-      errorMessage.toLowerCase().includes("not found")
-    ) {
-      isModelError = true;
-    } else if (
-      errorMessage.toLowerCase().includes("connect") ||
-      errorMessage.toLowerCase().includes("network") ||
-      errorMessage.toLowerCase().includes("timeout")
-    ) {
-      isConnectionError = true;
-    }
-
-    return {
-      valid: false,
-      error: {
-        provider: config.provider,
-        error: errorMessage,
-        isApiKeyError,
-        isModelError,
-        isConnectionError,
-      },
-    };
-  }
-}
-
-export function getDefaultModelForProvider(provider: AIProviderValue): string {
-  return DEFAULT_MODELS[provider] || "";
-}
-
-export function getProviderDisplayName(provider: AIProviderValue): string {
-  return PROVIDER_DISPLAY_NAMES[provider] || provider;
-}
-
-export function getModelDisplayName(
-  provider: AIProviderValue,
-  modelName: string,
-): string {
-  const modelDisplayNames: Record<AIProviderValue, Record<string, string>> = {
-    [AIProvider.OPENAI]: {
-      "gpt-5": "GPT-5",
-      "gpt-5-mini": "GPT-5 Mini",
-      "gpt-5-nano": "GPT-5 Nano",
-      "gpt-5-chat-latest": "GPT-5 Chat (Latest)",
-      "gpt-4o": "GPT-4o",
-      "gpt-4o-mini": "GPT-4o Mini",
-      "gpt-4": "GPT-4",
-      "gpt-4-turbo": "GPT-4 Turbo",
-      "dall-e-3": "DALL-E 3",
-    },
-    [AIProvider.ANTHROPIC]: {
-      "claude-opus-4-latest": "Claude Opus 4 (Latest)",
-      "claude-sonnet-4-latest": "Claude Sonnet 4 (Latest)",
-      "claude-3-7-sonnet-latest": "Claude 3.7 Sonnet (Latest)",
-      "claude-3-5-sonnet-latest": "Claude 3.5 Sonnet (Latest)",
-      "claude-3-5-haiku-latest": "Claude 3.5 Haiku (Latest)",
-      "claude-3-5-sonnet-20241022": "Claude 3.5 Sonnet",
-      "claude-3-opus-20240229": "Claude 3 Opus",
-      "claude-3-haiku-20240307": "Claude 3 Haiku",
-    },
-    [AIProvider.GOOGLE]: {
-      "gemini-2.5-pro": "Gemini 2.5 Pro",
-      "gemini-2.5-flash": "Gemini 2.5 Flash",
-      "gemini-2.5-flash-lite": "Gemini 2.5 Flash Lite",
-      "gemini-2.0-flash-exp": "Gemini 2.0 Flash (Experimental)",
-      "imagen-3.0-generate-001": "Imagen 3.0",
-      "gemini-2.5-flash-image-preview": "Gemini 2.5 Flash (Image Generation)",
-      "gemini-1.5-pro": "Gemini 1.5 Pro",
-      "gemini-1.5-flash": "Gemini 1.5 Flash",
-    },
-    [AIProvider.OLLAMA]: {
-      "llama3.2": "Llama 3.2",
-      "llama3.1": "Llama 3.1",
-      "qwen2.5": "Qwen 2.5",
-      codegemma: "CodeGemma",
-    },
-    [AIProvider.NONE]: {},
-  };
-
-  return modelDisplayNames[provider]?.[modelName] || modelName;
-}
+const CONNECTION_TIMEOUT_MS = 10000;
 
 export function requiresApiKey(provider: AIProviderValue): boolean {
   return provider !== AIProvider.OLLAMA && provider !== AIProvider.NONE;
 }
 
-export function supportsTask(provider: AIProviderValue): boolean {
-  if (provider === AIProvider.NONE) return false;
-
-  // All providers support all tasks for now
-  // In the future, we might have provider-specific task compatibility
-  return true;
+export function getProviderDisplayName(provider: AIProviderValue): string {
+  return PROVIDER_DISPLAY_NAMES[provider];
 }
 
-export function supportsImageGeneration(provider: AIProviderValue): boolean {
-  return provider === AIProvider.GOOGLE || provider === AIProvider.OPENAI;
-}
+export function getProvider(config: AIProviderConfig): LanguageModel {
+  const modelName = resolveModelName(config.provider, config.modelName);
 
-export function getImageGenerationModel(
-  provider: AIProviderValue,
-): string | null {
-  return (
-    IMAGE_GENERATION_MODELS[provider as keyof typeof IMAGE_GENERATION_MODELS] ||
-    null
-  );
-}
-
-export function getAvailableImageProviders(userSettings: {
-  hasGoogleKey?: boolean;
-  hasOpenaiKey?: boolean;
-}): AIProviderValue[] {
-  const providers: AIProviderValue[] = [];
-
-  if (userSettings.hasGoogleKey && supportsImageGeneration(AIProvider.GOOGLE)) {
-    providers.push(AIProvider.GOOGLE);
+  if (!modelName || config.provider === AIProvider.NONE) {
+    throw new Error("No AI provider configured");
   }
 
-  if (userSettings.hasOpenaiKey && supportsImageGeneration(AIProvider.OPENAI)) {
-    providers.push(AIProvider.OPENAI);
+  if (requiresApiKey(config.provider) && !config.apiKey) {
+    throw new Error(
+      `${getProviderDisplayName(config.provider)} needs an API key`,
+    );
   }
 
-  return providers;
+  const apiKey = config.apiKey ?? "";
+
+  switch (config.provider) {
+    case AIProvider.OPENAI:
+      return createOpenAI({ apiKey })(modelName);
+    case AIProvider.ANTHROPIC:
+      return createAnthropic({ apiKey })(modelName);
+    case AIProvider.GOOGLE:
+      return createGoogleGenerativeAI({ apiKey })(modelName);
+    case AIProvider.OLLAMA:
+      return createOllama({
+        baseURL: config.ollamaHost || DEFAULT_OLLAMA_HOST,
+      })(modelName);
+    default:
+      throw new Error("No AI provider configured");
+  }
+}
+
+interface ModelListRequest {
+  url: string;
+  headers: Record<string, string>;
+  readIds: (body: ModelListBody) => string[];
+}
+
+interface ModelListBody {
+  data?: Array<{ id?: string }>;
+  models?: Array<{ name?: string; model?: string }>;
+}
+
+function getModelListRequest(config: AIProviderConfig): ModelListRequest {
+  const apiKey = config.apiKey ?? "";
+
+  switch (config.provider) {
+    case AIProvider.OPENAI:
+      return {
+        url: "https://api.openai.com/v1/models",
+        headers: { Authorization: `Bearer ${apiKey}` },
+        readIds: (body) =>
+          (body.data ?? []).flatMap((m) => (m.id ? [m.id] : [])),
+      };
+    case AIProvider.ANTHROPIC:
+      return {
+        url: "https://api.anthropic.com/v1/models?limit=100",
+        headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+        readIds: (body) =>
+          (body.data ?? []).flatMap((m) => (m.id ? [m.id] : [])),
+      };
+    case AIProvider.GOOGLE:
+      return {
+        url: "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
+        headers: { "x-goog-api-key": apiKey },
+        readIds: (body) =>
+          (body.models ?? []).flatMap((m) =>
+            m.name ? [m.name.replace(/^models\//, "")] : [],
+          ),
+      };
+    case AIProvider.OLLAMA:
+      return {
+        url: `${(config.ollamaHost || DEFAULT_OLLAMA_HOST).replace(/\/$/, "")}/api/tags`,
+        headers: {},
+        readIds: (body) =>
+          (body.models ?? []).flatMap((m) => {
+            const name = m.model ?? m.name;
+            return name ? [name.replace(/:latest$/, "")] : [];
+          }),
+      };
+    default:
+      throw new Error("No AI provider selected");
+  }
+}
+
+// Checks a provider configuration by listing the models the key can use.
+// This verifies the key without spending tokens.
+export async function testProviderConnection(
+  config: AIProviderConfig,
+): Promise<ProviderConnectionResult> {
+  if (config.provider === AIProvider.NONE) {
+    return { valid: false, error: "No AI provider selected", models: [] };
+  }
+
+  if (requiresApiKey(config.provider) && !config.apiKey) {
+    return { valid: false, error: "An API key is required", models: [] };
+  }
+
+  try {
+    const request = getModelListRequest(config);
+    const response = await fetch(request.url, {
+      headers: request.headers,
+      signal: AbortSignal.timeout(CONNECTION_TIMEOUT_MS),
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      return { valid: false, error: "The API key was rejected", models: [] };
+    }
+
+    if (!response.ok) {
+      return {
+        valid: false,
+        error: `${getProviderDisplayName(config.provider)} returned HTTP ${response.status}`,
+        models: [],
+      };
+    }
+
+    const body = (await response.json()) as ModelListBody;
+    const models = request.readIds(body).sort();
+    const modelName = resolveModelName(config.provider, config.modelName);
+
+    if (modelName && models.length > 0 && !models.includes(modelName)) {
+      const hint =
+        config.provider === AIProvider.OLLAMA
+          ? ` Run "ollama pull ${modelName}" on the Ollama host.`
+          : "";
+      return {
+        valid: false,
+        error: `The model "${modelName}" isn't available with this configuration.${hint}`,
+        models,
+      };
+    }
+
+    logger.info(
+      { provider: config.provider, modelCount: models.length },
+      "AI provider connection verified",
+    );
+
+    return { valid: true, error: null, models };
+  } catch (error) {
+    logError(logger, "AI provider connection test failed", error, {
+      provider: config.provider,
+    });
+    const message =
+      config.provider === AIProvider.OLLAMA
+        ? "Couldn't reach the Ollama host"
+        : "Couldn't reach the provider";
+    return { valid: false, error: message, models: [] };
+  }
 }
