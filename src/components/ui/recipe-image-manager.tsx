@@ -17,12 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  AIGeneratedBadge,
-  RecipeImageGenerator,
-} from "@/components/ui/recipe-image-generator";
 import type { RecipeImage } from "@/db/schema.recipes";
-import type { ImageGenerationPromptData } from "@/lib/ai/prompts/image-generation-prompts";
 import {
   deleteRecipeImage,
   reorderRecipeImages,
@@ -35,7 +30,6 @@ interface RecipeImageManagerProps {
   images: RecipeImage[];
   onImagesChange?: () => void;
   className?: string;
-  recipeData?: ImageGenerationPromptData;
 }
 
 interface ImageEditData {
@@ -48,7 +42,6 @@ export function RecipeImageManager({
   images,
   onImagesChange,
   className,
-  recipeData,
 }: RecipeImageManagerProps) {
   const altTextId = useId();
   const isHeroId = useId();
@@ -202,22 +195,10 @@ export function RecipeImageManager({
               <ImageIcon className="h-5 w-5" />
               Recipe Images ({images.length})
             </div>
-            <div className="flex items-center gap-2">
-              {recipeData && (
-                <RecipeImageGenerator
-                  recipeId={recipeId}
-                  recipeData={recipeData}
-                  onImageGenerated={() => {
-                    onImagesChange?.();
-                    toast.success("AI image generated successfully!");
-                  }}
-                />
-              )}
-              <Button onClick={() => setShowUpload(!showUpload)} size="sm">
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Images
-              </Button>
-            </div>
+            <Button onClick={() => setShowUpload(!showUpload)} size="sm">
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Images
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -275,13 +256,6 @@ export function RecipeImageManager({
                             Hero
                           </Badge>
                         )}
-                        {image.metadata &&
-                        typeof image.metadata === "object" &&
-                        "source" in image.metadata &&
-                        (image.metadata as { source?: string }).source ===
-                          "ai-generated" ? (
-                          <AIGeneratedBadge />
-                        ) : null}
                       </div>
 
                       {/* Image overlay with actions */}

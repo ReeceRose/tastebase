@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RecipeImageGenerator } from "@/components/ui/recipe-image-generator";
 import {
   Select,
   SelectContent,
@@ -455,68 +454,16 @@ export function RecipeCreateForm({
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ImageIcon className="h-5 w-5" />
-              Recipe Images
-            </div>
-            <RecipeImageGenerator
-              recipeId="draft"
-              recipeData={{
-                title: formData.title || "Untitled Recipe",
-                description: formData.description || undefined,
-                ingredients:
-                  formData.ingredients
-                    ?.filter((ing) => ing.name.trim())
-                    .map((ing) => ({
-                      id: Math.random().toString(),
-                      recipeId: "draft",
-                      name: ing.name,
-                      amount: ing.amount?.toString() || null,
-                      unit: ing.unit || null,
-                      notes: ing.notes || null,
-                      groupName: ing.groupName || null,
-                      sortOrder: 0,
-                      isOptional: ing.isOptional || false,
-                    })) || [],
-                instructions:
-                  formData.instructions
-                    ?.filter((inst) => inst.instruction.trim())
-                    .map((inst, index) => ({
-                      id: Math.random().toString(),
-                      recipeId: "draft",
-                      stepNumber: index + 1,
-                      instruction: inst.instruction,
-                      timeMinutes: inst.timeMinutes || null,
-                      temperature: inst.temperature || null,
-                      notes: inst.notes || null,
-                      groupName: inst.groupName || null,
-                    })) || [],
-                cuisineType: formData.cuisine || undefined,
-                tags: formData.tags || [],
-                servings: formData.servings || undefined,
-                prepTime: formData.prepTimeMinutes || undefined,
-                cookTime: formData.cookTimeMinutes || undefined,
-              }}
-              onImageGenerated={(generatedImage) => {
-                setUploadedImages((prev) => [
-                  ...prev,
-                  {
-                    filename: generatedImage.filename,
-                    originalName: `${formData.title || "Recipe"} - AI Generated`,
-                    fileSize: 0, // AI images don't have a file size yet
-                  },
-                ]);
-                toast.success("AI image generated successfully!");
-              }}
-            />
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5" />
+            Recipe Images
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Upload images of your recipe or generate AI images. You can add
-              more images or set a hero image after creating the recipe.
+              Upload images of your recipe. You can add more images or set a
+              hero image after creating the recipe.
             </p>
             <ImageUpload
               onUploadComplete={(uploadedFile) => {

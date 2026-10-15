@@ -364,17 +364,6 @@ export function RecipeEditForm({ recipe, onSuccess }: RecipeEditFormProps) {
       <RecipeImageManager
         recipeId={recipe.id}
         images={images}
-        recipeData={{
-          title: watch("title") || recipe.title,
-          description: watch("description") || recipe.description || undefined,
-          ingredients: recipe.ingredients || [],
-          instructions: recipe.instructions || [],
-          cuisineType: watch("cuisine") || recipe.cuisine || undefined,
-          tags: watch("tags") || recipe.tags?.map((tag) => tag.name) || [],
-          servings: watch("servings") || recipe.servings || undefined,
-          prepTime: recipe.prepTimeMinutes || undefined,
-          cookTime: recipe.cookTimeMinutes || undefined,
-        }}
         onImagesChange={refreshImages}
         className="mb-8"
       />

@@ -1,12 +1,9 @@
-export type { ImageGenerationPromptData } from "../ai/prompts/image-generation-prompts";
-export type { ImageGenerationResult } from "../ai/services/image-generation-service";
 export * from "./ai-types";
 // Re-export specific enums for convenience
 export { ImageProcessingMethod } from "./ai-types";
 export * from "./image-processing-types";
 export * from "./recipe-types";
 
-import type { RecipeModification } from "@/components/history/recipe-modification-history";
 import type { User } from "@/db/schema.base";
 import type { Recipe } from "@/db/schema.recipes";
 import type { RecipeDraft } from "@/lib/server-actions/recipe-draft-actions";
@@ -46,13 +43,6 @@ export enum ButtonVariant {
   DESTRUCTIVE = "destructive",
   GHOST = "ghost",
   LINK = "link",
-}
-
-// Chat message role enum
-export enum MessageRole {
-  USER = "user",
-  ASSISTANT = "assistant",
-  SYSTEM = "system",
 }
 
 export enum BadgeVariant {
@@ -243,10 +233,6 @@ export type UserPreferencesDisplay = Pick<
 >;
 
 // Common Omit patterns
-export type RecipeModificationInput = Omit<
-  RecipeModification,
-  "id" | "createdAt"
->;
 export type RecipeDraftInput = Omit<RecipeDraft, "id" | "lastSaved">;
 export type ShareSettingsInput = Omit<
   RecipeShareSettings,
