@@ -151,7 +151,7 @@ recipe-app/
 │   │   ├── config/            # Configuration files
 │   │   ├── logging/           # Logging utilities
 │   │   └── utils/             # General utilities
-│   └── middleware.ts          # Route protection
+│   └── proxy.ts               # Route protection
 ├── db/                        # Database schema and migrations
 ├── docs/                      # Documentation
 ├── uploads/                   # Recipe images storage
@@ -474,22 +474,23 @@ Update relevant documentation files:
 
 ## 📚 Documentation
 
-Comprehensive documentation is available in the `docs/` directory:
+Documentation lives in the `docs/` directory:
 
-- **[Setup Guide](docs/SETUP.md)** - Complete installation and configuration instructions
-- **[Features Documentation](docs/FEATURES.md)** - Detailed guide to all included features
-- **[Deployment Guide](DEPLOYMENT.md)** - Docker deployment instructions
-- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Common issues and solutions
-- **[Architecture Guide](docs/architecture.md)** - System architecture and design decisions
-- **[Database Schema](docs/database.md)** - Database structure and relationships
-- **[Environment Variables](docs/environment-variables.md)** - Configuration reference
+- **[Setup Guide](docs/SETUP.md)** - Installation and local development
+- **[Environment Variables](docs/environment-variables.md)** - Every setting and how to generate secrets
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Docker deployment, plus [Unraid](docs/DEPLOYMENT_UNRAID.md)
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Common issues and fixes
+- **[Design System](docs/design-system.md)** - Colours, type, components and patterns for the UI
+- **[Architecture Guide](docs/architecture.md)** - How the code is organized
+- **[Development Guide](docs/DEVELOPMENT.md)** - Workflows, code quality and debugging
+- **[Security](docs/security/README.md)** - Encryption of stored AI keys and key rotation
 
 ## 🎯 Quick Links
 
 - **Documentation**: [docs/](docs/)
 - **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
-- **PRD**: [Product Requirements Document](docs/plans/Recipe-App-PRD.md)
+- **PRD**: [Product Requirements Document](docs/plans/PRD.md)
 
 ## 📄 License
 

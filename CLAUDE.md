@@ -284,7 +284,6 @@ src/hooks/                 # Global custom React hooks
   - `src/lib/config/` - Environment variables and configuration
   - `src/lib/logging/` - Structured logging utilities with Pino
   - `src/lib/utils/` - General utilities (cn, date formatting, error handling)
-- `src/middleware/` - Authentication and route protection
 - `src/hooks/` - Global custom React hooks
 
 ## Recipe Management Features
@@ -319,7 +318,7 @@ Tastebase provides comprehensive recipe management capabilities for shared insta
 ## Key Features & Implementation
 
 ### Authentication (BetterAuth)
-- Middleware in `src/middleware.ts` handles route protection
+- `src/proxy.ts` handles route protection
 - Simple email/password authentication for shared instance recipe management
 - User profile management integrated with custom database schema
 - Session management with secure cookie handling
@@ -354,7 +353,7 @@ Tastebase provides comprehensive recipe management capabilities for shared insta
 
 **📖 [Complete Design System Documentation](./docs/design-system.md)**
 
-Tastebase uses the "Market Crate" design system: paper and ink neutrals, a leek-green sidebar, one turmeric accent, and a produce-colour **swatch** for every recipe and person. The redesign is rolling out phase by phase; see `docs/redesign/implementation-plan.md`.
+Tastebase uses the "Market Crate" design system: paper and ink neutrals, a leek-green sidebar, one turmeric accent, and a produce-colour **swatch** for every recipe and person. The redesign is complete; `docs/redesign/implementation-plan.md` records how it was built.
 
 ### Core Design Principles
 - **Colour is identity**: swatches mark recipes, people and tags. UI chrome stays neutral.
@@ -586,7 +585,7 @@ The Docker build can also be triggered manually from GitHub Actions if needed.
 
 **Adding authentication features:**
 1. Configure additional providers in BetterAuth configuration
-2. Update middleware for new protected routes
+2. Update `src/proxy.ts` for new protected routes
 3. Extend user schema if additional fields needed
 4. Update profile management components
 
