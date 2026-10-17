@@ -24,7 +24,7 @@ src/
 │   │   └── logger.ts            # Pino logger setup
 │   └── utils/                   # General utilities
 │       └── utils.ts             # Shared helpers (cn, date utils, etc.)
-├── middleware/                  # Next.js middleware
+├── proxy.ts                     # Route protection (Next.js proxy)
 └── app/                         # App router - route definitions ONLY
     ├── (public)/                # Public routes (auth, landing)
     │   └── auth/

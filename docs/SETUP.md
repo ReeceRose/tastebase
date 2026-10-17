@@ -157,7 +157,7 @@ tastebase/
 │   │   ├── index.ts        # Database connection
 │   │   └── migrate.ts      # Migration runner
 │   ├── lib/               # Shared utilities
-│   └── middleware/        # Authentication middleware
+│   └── proxy.ts           # Route protection
 ├── docs/                  # Documentation
 ├── scripts/              # Development and maintenance scripts
 └── public/               # Static assets

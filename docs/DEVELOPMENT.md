@@ -112,59 +112,11 @@ src/db/
    pnpm run db:migrate
    ```
 
-## AI Integration Status
+## Recipe import and AI
 
-### ✅ Phase 3: Core AI Integration - COMPLETED
-**Context**: `docs/context/phase-3-ai-progress-2025-09-12-1720.md`
+Import works without AI: links use the page's recipe data (JSON-LD) and fall back to the page text; pasted text goes through `src/lib/import/text-recipe-parser.ts`; photos use OCR (Tesseract) on the server. AI is optional. Each person can add a provider (OpenAI, Anthropic, Google or Ollama) in **Settings → Import and AI** to tidy up messy imports or read photos with a vision model. The AI code lives in `src/lib/ai/`.
 
-Phase 3 is **100% complete** with production-ready features:
-- **Smart URL Detection**: JSON-LD → HTML → AI fallback parsing
-- **Advanced UI Components**: Tab interface with progress indicators  
-- **Multi-Provider Support**: OpenAI, Anthropic, Google, Ollama
-- **OCR Foundation**: Tesseract service with Sharp preprocessing
-
-### 📋 Phase 3.5: Dual Image Processing - READY (3-4 hours)
-
-**Strategic Enhancement**: Support both AI Vision and Local OCR with user toggle.
-
-**Remaining Tasks**:
-1. **AI Vision Service** (~1 hour) - GPT-4V, Claude Vision integration
-2. **Smart Image Processor** (~1 hour) - User preference routing  
-3. **Image Upload Component** (~2 hours) - Drag-drop with dual method support
-4. **Settings Integration** (~30 min) - Add processing method toggle
-
-**Resume Commands**:
-```bash
-# Check Phase 3 completion status
-ls src/lib/ai/tools/fetch-recipe-tool.ts  # Should exist
-ls src/components/forms/recipe-url-input.tsx  # Should exist  
-ls src/lib/ai/services/ocr-service.ts  # Should exist
-
-# Test existing URL parsing
-pnpm run dev  # Test at /recipes/new with URL tab
-
-# Start Phase 3.5 implementation
-# Next: Create src/lib/ai/services/ai-vision-service.ts
-```
-
-4. **Implement Server Actions First**
-   - Define TypeScript types
-   - Create Zod validation schemas
-   - Implement server actions with error handling
-   - Write unit tests for server actions
-
-5. **Build UI Components**
-   - Create skeleton components first in `src/components/skeletons/`
-   - Build form components in `src/components/forms/`
-   - Build list components in `src/components/lists/`
-   - Create card components in `src/components/cards/`
-   - Add comprehensive error states
-
-6. **Integration and Testing**
-   - Connect components to server actions
-   - Add integration tests
-   - Test all user flows
-   - Validate mobile responsiveness
+## Code quality
 
 ### Code Style and Standards
 
