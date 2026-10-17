@@ -4,148 +4,118 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDebouncedValue } from "@/hooks/use-debounced-search";
 import { performGlobalSearch } from "@/lib/server-actions/global-search-actions";
-import type { RecipeWithDetails } from "@/lib/types/recipe-types";
+import {
+  getSearchHistory,
+  recordSearchQuery,
+} from "@/lib/server-actions/search-history-actions";
+import type { RecipeSummary } from "@/lib/types/recipe-types";
 
 interface UseGlobalSearchProps {
   isOpen: boolean;
 }
 
-interface UseGlobalSearchReturn {
-  query: string;
-  setQuery: (query: string) => void;
-  results: RecipeWithDetails[];
-  isSearching: boolean;
-  isPending: boolean;
-  selectedIndex: number;
-  setSelectedIndex: (index: number) => void;
-  handleSelectResult: (result: RecipeWithDetails) => void;
-  handleViewAllResults: () => void;
-  clearSearch: () => void;
-  hasResults: boolean;
-  showResults: boolean;
-  hasCompletedSearchForQuery: boolean;
-}
-
-export function useGlobalSearch({
-  isOpen,
-}: UseGlobalSearchProps): UseGlobalSearchReturn {
+export function useGlobalSearch({ isOpen }: UseGlobalSearchProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<RecipeWithDetails[]>([]);
+  const [results, setResults] = useState<RecipeSummary[]>([]);
+  const [total, setTotal] = useState(0);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const latestRequestIdRef = useRef(0);
   const [lastCompletedQuery, setLastCompletedQuery] = useState<string | null>(
     null,
   );
+  const latestRequest = useRef(0);
+  const debouncedQuery = useDebouncedValue(query, 250);
+  const trimmed = query.trim();
 
-  const debouncedQuery = useDebouncedValue(query, 300);
-  const trimmedCurrentQuery = query.trim();
-  const isDebouncing =
-    trimmedCurrentQuery.length > 0 && query !== debouncedQuery;
+  useEffect(() => {
+    if (!isOpen) return;
+    getSearchHistory(5)
+      .then((result) => {
+        if (result.success && result.data) {
+          setRecentSearches(result.data.map((entry) => entry.query));
+        }
+      })
+      .catch(() => undefined);
+  }, [isOpen]);
 
-  const performSearch = useCallback(async (searchQuery: string) => {
-    const requestId = latestRequestIdRef.current + 1;
-    latestRequestIdRef.current = requestId;
+  useEffect(() => {
+    if (!isOpen) return;
+    const searchFor = debouncedQuery.trim();
+    const requestId = latestRequest.current + 1;
+    latestRequest.current = requestId;
 
-    const trimmedQuery = searchQuery.trim();
-
-    if (!trimmedQuery) {
+    if (!searchFor) {
       setResults([]);
+      setTotal(0);
       setIsSearching(false);
       setLastCompletedQuery(null);
       return;
     }
 
     setIsSearching(true);
-    try {
-      const searchResult = await performGlobalSearch(trimmedQuery, 8);
-
-      if (latestRequestIdRef.current !== requestId) {
-        return;
-      }
-
-      if (searchResult.success) {
-        setResults(searchResult.recipes);
+    performGlobalSearch(searchFor, 8)
+      .then((result) => {
+        if (latestRequest.current !== requestId) return;
+        setResults(result.recipes);
+        setTotal(result.total);
         setSelectedIndex(0);
-        setLastCompletedQuery(trimmedQuery);
-      } else {
-        console.error("Global search error:", searchResult.error);
+        setLastCompletedQuery(searchFor);
+      })
+      .catch(() => {
+        if (latestRequest.current !== requestId) return;
         setResults([]);
-        setLastCompletedQuery(trimmedQuery);
-      }
-    } catch (error) {
-      if (latestRequestIdRef.current !== requestId) {
-        return;
-      }
-      console.error("Global search error:", error);
-      setResults([]);
-      setLastCompletedQuery(trimmedQuery);
-    } finally {
-      if (latestRequestIdRef.current === requestId) {
-        setIsSearching(false);
-      }
-    }
-  }, []);
+        setTotal(0);
+        setLastCompletedQuery(searchFor);
+      })
+      .finally(() => {
+        if (latestRequest.current === requestId) setIsSearching(false);
+      });
+  }, [debouncedQuery, isOpen]);
 
   useEffect(() => {
-    if (isOpen) {
-      performSearch(debouncedQuery);
-    }
-  }, [debouncedQuery, isOpen, performSearch]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setQuery("");
-      setResults([]);
-      setSelectedIndex(0);
-      setIsSearching(false);
-      setLastCompletedQuery(null);
-    }
-  }, [isOpen]);
-
-  const handleSelectResult = useCallback(
-    (result: RecipeWithDetails) => {
-      const slug = result.slug ?? result.id;
-      router.push(`/recipes/${slug}`);
-    },
-    [router],
-  );
-
-  const handleViewAllResults = useCallback(() => {
-    if (query.trim()) {
-      router.push(`/recipes?search=${encodeURIComponent(query.trim())}`);
-    } else {
-      router.push("/recipes");
-    }
-  }, [router, query]);
-
-  const clearSearch = useCallback(() => {
+    if (isOpen) return;
     setQuery("");
     setResults([]);
+    setTotal(0);
     setSelectedIndex(0);
+    setIsSearching(false);
     setLastCompletedQuery(null);
-  }, []);
+  }, [isOpen]);
 
-  const hasResults = results.length > 0;
-  const showResults = trimmedCurrentQuery.length > 0;
-  const isPendingSearch = isSearching || isDebouncing;
-  const hasCompletedSearchForQuery =
-    lastCompletedQuery !== null && lastCompletedQuery === trimmedCurrentQuery;
+  const remember = useCallback(() => {
+    if (trimmed) void recordSearchQuery(trimmed, total);
+  }, [trimmed, total]);
+
+  const openRecipe = useCallback(
+    (recipe: RecipeSummary) => {
+      remember();
+      router.push(`/recipes/${recipe.slug}`);
+    },
+    [remember, router],
+  );
+
+  const viewAll = useCallback(() => {
+    remember();
+    router.push(
+      trimmed ? `/recipes?q=${encodeURIComponent(trimmed)}` : "/recipes",
+    );
+  }, [remember, router, trimmed]);
 
   return {
     query,
     setQuery,
     results,
-    isSearching,
-    isPending: isPendingSearch,
+    total,
+    recentSearches,
     selectedIndex,
     setSelectedIndex,
-    handleSelectResult,
-    handleViewAllResults,
-    clearSearch,
-    hasResults,
-    showResults,
-    hasCompletedSearchForQuery,
+    openRecipe,
+    viewAll,
+    isPending: isSearching || (trimmed.length > 0 && query !== debouncedQuery),
+    hasQuery: trimmed.length > 0,
+    hasCompletedSearch:
+      lastCompletedQuery !== null && lastCompletedQuery === trimmed,
   };
 }

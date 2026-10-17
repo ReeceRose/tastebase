@@ -1,7 +1,13 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Suspense } from "react";
+import { AppShell } from "@/components/layout/app-shell";
+import {
+  HouseholdStrip,
+  HouseholdStripSkeleton,
+} from "@/components/navigation/household-strip";
 import { auth } from "@/lib/auth/auth";
+import { getNavCounts } from "@/lib/server-actions/household-actions";
 
 export default async function DashboardLayoutWrapper({
   children,
@@ -16,5 +22,17 @@ export default async function DashboardLayoutWrapper({
     redirect("/auth/sign-in");
   }
 
-  return <DashboardLayout user={session.user}>{children}</DashboardLayout>;
+  return (
+    <AppShell
+      user={session.user}
+      counts={getNavCounts()}
+      household={
+        <Suspense fallback={<HouseholdStripSkeleton />}>
+          <HouseholdStrip />
+        </Suspense>
+      }
+    >
+      {children}
+    </AppShell>
+  );
 }

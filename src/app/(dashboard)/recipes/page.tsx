@@ -1,14 +1,21 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { RecipeLibrary } from "@/components/layout/recipe-library";
 import { auth } from "@/lib/auth/auth";
+import { LibraryScope } from "@/lib/types";
+import {
+  type LibrarySearchParams,
+  parseLibraryParams,
+} from "@/lib/utils/library-params";
 
-export const metadata = {
-  title: "My Recipes | Tastebase",
-  description: "Browse and manage your personal recipe collection",
+export const metadata: Metadata = {
+  title: "Recipes | Tastebase",
+  description: "Every recipe in your house's collection",
 };
 
 interface RecipesPageProps {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: Promise<LibrarySearchParams>;
 }
 
 export default async function RecipesPage({ searchParams }: RecipesPageProps) {
@@ -20,23 +27,14 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
     redirect("/auth/sign-in");
   }
 
-  const params = await searchParams;
-  const query = new URLSearchParams();
+  const filters = parseLibraryParams(await searchParams, LibraryScope.ALL);
 
-  Object.entries(params).forEach(([key, value]) => {
-    if (!value) return;
-    if (Array.isArray(value)) {
-      value.forEach((item) => {
-        if (item) {
-          query.append(key, item);
-        }
-      });
-    } else {
-      query.set(key, value);
-    }
-  });
-
-  const target = query.toString() ? `/search?${query.toString()}` : "/search";
-
-  redirect(target);
+  return (
+    <RecipeLibrary
+      title="Recipes"
+      filters={filters}
+      basePath="/recipes"
+      currentUserId={session.user.id}
+    />
+  );
 }

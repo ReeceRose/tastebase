@@ -1,54 +1,40 @@
-export function formatRecentTime(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+export function formatTotalTime(minutes: number | null): string | null {
+  if (minutes === null || minutes <= 0) return null;
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest}`;
+}
 
-  if (diffMinutes < 5) return "Just now";
-  if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  if (diffDays < 7)
-    return diffDays === 1 ? "Yesterday" : `${diffDays} days ago`;
-  if (diffDays < 30) {
-    const weeks = Math.floor(diffDays / 7);
-    return weeks === 1 ? "Last week" : `${weeks} weeks ago`;
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+function startOfDay(date: Date): number {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  ).getTime();
+}
+
+export function formatRelativeDay(date: Date, now: Date = new Date()): string {
+  const days = Math.round((startOfDay(now) - startOfDay(date)) / DAY_MS);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) {
+    return date.toLocaleDateString("en-CA", { weekday: "short" });
   }
-
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString("en-CA", {
     month: "short",
     day: "numeric",
     year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
   });
 }
 
-export function formatFavoriteTime(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 7) {
-    return diffDays === 0
-      ? "Added today"
-      : diffDays === 1
-        ? "Added yesterday"
-        : `Added ${diffDays} days ago`;
-  }
-
-  if (diffDays < 30) {
-    const weeks = Math.floor(diffDays / 7);
-    return weeks === 1 ? "Added last week" : `Added ${weeks} weeks ago`;
-  }
-
-  return `Added ${date.toLocaleDateString(undefined, {
-    month: "long",
-    year: "numeric",
-  })}`;
-}
-
-export function isVeryRecent(date: Date): boolean {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  return diffHours < 2;
+export function formatElapsed(date: Date, now: Date = new Date()): string {
+  const days = Math.floor((now.getTime() - date.getTime()) / DAY_MS);
+  if (days < 14) return days <= 1 ? "1 day" : `${days} days`;
+  if (days < 60) return `${Math.floor(days / 7)} weeks`;
+  if (days < 365) return `${Math.floor(days / 30)} months`;
+  const years = Math.floor(days / 365);
+  return years === 1 ? "1 year" : `${years} years`;
 }

@@ -1,5 +1,6 @@
 import { PasswordResetForm } from "@/components/auth/password-reset-form";
 import { ResetPasswordTokenForm } from "@/components/auth/reset-password-token-form";
+import { AuthShell } from "@/components/layout/auth-shell";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const metadata = {
@@ -15,15 +16,15 @@ export default async function ResetPasswordPage({
   const { token, error } = await searchParams;
 
   return (
-    <div className="flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
+    <AuthShell>
+      <div>
         {error ? (
           <div className="space-y-4">
             <Alert variant="destructive">
               <AlertDescription>
                 {error === "INVALID_TOKEN"
-                  ? "This password reset link is invalid or has expired. Please request a new one."
-                  : "An error occurred. Please try again."}
+                  ? "That reset link has expired or was already used. Ask for a new one below."
+                  : "That didn't work. Ask for a new reset link below."}
               </AlertDescription>
             </Alert>
             <PasswordResetForm />
@@ -34,6 +35,6 @@ export default async function ResetPasswordPage({
           <PasswordResetForm />
         )}
       </div>
-    </div>
+    </AuthShell>
   );
 }

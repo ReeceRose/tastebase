@@ -72,11 +72,13 @@ export function PasswordResetForm() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Check your email</CardTitle>
+          <CardTitle className="text-[28px] leading-tight tracking-[-0.03em]">
+            Reset link created
+          </CardTitle>
           <CardDescription>
-            If an account with that email exists, we&apos;ve sent you a password
-            reset link. For local development, check your server logs for the
-            reset link.
+            If an account with that email exists, a reset link has been written
+            to this server&apos;s log. Tastebase doesn&apos;t send email, so ask
+            whoever runs this server to pass the link on.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -85,7 +87,7 @@ export function PasswordResetForm() {
               onClick={() => router.push("/auth/sign-in")}
               className="w-full"
             >
-              Return to Sign In
+              Back to sign in
             </Button>
           </div>
         </CardContent>
@@ -96,10 +98,13 @@ export function PasswordResetForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Reset your password</CardTitle>
+        <CardTitle className="text-[28px] leading-tight tracking-[-0.03em]">
+          Reset your password
+        </CardTitle>
         <CardDescription>
-          Enter your email address and we&apos;ll send you a link to reset your
-          password.
+          Enter your email and Tastebase will create a reset link. It goes to
+          the server&apos;s log, not your inbox, so whoever runs this server can
+          pass it on.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -133,10 +138,10 @@ export function PasswordResetForm() {
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <Loading size={ComponentSize.SM} />
-                    Sending reset link...
+                    Creating reset link…
                   </div>
                 ) : (
-                  "Send reset link"
+                  "Create reset link"
                 )}
               </Button>
             </div>

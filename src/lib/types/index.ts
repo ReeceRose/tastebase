@@ -1,10 +1,10 @@
 export * from "@/lib/types/ai-types";
 export * from "@/lib/types/import-types";
 export * from "@/lib/types/recipe-types";
+export * from "@/lib/types/storage-types";
 
 import type { User } from "@/db/schema.base";
 import type { Recipe } from "@/db/schema.recipes";
-import type { RecipeDraft } from "@/lib/server-actions/recipe-draft-actions";
 import type { RecipeShareSettings } from "@/lib/sharing/recipe-sharing-types";
 
 // User preference enums
@@ -40,13 +40,7 @@ export enum ButtonVariant {
   DESTRUCTIVE = "destructive",
   GHOST = "ghost",
   LINK = "link",
-}
-
-export enum BadgeVariant {
-  DEFAULT = "default",
-  SECONDARY = "secondary",
-  OUTLINE = "outline",
-  DESTRUCTIVE = "destructive",
+  ACCENT = "accent",
 }
 
 // View mode enums
@@ -74,12 +68,6 @@ export enum MessageType {
 export enum ComponentSize {
   SM = "sm",
   MD = "md",
-  LG = "lg",
-}
-
-export enum SizeVariant {
-  SM = "sm",
-  DEFAULT = "default",
   LG = "lg",
 }
 
@@ -124,33 +112,124 @@ export enum Theme {
   SYSTEM = "system",
 }
 
-// Page section spacing
-export enum SectionSpacing {
-  COMPACT = "compact",
-  DEFAULT = "default",
-  SPACIOUS = "spacious",
+// Recipe and member colour swatches
+export enum RecipeSwatch {
+  TOMATO = "tomato",
+  LEEK = "leek",
+  AUBERGINE = "aubergine",
+  BEET = "beet",
+  TURMERIC = "turmeric",
+  RADISH = "radish",
+  SKY = "sky",
+  HERB = "herb",
 }
 
-// Page header stat types
-export enum StatType {
-  METRIC = "metric",
-  STATUS = "status",
-  PROGRESS = "progress",
+export interface SwatchClasses {
+  bg: string;
+  fg: string;
+  deep: string;
 }
 
-// Stat status enum
-export enum StatStatus {
-  SUCCESS = "success",
-  WARNING = "warning",
-  ERROR = "error",
-  INFO = "info",
-  MUTED = "muted",
+// Chip variants
+export enum ChipVariant {
+  FILTER = "filter",
+  FACT = "fact",
+  TAG = "tag",
 }
 
-// Navigation direction
-export enum NavigationDirection {
-  PREV = "prev",
-  NEXT = "next",
+// Member avatar sizes
+export enum AvatarSize {
+  SM = "sm",
+  MD = "md",
+  LG = "lg",
+}
+
+// Recipe library scopes
+export enum LibraryScope {
+  ALL = "all",
+  FAVOURITES = "favourites",
+  RECENT = "recent",
+}
+
+// Settings sections
+export enum SettingsSection {
+  PROFILE = "profile",
+  HOUSEHOLD = "household",
+  UNITS = "units",
+  IMPORT = "import",
+  TEMPLATES = "templates",
+  STORAGE = "storage",
+  SECURITY = "security",
+}
+
+export interface SegmentedOption {
+  value: string;
+  label: string;
+}
+
+export interface HouseholdMember {
+  id: string;
+  name: string;
+}
+
+// House activity kinds
+export enum ActivityKind {
+  ADDED = "added",
+  NOTE = "note",
+  COOKED = "cooked",
+  EDITED = "edited",
+}
+
+// Navigation count keys
+export enum NavCountKey {
+  RECIPES = "recipes",
+  FAVOURITES = "favourites",
+}
+
+// Recipe library sorting and visibility
+export enum LibrarySort {
+  NEWEST = "newest",
+  RATING = "rating",
+  QUICKEST = "quickest",
+  TITLE = "title",
+  UPDATED = "updated",
+}
+
+export enum LibraryVisibility {
+  ALL = "all",
+  MINE = "mine",
+  PRIVATE = "private",
+}
+
+// Recipe editor
+export enum EditorSection {
+  BASICS = "basics",
+  INGREDIENTS = "ingredients",
+  METHOD = "method",
+  PHOTOS = "photos",
+  DETAILS = "details",
+  SHARING = "sharing",
+}
+
+export enum RecipeEditorMode {
+  CREATE = "create",
+  EDIT = "edit",
+}
+
+export enum AddRecipeStep {
+  START = "start",
+  IMPORTING = "importing",
+  REVIEW = "review",
+}
+
+// Recipe change history
+export enum RecipeChangeType {
+  TITLE = "title",
+  INGREDIENTS = "ingredients",
+  INSTRUCTIONS = "instructions",
+  METADATA = "metadata",
+  IMAGES = "images",
+  MAJOR = "major",
 }
 
 // Common type aliases for Pick/Omit patterns
@@ -163,7 +242,6 @@ export type RecipeDisplayInfo = Pick<
   "title" | "description" | "cuisine"
 >;
 // Common Omit patterns
-export type RecipeDraftInput = Omit<RecipeDraft, "id" | "lastSaved">;
 export type ShareSettingsInput = Omit<
   RecipeShareSettings,
   "id" | "recipeId" | "userId" | "createdAt" | "updatedAt"

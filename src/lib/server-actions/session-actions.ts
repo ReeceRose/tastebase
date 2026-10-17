@@ -7,25 +7,9 @@ import { db } from "@/db";
 import { sessions, users } from "@/db/schema";
 import { auth } from "@/lib/auth/auth";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
+import type { SecurityMetrics, SessionInfo } from "@/lib/types/session-types";
 
 const logger = createOperationLogger("session-actions");
-
-interface SessionInfo {
-  id: string;
-  device: string;
-  browser: string;
-  location: string;
-  lastActive: string;
-  isCurrent: boolean;
-  ipAddress?: string;
-}
-
-interface SecurityMetrics {
-  lastLogin: string;
-  passwordLastChanged: string;
-  accountCreated: string;
-  activeSessions: number;
-}
 
 function parseUserAgent(userAgent: string): {
   device: string;

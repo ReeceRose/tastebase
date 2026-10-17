@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, or } from "drizzle-orm";
+import { and, count, eq, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { headers } from "next/headers";
 import type { z } from "zod";
@@ -10,6 +10,7 @@ import {
   recipeImages,
   recipeIngredients,
   recipeInstructions,
+  recipeModifications,
   recipeNotes,
   recipes,
   recipeTagRelations,
@@ -18,6 +19,7 @@ import {
 import { auth } from "@/lib/auth/auth";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
 import type { RecipeWithRelations } from "@/lib/types/recipe-types";
+import { describeRecipeChanges } from "@/lib/utils/recipe-changes";
 import { generateRecipeSlug } from "@/lib/utils/recipe-utils";
 import {
   type CreateRecipeInput,
@@ -31,7 +33,10 @@ import {
 
 const logger = createOperationLogger("recipe-actions");
 
-async function generateUniqueSlug(title: string): Promise<string> {
+async function generateUniqueSlug(
+  title: string,
+  ignoreRecipeId: string | null = null,
+): Promise<string> {
   const baseSlug = generateRecipeSlug(title);
   let slug = baseSlug;
   let counter = 1;
@@ -43,7 +48,7 @@ async function generateUniqueSlug(title: string): Promise<string> {
       .where(eq(recipes.slug, slug))
       .limit(1);
 
-    if (existing.length === 0) {
+    if (existing.length === 0 || existing[0].id === ignoreRecipeId) {
       return slug;
     }
 
@@ -192,6 +197,7 @@ export async function createRecipe(rawData: CreateRecipeInput) {
       cookTimeMinutes: validatedData.cookTimeMinutes,
       difficulty: validatedData.difficulty,
       cuisine: validatedData.cuisine,
+      swatch: validatedData.swatch ?? null,
       sourceUrl: validatedData.sourceUrl,
       sourceName: validatedData.sourceName,
       isPublic: validatedData.isPublic,
@@ -235,6 +241,7 @@ export async function createRecipe(rawData: CreateRecipeInput) {
               cookTimeMinutes: validatedData.cookTimeMinutes,
               difficulty: validatedData.difficulty,
               cuisine: validatedData.cuisine,
+              swatch: validatedData.swatch ?? null,
               sourceUrl: validatedData.sourceUrl,
               sourceName: validatedData.sourceName,
               isPublic: validatedData.isPublic,
@@ -300,8 +307,9 @@ export async function getRecipeBySlug(
     }
 
     const recipe = await db
-      .select()
+      .select({ recipe: recipes, authorName: users.name })
       .from(recipes)
+      .innerJoin(users, eq(recipes.userId, users.id))
       .where(
         and(
           eq(recipes.slug, slug),
@@ -318,7 +326,7 @@ export async function getRecipeBySlug(
       return { success: false, error: "Recipe not found" };
     }
 
-    const recipeId = recipe[0].id;
+    const recipeId = recipe[0].recipe.id;
     const [ingredients, instructions, images, notes, tagRelations] =
       await Promise.all([
         db
@@ -333,7 +341,19 @@ export async function getRecipeBySlug(
           .select()
           .from(recipeImages)
           .where(eq(recipeImages.recipeId, recipeId)),
-        db.select().from(recipeNotes).where(eq(recipeNotes.recipeId, recipeId)),
+        db
+          .select({ note: recipeNotes, authorName: users.name })
+          .from(recipeNotes)
+          .innerJoin(users, eq(recipeNotes.userId, users.id))
+          .where(
+            and(
+              eq(recipeNotes.recipeId, recipeId),
+              or(
+                eq(recipeNotes.userId, session.user.id),
+                eq(recipeNotes.isPrivate, false),
+              ),
+            ),
+          ),
         db
           .select({ tag: recipeTags })
           .from(recipeTagRelations)
@@ -342,7 +362,8 @@ export async function getRecipeBySlug(
       ]);
 
     const recipeWithRelations: RecipeWithRelations = {
-      ...recipe[0],
+      ...recipe[0].recipe,
+      author: { id: recipe[0].recipe.userId, name: recipe[0].authorName },
       ingredients: ingredients.sort(
         (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0),
       ),
@@ -350,11 +371,13 @@ export async function getRecipeBySlug(
         (a, b) => (a.stepNumber || 0) - (b.stepNumber || 0),
       ),
       images: images.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)),
-      notes: notes.sort((a, b) => {
-        const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return bDate - aDate;
-      }),
+      notes: notes
+        .map((row) => ({ ...row.note, authorName: row.authorName }))
+        .sort((a, b) => {
+          const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bDate - aDate;
+        }),
       tags: tagRelations.map((tr) => tr.tag),
     };
 
@@ -387,29 +410,62 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
       return { success: false, error: "Recipe ID is required" };
     }
 
-    const existingRecipe = await db
-      .select({ id: recipes.id })
+    const [existingRecipe] = await db
+      .select()
       .from(recipes)
       .where(and(eq(recipes.id, recipeId), eq(recipes.userId, session.user.id)))
       .limit(1);
 
-    if (!existingRecipe.length) {
+    if (!existingRecipe) {
       return { success: false, error: "Recipe not found" };
     }
 
+    const [previousIngredients, previousInstructions] = await Promise.all([
+      db
+        .select()
+        .from(recipeIngredients)
+        .where(eq(recipeIngredients.recipeId, recipeId)),
+      db
+        .select()
+        .from(recipeInstructions)
+        .where(eq(recipeInstructions.recipeId, recipeId)),
+    ]);
+
+    const titleChanged =
+      recipeData.title !== undefined &&
+      recipeData.title !== existingRecipe.title;
+    const slug = titleChanged
+      ? await generateUniqueSlug(
+          recipeData.title ?? existingRecipe.title,
+          recipeId,
+        )
+      : existingRecipe.slug;
+
+    const changes = describeRecipeChanges({
+      before: existingRecipe,
+      after: recipeData,
+      ingredientsBefore: previousIngredients,
+      ingredientsAfter: ingredients ?? null,
+      instructionsBefore: previousInstructions,
+      instructionsAfter: instructions ?? null,
+    });
+
     const updatedRecipe = await db.transaction(async (tx) => {
-      let updateData = {
-        ...recipeData,
+      const updateData = {
+        title: recipeData.title ?? existingRecipe.title,
+        slug,
+        description: recipeData.description ?? null,
+        servings: recipeData.servings ?? null,
+        prepTimeMinutes: recipeData.prepTimeMinutes ?? null,
+        cookTimeMinutes: recipeData.cookTimeMinutes ?? null,
+        difficulty: recipeData.difficulty ?? null,
+        cuisine: recipeData.cuisine ?? null,
+        sourceUrl: recipeData.sourceUrl ?? null,
+        sourceName: recipeData.sourceName ?? null,
+        swatch: recipeData.swatch ?? null,
+        isPublic: recipeData.isPublic ?? existingRecipe.isPublic,
         updatedAt: new Date(),
       };
-
-      // If title is being updated, generate a new slug
-      if (recipeData.title) {
-        const newSlug = await generateUniqueSlug(recipeData.title);
-        updateData = { ...updateData, slug: newSlug } as typeof updateData & {
-          slug: string;
-        };
-      }
 
       const [updated] = await tx
         .update(recipes)
@@ -493,11 +549,27 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
         }
       }
 
+      if (changes) {
+        const [{ value: previousVersions }] = await tx
+          .select({ value: count() })
+          .from(recipeModifications)
+          .where(eq(recipeModifications.recipeId, recipeId));
+        await tx.insert(recipeModifications).values({
+          id: nanoid(),
+          recipeId,
+          userId: session.user.id,
+          changeType: changes.type,
+          changeDescription: changes.description,
+          versionNumber: previousVersions + 1,
+          createdAt: new Date(),
+        });
+      }
+
       return updated;
     });
 
     logger.info(
-      { recipeId, userId: session.user.id },
+      { recipeId, userId: session.user.id, change: changes?.type ?? null },
       "Recipe updated successfully",
     );
     return { success: true, data: updatedRecipe };

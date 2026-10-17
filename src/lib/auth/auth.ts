@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
   accounts,
@@ -7,6 +8,7 @@ import {
   users,
   verificationTokens,
 } from "@/db/schema.base";
+import { recipeImages, recipes } from "@/db/schema.recipes";
 import { env } from "@/lib/config/env";
 import { createOperationLogger } from "@/lib/logging/logger";
 
@@ -77,6 +79,26 @@ export const auth = betterAuth({
       preferredVolumeUnit: {
         type: "string",
         defaultValue: "imperial", // imperial (tsp, tbsp, cup, fl oz) or metric (ml, l)
+      },
+    },
+    deleteUser: {
+      enabled: true,
+      beforeDelete: async (user) => {
+        const images = await db
+          .select({ filename: recipeImages.filename })
+          .from(recipeImages)
+          .innerJoin(recipes, eq(recipeImages.recipeId, recipes.id))
+          .where(eq(recipes.userId, user.id));
+        const { deleteRecipeImage } = await import("@/lib/file-storage");
+        await Promise.all(
+          images.map((image) =>
+            deleteRecipeImage(image.filename).catch(() => false),
+          ),
+        );
+        logger.info(
+          { userId: user.id, imageCount: images.length },
+          "Deleting account and recipe photos",
+        );
       },
     },
   },

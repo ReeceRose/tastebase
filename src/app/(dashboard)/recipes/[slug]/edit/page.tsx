@@ -1,18 +1,26 @@
-import { Edit } from "lucide-react";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { RecipeEditForm } from "@/components/forms/recipe-edit-form";
+import { RecipeEditor } from "@/components/forms/recipe-editor/recipe-editor";
 import { RecipeFormSkeleton } from "@/components/skeletons/recipe-form-skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { auth } from "@/lib/auth/auth";
 import { getRecipeBySlug } from "@/lib/server-actions/recipe-actions";
+import { RecipeEditorMode } from "@/lib/types";
+import { editorValuesFromRecipe } from "@/lib/utils/recipe-editor-values";
 
 interface RecipeEditPageProps {
   params: Promise<{ slug: string }>;
 }
 
-async function RecipeEditContent({ recipeSlug }: { recipeSlug: string }) {
+interface RecipeEditContentProps {
+  recipeSlug: string;
+  userId: string;
+}
+
+async function RecipeEditContent({
+  recipeSlug,
+  userId,
+}: RecipeEditContentProps) {
   const result = await getRecipeBySlug(recipeSlug);
 
   if (!result.success || !result.data) {
@@ -22,7 +30,24 @@ async function RecipeEditContent({ recipeSlug }: { recipeSlug: string }) {
     throw new Error(result.error || "Failed to load recipe");
   }
 
-  return <RecipeEditForm recipe={result.data} />;
+  if (result.data.userId !== userId) {
+    redirect(`/recipes/${result.data.slug}`);
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-[32px] leading-none font-extrabold tracking-[-0.03em] lg:text-title">
+        Edit recipe
+      </h1>
+      <RecipeEditor
+        mode={RecipeEditorMode.EDIT}
+        userId={userId}
+        recipe={result.data}
+        initialValues={editorValuesFromRecipe(result.data)}
+        notice={null}
+      />
+    </div>
+  );
 }
 
 export default async function RecipeEditPage({ params }: RecipeEditPageProps) {
@@ -37,25 +62,9 @@ export default async function RecipeEditPage({ params }: RecipeEditPageProps) {
   const { slug } = await params;
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Edit className="h-6 w-6" />
-            Edit Recipe
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Make changes to your recipe. All fields marked with * are required.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Suspense fallback={<RecipeFormSkeleton />}>
-        <RecipeEditContent recipeSlug={slug} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<RecipeFormSkeleton />}>
+      <RecipeEditContent recipeSlug={slug} userId={session.user.id} />
+    </Suspense>
   );
 }
 
@@ -65,7 +74,7 @@ export async function generateMetadata({ params }: RecipeEditPageProps) {
 
   if (!result.success || !result.data) {
     return {
-      title: "Edit Recipe - Recipe Not Found",
+      title: "Recipe not found | Tastebase",
       description: "The recipe you're trying to edit could not be found.",
     };
   }
@@ -73,7 +82,7 @@ export async function generateMetadata({ params }: RecipeEditPageProps) {
   const recipe = result.data;
 
   return {
-    title: `Edit ${recipe.title} - Tastebase`,
+    title: `Edit ${recipe.title} | Tastebase`,
     description: `Edit your ${recipe.title} recipe. Update ingredients, instructions, and more.`,
   };
 }

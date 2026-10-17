@@ -88,9 +88,11 @@ export function SignInForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
+          <CardTitle className="text-[28px] leading-tight tracking-[-0.03em]">
+            Sign in to Tastebase
+          </CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Use the email and password you signed up with.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -152,22 +154,22 @@ export function SignInForm({
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <Loading size={ComponentSize.SM} />
-                      Logging in...
+                      Signing in…
                     </div>
                   ) : (
-                    "Login"
+                    "Sign in"
                   )}
                 </Button>
               </div>
             </div>
 
             <div className="mt-4 text-center text-sm">
-              Don't have an account?{" "}
+              New here?{" "}
               <Link
                 href="/auth/sign-up"
                 className="underline underline-offset-4"
               >
-                Sign up
+                Create an account
               </Link>
             </div>
           </form>

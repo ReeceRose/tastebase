@@ -5,6 +5,7 @@ import {
   recipeImages,
   recipeIngredients,
   recipeInstructions,
+  recipeNotes,
   recipes,
   recipeTagRelations,
   recipeTags,
@@ -34,6 +35,10 @@ export async function searchRecipes(
       tags: searchTags,
       maxPrepTime,
       maxCookTime,
+      maxTotalTime,
+      authorId,
+      recipeIds,
+      recordHistory = true,
       servings,
       isPublic,
       sortBy,
@@ -55,6 +60,7 @@ export async function searchRecipes(
         cookTimeMinutes: recipes.cookTimeMinutes,
         difficulty: recipes.difficulty,
         cuisine: recipes.cuisine,
+        swatch: recipes.swatch,
         sourceUrl: recipes.sourceUrl,
         sourceName: recipes.sourceName,
         isPublic: recipes.isPublic,
@@ -73,11 +79,28 @@ export async function searchRecipes(
     // Build WHERE conditions
     const conditions = [
       eq(recipes.isArchived, false),
-      // User can see their own recipes or public recipes
-      isPublic !== undefined
-        ? eq(recipes.isPublic, isPublic)
-        : sql`(${recipes.userId} = ${userId} OR ${recipes.isPublic} = true)`,
+      sql`(${recipes.userId} = ${userId} OR ${recipes.isPublic} = true)`,
     ];
+
+    if (isPublic !== undefined) {
+      conditions.push(eq(recipes.isPublic, isPublic));
+    }
+
+    if (authorId) {
+      conditions.push(eq(recipes.userId, authorId));
+    }
+
+    if (recipeIds) {
+      if (recipeIds.length === 0) {
+        return {
+          recipes: [],
+          total: 0,
+          hasMore: false,
+          filters: { cuisines: [], difficulties: [], tags: [] },
+        };
+      }
+      conditions.push(inArray(recipes.id, recipeIds));
+    }
 
     // Full-text search using FTS if query provided
     if (query && query.trim().length > 0) {
@@ -197,6 +220,12 @@ export async function searchRecipes(
       );
     }
 
+    if (maxTotalTime) {
+      conditions.push(
+        sql`(COALESCE(${recipes.prepTimeMinutes}, 0) + COALESCE(${recipes.cookTimeMinutes}, 0)) BETWEEN 1 AND ${maxTotalTime}`,
+      );
+    }
+
     // Filter by servings
     if (servings) {
       conditions.push(eq(recipes.servings, servings));
@@ -255,7 +284,8 @@ export async function searchRecipes(
             prepTimeMinutes: recipes.prepTimeMinutes,
             cookTimeMinutes: recipes.cookTimeMinutes,
             difficulty: recipes.difficulty,
-            averageRating: recipes.title, // Placeholder - averageRating would need to be computed
+            totalTime: sql`COALESCE(${recipes.prepTimeMinutes}, 0) + COALESCE(${recipes.cookTimeMinutes}, 0)`,
+            averageRating: sql`(SELECT AVG(${recipeNotes.rating}) FROM ${recipeNotes} WHERE ${recipeNotes.recipeId} = ${recipes.id})`,
           }[sortBy];
 
     // Build final query with conditions and sorting
@@ -330,7 +360,7 @@ export async function searchRecipes(
     }
 
     const trimmedQuery = query?.trim();
-    if (trimmedQuery) {
+    if (trimmedQuery && recordHistory) {
       const normalizedQuery = trimmedQuery.toLowerCase();
       try {
         await db

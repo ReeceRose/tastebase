@@ -1,33 +1,45 @@
-import { Heart } from "lucide-react";
-import { Suspense } from "react";
-import { RecipeFavoritesList } from "@/components/lists/recipe-favorites-list";
-import { RecipeCardGridSkeleton } from "@/components/skeletons/recipe-card-skeleton";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { RecipeLibrary } from "@/components/layout/recipe-library";
+import { auth } from "@/lib/auth/auth";
+import { LibraryScope } from "@/lib/types";
+import {
+  type LibrarySearchParams,
+  parseLibraryParams,
+} from "@/lib/utils/library-params";
 
-export const metadata = {
-  title: "Favorite Recipes | Tastebase",
-  description: "Your collection of go-to recipes and family favorites",
+export const metadata: Metadata = {
+  title: "Favourites | Tastebase",
+  description: "The recipes you come back to",
 };
 
-export default function FavoritesPage() {
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <Heart className="h-6 w-6 text-chart-2" />
-            <h1 className="text-2xl font-semibold text-foreground">
-              Favorite Recipes
-            </h1>
-          </div>
-          <p className="text-muted-foreground">
-            Your collection of go-to recipes and family favorites
-          </p>
-        </div>
-      </div>
+interface FavouritesPageProps {
+  searchParams: Promise<LibrarySearchParams>;
+}
 
-      <Suspense fallback={<RecipeCardGridSkeleton count={6} />}>
-        <RecipeFavoritesList />
-      </Suspense>
-    </div>
+export default async function FavouritesPage({
+  searchParams,
+}: FavouritesPageProps) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    redirect("/auth/sign-in");
+  }
+
+  const filters = parseLibraryParams(
+    await searchParams,
+    LibraryScope.FAVOURITES,
+  );
+
+  return (
+    <RecipeLibrary
+      title="Favourites"
+      filters={filters}
+      basePath="/recipes/favourites"
+      currentUserId={session.user.id}
+    />
   );
 }

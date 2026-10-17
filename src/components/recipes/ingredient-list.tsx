@@ -1,158 +1,102 @@
 "use client";
 
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { IngredientDisplay } from "@/components/ui/ingredient-display";
-import type { User } from "@/db/schema.base";
+import { Check } from "lucide-react";
+import type { MeasurementUnit } from "@/lib/types";
 import type { RecipeIngredient } from "@/lib/types/recipe-types";
-import {
-  formatIngredientAmount,
-  groupIngredientsByGroup,
-} from "@/lib/utils/recipe-utils";
+import { cn } from "@/lib/utils";
+import { displayIngredientAmount } from "@/lib/utils/ingredient-scaling";
+import { groupIngredientsByGroup } from "@/lib/utils/recipe-utils";
 
 interface IngredientListProps {
   ingredients: RecipeIngredient[];
-  showCheckboxes?: boolean;
-  showToggles?: boolean;
-  userPreferences?: Pick<User, "preferredWeightUnit" | "preferredVolumeUnit">;
-  className?: string;
+  factor: number;
+  system: MeasurementUnit | null;
+  ticked: Set<string>;
+  onToggle: (ingredientId: string) => void;
+  large?: boolean;
 }
 
 export function IngredientList({
   ingredients,
-  showCheckboxes = false,
-  showToggles = false,
-  userPreferences,
-  className,
+  factor,
+  system,
+  ticked,
+  onToggle,
+  large = false,
 }: IngredientListProps) {
-  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(
-    new Set(),
-  );
-  const groupedIngredients = groupIngredientsByGroup(ingredients);
-
-  const toggleIngredient = (ingredientId: string) => {
-    setCheckedIngredients((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(ingredientId)) {
-        newSet.delete(ingredientId);
-      } else {
-        newSet.add(ingredientId);
-      }
-      return newSet;
-    });
-  };
-
-  const checkedCount = checkedIngredients.size;
-
-  if (ingredients.length === 0) {
-    return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>Ingredients</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No ingredients listed</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const groups = Object.entries(groupIngredientsByGroup([...ingredients]));
+  const showGroupNames = groups.length > 1;
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Ingredients</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {Object.entries(groupedIngredients).map(
-          ([groupName, groupIngredients]) => (
-            <div key={groupName}>
-              {Object.keys(groupedIngredients).length > 1 && (
-                <h4 className="font-medium text-sm text-muted-foreground mb-2 uppercase tracking-wide">
-                  {groupName}
-                </h4>
-              )}
+    <div className="space-y-5">
+      {groups.map(([groupName, items]) => (
+        <div key={groupName}>
+          {showGroupNames && (
+            <h3 className="mb-1 text-meta text-muted-foreground">
+              {groupName}
+            </h3>
+          )}
+          <ul className="divide-y-2 divide-background">
+            {items.map((ingredient) => {
+              const done = ticked.has(ingredient.id);
+              const { amount, unit } = displayIngredientAmount(
+                ingredient.amount,
+                ingredient.unit,
+                factor,
+                system,
+              );
+              const quantity = [amount, unit].filter(Boolean).join(" ");
 
-              <div className="space-y-3">
-                {groupIngredients.map((ingredient) => {
-                  const isChecked = checkedIngredients.has(ingredient.id);
-
-                  return (
-                    <div
-                      key={ingredient.id}
-                      className="flex items-start gap-3 group"
-                    >
-                      {showCheckboxes && (
-                        <div className="mt-0.5">
-                          <Checkbox
-                            checked={isChecked}
-                            onCheckedChange={() =>
-                              toggleIngredient(ingredient.id)
-                            }
-                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                          />
-                        </div>
+              return (
+                <li key={ingredient.id}>
+                  <label
+                    className={cn(
+                      "grid w-full cursor-pointer grid-cols-[22px_minmax(64px,auto)_1fr] items-start gap-x-3 rounded-sm py-2.5 text-left transition-opacity duration-150 has-[input:focus-visible]:ring-[3px] has-[input:focus-visible]:ring-ring",
+                      large ? "text-lead" : "text-body",
+                      done && "opacity-45",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={done}
+                      onChange={() => onToggle(ingredient.id)}
+                      className="sr-only"
+                    />
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "mt-0.5 grid size-5 place-items-center rounded-[7px] border-2 transition-colors duration-150",
+                        done
+                          ? "border-swatch-herb bg-swatch-herb text-swatch-herb-fg"
+                          : "border-foreground",
                       )}
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2">
-                          {showToggles ? (
-                            <IngredientDisplay
-                              id={ingredient.id}
-                              amount={ingredient.amount || ""}
-                              unit={ingredient.unit || ""}
-                              name={ingredient.name}
-                              notes={ingredient.notes || undefined}
-                              userPreferences={userPreferences}
-                              showToggle={true}
-                              className={`text-sm leading-relaxed transition-all duration-200 ${
-                                isChecked
-                                  ? "line-through text-muted-foreground"
-                                  : ""
-                              }`}
-                            />
-                          ) : (
-                            <span
-                              className={`text-sm leading-relaxed transition-all duration-200 ${
-                                isChecked
-                                  ? "line-through text-muted-foreground"
-                                  : ""
-                              }`}
-                            >
-                              {formatIngredientAmount(ingredient)}
-                            </span>
-                          )}
-
-                          {ingredient.isOptional && (
-                            <Badge variant="outline" className="text-xs">
-                              optional
-                            </Badge>
-                          )}
-                        </div>
-
-                        {ingredient.notes && !showToggles && (
-                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                            {ingredient.notes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ),
-        )}
-
-        {showCheckboxes && checkedCount > 0 && (
-          <div className="pt-3 border-t mt-4">
-            <p className="text-sm text-muted-foreground">
-              {checkedCount} of {ingredients.length} ingredients checked
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                    >
+                      {done && <Check className="size-3.5" strokeWidth={3} />}
+                    </span>
+                    <span className="font-extrabold tabular">
+                      {quantity || "—"}
+                    </span>
+                    <span className={cn(done && "line-through decoration-2")}>
+                      {ingredient.name}
+                      {ingredient.notes && (
+                        <span className="text-muted-foreground">
+                          , {ingredient.notes}
+                        </span>
+                      )}
+                      {ingredient.isOptional && (
+                        <span className="text-muted-foreground">
+                          {" "}
+                          (optional)
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+    </div>
   );
 }

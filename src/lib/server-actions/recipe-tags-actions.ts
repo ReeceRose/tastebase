@@ -1,12 +1,16 @@
 "use server";
 
-import { and, count, desc, eq, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, or } from "drizzle-orm";
 import { headers } from "next/headers";
 import { db } from "@/db";
-import { users } from "@/db/schema.base";
 import { recipes, recipeTagRelations, recipeTags } from "@/db/schema.recipes";
 import { auth } from "@/lib/auth/auth";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
+import { visibleTo } from "@/lib/search/recipe-summaries";
+import { getAuthenticatedUser } from "@/lib/server-actions/base";
+import type { TagTileData } from "@/lib/types/recipe-types";
+import { isNextRedirectError } from "@/lib/utils";
+import { resolveSwatch } from "@/lib/utils/swatches";
 
 const logger = createOperationLogger("recipe-tags-actions");
 
@@ -51,206 +55,78 @@ export async function getAllUserTags() {
   }
 }
 
-export async function getRecipesByTag(
-  tagId: string,
-  limit: number = 20,
-  offset: number = 0,
-) {
+export async function getTagNameById(tagId: string): Promise<string | null> {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    if (!session?.user?.id) {
-      return { success: false, error: "Authentication required" };
-    }
-
-    // Verify tag exists and get tag details
-    const tagResult = await db
-      .select()
+    const [tag] = await db
+      .select({ name: recipeTags.name })
       .from(recipeTags)
       .where(eq(recipeTags.id, tagId))
       .limit(1);
-
-    if (!tagResult.length) {
-      return { success: false, error: "Tag not found" };
-    }
-
-    const tag = tagResult[0];
-
-    // Get recipes with this tag (user's recipes and public recipes)
-    const recipesWithTag = await db
-      .select({
-        id: recipes.id,
-        slug: recipes.slug,
-        userId: recipes.userId,
-        title: recipes.title,
-        description: recipes.description,
-        servings: recipes.servings,
-        prepTimeMinutes: recipes.prepTimeMinutes,
-        cookTimeMinutes: recipes.cookTimeMinutes,
-        difficulty: recipes.difficulty,
-        cuisine: recipes.cuisine,
-        sourceUrl: recipes.sourceUrl,
-        sourceName: recipes.sourceName,
-        isPublic: recipes.isPublic,
-        isArchived: recipes.isArchived,
-        createdAt: recipes.createdAt,
-        updatedAt: recipes.updatedAt,
-        // Add user info for author display
-        userName: users.name,
-        userEmail: users.email,
-      })
-      .from(recipes)
-      .innerJoin(
-        recipeTagRelations,
-        eq(recipes.id, recipeTagRelations.recipeId),
-      )
-      .leftJoin(users, eq(recipes.userId, users.id))
-      .where(
-        and(
-          eq(recipeTagRelations.tagId, tagId),
-          eq(recipes.isArchived, false),
-          or(eq(recipes.userId, session.user.id), eq(recipes.isPublic, true)),
-        ),
-      )
-      .orderBy(desc(recipes.updatedAt))
-      .limit(limit)
-      .offset(offset);
-
-    // Get total count for pagination
-    const totalCountResult = await db
-      .select({ count: count() })
-      .from(recipes)
-      .innerJoin(
-        recipeTagRelations,
-        eq(recipes.id, recipeTagRelations.recipeId),
-      )
-      .where(
-        and(
-          eq(recipeTagRelations.tagId, tagId),
-          eq(recipes.isArchived, false),
-          or(eq(recipes.userId, session.user.id), eq(recipes.isPublic, true)),
-        ),
-      );
-
-    const totalCount = totalCountResult[0]?.count || 0;
-    const hasMore = offset + recipesWithTag.length < totalCount;
-
-    // Transform recipes to include user info
-    const recipesWithUserInfo = recipesWithTag.map((recipe) => ({
-      ...recipe,
-      user: recipe.userName
-        ? {
-            id: recipe.userId,
-            name: recipe.userName,
-            email: recipe.userEmail,
-          }
-        : undefined,
-    }));
-
-    return {
-      success: true,
-      data: {
-        tag,
-        recipes: recipesWithUserInfo,
-        totalCount,
-        hasMore,
-      },
-    };
+    return tag?.name ?? null;
   } catch (error) {
-    logError(logger, "Failed to get recipes by tag", error, { tagId });
-    return { success: false, error: "Failed to get recipes by tag" };
+    logError(logger, "Failed to look up tag", error, { tagId });
+    return null;
   }
 }
 
-export async function getTagStats() {
+const PREVIEW_TITLES = 3;
+
+export async function getTagTiles(): Promise<TagTileData[]> {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    if (!session?.user?.id) {
-      return { success: false, error: "Authentication required" };
+    const user = await getAuthenticatedUser();
+    const tags = await db
+      .select({
+        id: recipeTags.id,
+        name: recipeTags.name,
+        color: recipeTags.color,
+        category: recipeTags.category,
+        recipeCount: count(recipeTagRelations.recipeId),
+      })
+      .from(recipeTags)
+      .innerJoin(
+        recipeTagRelations,
+        eq(recipeTags.id, recipeTagRelations.tagId),
+      )
+      .innerJoin(recipes, eq(recipeTagRelations.recipeId, recipes.id))
+      .where(visibleTo(user.id))
+      .groupBy(recipeTags.id)
+      .orderBy(desc(count(recipeTagRelations.recipeId)), asc(recipeTags.name));
+
+    if (tags.length === 0) return [];
+
+    const previews = await db
+      .select({ tagId: recipeTagRelations.tagId, title: recipes.title })
+      .from(recipeTagRelations)
+      .innerJoin(recipes, eq(recipeTagRelations.recipeId, recipes.id))
+      .where(
+        and(
+          visibleTo(user.id),
+          inArray(
+            recipeTagRelations.tagId,
+            tags.map((tag) => tag.id),
+          ),
+        ),
+      )
+      .orderBy(desc(recipes.createdAt));
+
+    const titlesByTag = new Map<string, string[]>();
+    for (const preview of previews) {
+      const titles = titlesByTag.get(preview.tagId) ?? [];
+      if (titles.length < PREVIEW_TITLES) titles.push(preview.title);
+      titlesByTag.set(preview.tagId, titles);
     }
 
-    const [totalTags, totalRecipesTagged, avgTagsPerRecipe] = await Promise.all(
-      [
-        // Total unique tags used by user's recipes and public recipes
-        db
-          .select({ count: sql<number>`count(distinct ${recipeTags.id})` })
-          .from(recipeTags)
-          .innerJoin(
-            recipeTagRelations,
-            eq(recipeTags.id, recipeTagRelations.tagId),
-          )
-          .innerJoin(recipes, eq(recipeTagRelations.recipeId, recipes.id))
-          .where(
-            and(
-              eq(recipes.isArchived, false),
-              or(
-                eq(recipes.userId, session.user.id),
-                eq(recipes.isPublic, true),
-              ),
-            ),
-          ),
-
-        // Total recipes that have at least one tag (user's + public)
-        db
-          .select({ count: sql<number>`count(distinct ${recipes.id})` })
-          .from(recipes)
-          .innerJoin(
-            recipeTagRelations,
-            eq(recipes.id, recipeTagRelations.recipeId),
-          )
-          .where(
-            and(
-              eq(recipes.isArchived, false),
-              or(
-                eq(recipes.userId, session.user.id),
-                eq(recipes.isPublic, true),
-              ),
-            ),
-          ),
-
-        // Average tags per recipe (user's + public)
-        db
-          .select({
-            avg: sql<number>`avg(tag_count)`,
-          })
-          .from(
-            db
-              .select({
-                recipeId: recipeTagRelations.recipeId,
-                tagCount: sql<number>`count(${recipeTagRelations.tagId})`.as(
-                  "tag_count",
-                ),
-              })
-              .from(recipeTagRelations)
-              .innerJoin(recipes, eq(recipeTagRelations.recipeId, recipes.id))
-              .where(
-                and(
-                  eq(recipes.isArchived, false),
-                  or(
-                    eq(recipes.userId, session.user.id),
-                    eq(recipes.isPublic, true),
-                  ),
-                ),
-              )
-              .groupBy(recipeTagRelations.recipeId)
-              .as("recipe_tag_counts"),
-          ),
-      ],
-    );
-
-    return {
-      success: true,
-      data: {
-        totalTags: totalTags[0]?.count || 0,
-        totalRecipesTagged: totalRecipesTagged[0]?.count || 0,
-        avgTagsPerRecipe: Math.round((avgTagsPerRecipe[0]?.avg || 0) * 10) / 10,
-      },
-    };
+    return tags.map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      category: tag.category,
+      swatch: resolveSwatch(tag.id, tag.color),
+      recipeCount: tag.recipeCount,
+      previewTitles: titlesByTag.get(tag.id) ?? [],
+    }));
   } catch (error) {
-    logError(logger, "Failed to get tag stats", error);
-    return { success: false, error: "Failed to get tag stats" };
+    if (isNextRedirectError(error)) throw error;
+    logError(logger, "Failed to load tag tiles", error);
+    return [];
   }
 }

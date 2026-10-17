@@ -26,40 +26,39 @@ export function ThemeProvider({
   defaultTheme = Theme.SYSTEM,
   storageKey = "ui-theme",
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    // Return default theme on server
-    if (typeof window === "undefined") {
-      return defaultTheme;
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(storageKey);
+    if (stored && (Object.values(Theme) as string[]).includes(stored)) {
+      setTheme(stored as Theme);
     }
-
-    // Get stored theme on client
-    const storedTheme = localStorage.getItem(storageKey) as Theme;
-    return storedTheme || defaultTheme;
-  });
-
-  const [mounted, setMounted] = useState(false);
+    setLoaded(true);
+  }, [storageKey]);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-
+    if (!loaded) return;
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
 
-    if (theme === Theme.SYSTEM) {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? Theme.DARK
-        : Theme.LIGHT;
-      root.classList.add(systemTheme);
-      return;
-    }
+    const apply = () => {
+      const resolved =
+        theme === Theme.SYSTEM
+          ? media.matches
+            ? Theme.DARK
+            : Theme.LIGHT
+          : theme;
+      root.classList.remove(Theme.LIGHT, Theme.DARK);
+      root.classList.add(resolved);
+      root.style.colorScheme = resolved;
+    };
 
-    root.classList.add(theme);
-  }, [theme, mounted]);
+    apply();
+    if (theme !== Theme.SYSTEM) return;
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, [theme, loaded]);
 
   const value = {
     theme,
