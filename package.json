@@ -123,7 +123,7 @@
     "@radix-ui/react-tabs": "1.2.1",
     "@radix-ui/react-tooltip": "1.4.1",
     "@t3-oss/env-nextjs": "0.13.11",
-    "ai": "7.0.139",
+    "ai": "7.0.140",
     "ai-sdk-ollama": "4.5.0",
     "better-auth": "1.7.7",
     "better-sqlite3": "13.0.3",
