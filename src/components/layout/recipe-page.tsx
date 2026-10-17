@@ -72,7 +72,7 @@ export function RecipePage({
 
       <PhotoStrip images={recipe.images} title={recipe.title} />
 
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(300px,360px)_1fr] xl:grid-cols-[340px_1fr_280px]">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(300px,360px)_1fr] xl:grid-cols-[340px_1fr_280px]">
         <div className="lg:sticky lg:top-6">
           <IngredientPanel
             recipeId={recipe.id}

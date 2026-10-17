@@ -74,14 +74,17 @@ export function RecipeTile({
       )}
 
       <div
-        className={cn("relative flex flex-1 flex-col", compact ? "p-4" : "p-5")}
+        className={cn(
+          "relative flex flex-1 flex-col",
+          compact ? "p-4" : "p-4 sm:p-5",
+        )}
       >
         <h3
           className={cn(
-            "line-clamp-3 max-w-[13ch] pr-6",
+            "line-clamp-3 max-w-[13ch] pr-6 wrap-break-word",
             compact
               ? "text-[18px] leading-[1.05] font-extrabold tracking-[-0.02em]"
-              : "text-tile",
+              : "text-[19px] leading-[1.05] font-extrabold tracking-[-0.02em] sm:text-tile",
           )}
         >
           {recipe.title}

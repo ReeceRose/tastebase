@@ -56,7 +56,7 @@ export function HomeFeature({ recipe, currentUserId }: HomeFeatureProps) {
         </p>
         <h2
           id="home-feature-title"
-          className="mt-4 max-w-[12ch] text-[40px] leading-[0.95] font-extrabold tracking-[-0.035em] sm:text-display lg:text-[64px]"
+          className="mt-4 max-w-[12ch] wrap-break-word hyphens-auto text-[34px] min-[380px]:text-[40px] leading-[0.95] font-extrabold tracking-[-0.035em] sm:text-display lg:text-[64px]"
         >
           {recipe.title}
         </h2>

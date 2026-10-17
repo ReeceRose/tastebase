@@ -210,7 +210,7 @@ export function TemplateForm({
             id={contentId}
             {...register("content")}
             placeholder="Enter your template content with placeholders like {{date}}, {{recipeName}}, etc."
-            className="min-h-[200px] resize-y font-mono text-sm w-full"
+            className="min-h-[200px] resize-y font-mono text-base sm:text-sm w-full"
             rows={10}
           />
           {errors.content && (

@@ -45,7 +45,7 @@ export function EditorDetails({ automaticSwatch }: EditorDetailsProps) {
 
   return (
     <EditorSectionCard id={EditorSection.DETAILS} title="Details">
-      <div className="grid gap-6 lg:grid-cols-[1fr_240px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_240px]">
         <div className="space-y-5">
           <EditorField
             id={ids.tags}
@@ -101,7 +101,7 @@ export function EditorDetails({ automaticSwatch }: EditorDetailsProps) {
                 }}
                 onBlur={() => addTags(tagText)}
                 placeholder={tags.length === 0 ? "weeknight, vegetarian" : ""}
-                className="h-9 min-w-32 flex-1 bg-transparent px-2 text-body outline-none placeholder:text-muted-foreground"
+                className="h-9 min-w-32 flex-1 bg-transparent px-2 text-base sm:text-body outline-none placeholder:text-muted-foreground"
               />
             </div>
           </EditorField>

@@ -308,7 +308,7 @@ export function RecipeEditor({
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-[200px_1fr]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[200px_1fr]">
           <EditorSectionNav sectionsWithErrors={errorSections} />
           <div className="min-w-0 space-y-5">
             <EditorBasics />

@@ -99,6 +99,8 @@ pnpm run db:studio
 pnpm run db:seed
 ```
 
+Seeding adds an example household (julia@, marco@ and sarah@example.com, password `tastebase-demo`) with a handful of recipes adapted from Serious Eats. It is safe to re-run: it only replaces `@example.com` members and their recipes, so your own account and recipes are left alone.
+
 ### Code Quality
 
 ```bash

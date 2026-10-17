@@ -56,7 +56,7 @@ export function EditorBasics() {
             {...register("title")}
             placeholder="Weeknight chana masala"
             aria-invalid={Boolean(errors.title)}
-            className="h-14 text-2xl font-extrabold tracking-[-0.02em]"
+            className="h-14 text-2xl font-extrabold sm:text-2xl tracking-[-0.02em]"
           />
         </EditorField>
 

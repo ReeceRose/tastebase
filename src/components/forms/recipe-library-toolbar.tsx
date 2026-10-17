@@ -137,7 +137,7 @@ export function RecipeLibraryToolbar({
             value={text}
             onChange={(event) => setText(event.target.value)}
             placeholder="Search by name, ingredient or note"
-            className="h-12 w-full rounded-control border-2 border-foreground bg-card pr-12 pl-12 text-body outline-none placeholder:text-muted-foreground focus-visible:ring-[3px] focus-visible:ring-ring/25 [&::-webkit-search-cancel-button]:hidden"
+            className="h-12 w-full rounded-control border-2 border-foreground bg-card pr-12 pl-12 text-base sm:text-body outline-none placeholder:text-muted-foreground focus-visible:ring-[3px] focus-visible:ring-ring/25 [&::-webkit-search-cancel-button]:hidden"
           />
           {text && (
             <button
@@ -150,7 +150,7 @@ export function RecipeLibraryToolbar({
             </button>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select
             value={sortValue}
             onValueChange={(value) => update({ sort: value as LibrarySort })}
@@ -180,7 +180,7 @@ export function RecipeLibraryToolbar({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="-mx-5 flex items-center gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&>*]:shrink-0">
         {otherMembers.map((member) => {
           const active = filters.authorId === member.id;
           return (

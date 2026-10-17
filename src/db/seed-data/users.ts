@@ -1,10 +1,18 @@
-import { nanoid } from "nanoid";
 import { MeasurementUnit, TemperatureUnit } from "@/lib/types";
 
-// Test users for development seeding
+// Every seeded member signs in with this password
+export const SEED_USER_PASSWORD = "tastebase-demo";
+
+export const SEED_USER_IDS = {
+  julia: "seed-user-julia",
+  marco: "seed-user-marco",
+  sarah: "seed-user-sarah",
+};
+
+// Example household members for development seeding
 export const seedUsers = [
   {
-    id: nanoid(),
+    id: SEED_USER_IDS.julia,
     name: "Julia Rodriguez",
     email: "julia@example.com",
     emailVerified: true,
@@ -14,7 +22,7 @@ export const seedUsers = [
     image: null,
   },
   {
-    id: nanoid(),
+    id: SEED_USER_IDS.marco,
     name: "Marco Chen",
     email: "marco@example.com",
     emailVerified: true,
@@ -24,10 +32,10 @@ export const seedUsers = [
     image: null,
   },
   {
-    id: nanoid(),
+    id: SEED_USER_IDS.sarah,
     name: "Sarah Johnson",
     email: "sarah@example.com",
-    emailVerified: false,
+    emailVerified: true,
     preferredTemperatureUnit: TemperatureUnit.FAHRENHEIT,
     preferredWeightUnit: MeasurementUnit.METRIC,
     preferredVolumeUnit: MeasurementUnit.IMPERIAL,

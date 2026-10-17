@@ -28,7 +28,9 @@ export function TagTile({ tag }: TagTileProps) {
           classes.deep,
         )}
       />
-      <h3 className="relative text-tile capitalize">{tag.name}</h3>
+      <h3 className="relative text-[19px] leading-[1.05] font-extrabold tracking-[-0.02em] wrap-break-word capitalize sm:text-tile">
+        {tag.name}
+      </h3>
       <p className="relative mt-1 text-meta opacity-85">{label}</p>
       {tag.previewTitles.length > 0 && (
         <ul className="relative mt-auto space-y-0.5 pt-4 pr-14 text-sm">

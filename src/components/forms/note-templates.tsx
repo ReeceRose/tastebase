@@ -212,7 +212,7 @@ export function NoteTemplates({
           </Badge>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent className="max-h-[85dvh] sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
@@ -228,16 +228,16 @@ export function NoteTemplates({
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="user" className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              Your Templates ({userTemplates.length})
+              Yours ({userTemplates.length})
             </TabsTrigger>
             <TabsTrigger value="system" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              System Templates ({filteredTemplates.length})
+              Built in ({filteredTemplates.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="user" className="mt-4">
-            <ScrollArea className="max-h-[50vh] pr-4">
+            <ScrollArea className="max-h-[50dvh] sm:pr-4">
               {loadingUserTemplates ? (
                 <div className="space-y-3">
                   {[0, 1, 2].map((i) => (
@@ -272,7 +272,7 @@ export function NoteTemplates({
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors"
                     >
                       <div className="flex-1 min-w-0 mr-4">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
                           <h3 className="font-medium text-sm">
                             {template.name}
                           </h3>
@@ -316,7 +316,7 @@ export function NoteTemplates({
           </TabsContent>
 
           <TabsContent value="system" className="mt-4">
-            <ScrollArea className="max-h-[50vh] pr-4">
+            <ScrollArea className="max-h-[50dvh] sm:pr-4">
               <div className="space-y-3">
                 {filteredTemplates.map((template) => (
                   <div
@@ -324,7 +324,7 @@ export function NoteTemplates({
                     className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors"
                   >
                     <div className="flex-1 min-w-0 mr-4">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <h3 className="font-medium text-sm">{template.name}</h3>
                         <Badge variant="secondary" className="text-xs">
                           {template.category}

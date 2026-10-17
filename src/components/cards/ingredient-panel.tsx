@@ -47,7 +47,7 @@ export function IngredientPanel({
               onClick={scale.decrease}
               disabled={scale.servings <= 1}
               aria-label="Fewer servings"
-              className="grid size-8 place-items-center rounded-full bg-card outline-none disabled:opacity-40 focus-visible:ring-[3px] focus-visible:ring-ring"
+              className="grid size-10 place-items-center rounded-full bg-card sm:size-8 outline-none disabled:opacity-40 focus-visible:ring-[3px] focus-visible:ring-ring"
             >
               <Minus className="size-4" strokeWidth={2.5} />
             </button>
@@ -61,13 +61,26 @@ export function IngredientPanel({
               type="button"
               onClick={scale.increase}
               aria-label="More servings"
-              className="grid size-8 place-items-center rounded-full bg-card outline-none focus-visible:ring-[3px] focus-visible:ring-ring"
+              className="grid size-10 place-items-center rounded-full bg-card sm:size-8 outline-none focus-visible:ring-[3px] focus-visible:ring-ring"
             >
               <Plus className="size-4" strokeWidth={2.5} />
             </button>
           </div>
         )}
       </div>
+
+      {scale.isScaled && (
+        <p
+          role="note"
+          className="mb-4 rounded-control bg-background px-4 py-3 text-meta"
+        >
+          <span className="font-extrabold">
+            Scaled from {scale.original} to {scale.servings} servings.
+          </span>{" "}
+          Amounts are simply multiplied, so check seasoning, pan size and
+          cooking times. Amounts in the method aren't scaled.
+        </p>
+      )}
 
       {ingredients.length === 0 ? (
         <p className="text-muted-foreground">No ingredients listed yet.</p>

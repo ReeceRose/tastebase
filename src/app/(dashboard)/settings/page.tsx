@@ -58,7 +58,7 @@ export default async function SettingsPage({
       <h1 className="text-[32px] leading-none font-extrabold tracking-[-0.03em] lg:text-title">
         Settings
       </h1>
-      <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
         <SettingsNav active={section} />
         <section
           aria-labelledby="settings-section-title"

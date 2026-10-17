@@ -65,7 +65,7 @@ export function NoteBubble({ note, isOwn, onEdit, onDelete }: NoteBubbleProps) {
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Note options"
-              className="-mr-1 grid size-7 place-items-center rounded-full outline-none hover:bg-black/10 focus-visible:ring-[3px] focus-visible:ring-ring"
+              className="-mr-1 grid size-9 place-items-center sm:size-7 rounded-full outline-none hover:bg-black/10 focus-visible:ring-[3px] focus-visible:ring-ring"
             >
               <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>

@@ -10,7 +10,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
 import { IngredientList } from "@/components/recipes/ingredient-list";
 import { Button } from "@/components/ui/button";
@@ -33,6 +40,7 @@ import {
 import type { RecipeWithRelations } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
 import { convertTemperaturesInText } from "@/lib/utils/ingredient-scaling";
+import { matchStepIngredients } from "@/lib/utils/step-ingredients";
 import { isDarkSwatch, swatchClasses } from "@/lib/utils/swatches";
 import { formatTotalTime } from "@/lib/utils/time-formatting";
 import { formatTemperatureForDisplay } from "@/lib/utils/unit-conversions";
@@ -55,8 +63,9 @@ export function CookMode({
   const router = useRouter();
   const classes = swatchClasses(swatch);
   const dark = isDarkSwatch(swatch);
-  const steps = [...recipe.instructions].sort(
-    (a, b) => a.stepNumber - b.stepNumber,
+  const steps = useMemo(
+    () => [...recipe.instructions].sort((a, b) => a.stepNumber - b.stepNumber),
+    [recipe.instructions],
   );
   const [index, setIndex] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -70,7 +79,17 @@ export function CookMode({
     toast.success(`Time's up: ${timer.label}`);
   });
 
+  const stepIngredients = useMemo(
+    () =>
+      matchStepIngredients(
+        steps.map((item) => item.instruction),
+        recipe.ingredients,
+      ),
+    [steps, recipe.ingredients],
+  );
+
   const step = steps[index];
+  const usedHere = stepIngredients[index] ?? [];
   const isLast = index === steps.length - 1;
   const stepTime = step?.timeMinutes ?? null;
   const stepTimer = step
@@ -136,6 +155,7 @@ export function CookMode({
           <Button
             variant={ButtonVariant.SECONDARY}
             onClick={() => setDrawerOpen(true)}
+            aria-label="Ingredients"
           >
             <ListChecks className="size-5" />
             <span className="hidden sm:inline">Ingredients</span>
@@ -230,6 +250,25 @@ export function CookMode({
                 </div>
               )}
             </div>
+
+            {usedHere.length > 0 && (
+              <section
+                aria-label="Ingredients for this step"
+                className="mt-8 rounded-tile bg-card p-5 sm:p-6"
+              >
+                <h2 className="mb-1 text-meta text-muted-foreground">
+                  For this step
+                </h2>
+                <IngredientList
+                  ingredients={usedHere}
+                  factor={1}
+                  system={measurementSystem}
+                  ticked={ticked}
+                  onToggle={toggle}
+                  large
+                />
+              </section>
+            )}
           </div>
         ) : (
           <p className="mx-auto max-w-xl text-center text-lead text-muted-foreground">

@@ -124,7 +124,7 @@ export function RecipeHero({
           </p>
           <h1
             id="recipe-title"
-            className="mt-4 max-w-[14ch] text-[44px] leading-[0.92] font-extrabold tracking-[-0.04em] sm:text-[56px] lg:text-hero"
+            className="mt-4 max-w-[14ch] wrap-break-word hyphens-auto text-[36px] min-[380px]:text-[44px] leading-[0.92] font-extrabold tracking-[-0.04em] sm:text-[56px] lg:text-hero"
           >
             {recipe.title}
           </h1>
@@ -154,7 +154,7 @@ export function RecipeHero({
           )}
           {cooked && <p className="mt-3 text-meta opacity-90">{cooked}</p>}
 
-          <div className="mt-7 flex flex-wrap items-center gap-2.5">
+          <div className="mt-7 flex flex-wrap items-center gap-2 sm:gap-2.5">
             <Button size="lg" asChild>
               <Link href={`/recipes/${recipe.slug}/cook`}>
                 <ChefHat className="size-5" />

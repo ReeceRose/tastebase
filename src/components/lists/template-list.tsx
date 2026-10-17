@@ -128,7 +128,7 @@ export function TemplateList() {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search templates"
             aria-label="Search templates"
-            className="h-11 w-full rounded-control border-2 border-input bg-card pr-4 pl-11 outline-none focus-visible:border-foreground focus-visible:ring-[3px] focus-visible:ring-ring/25"
+            className="h-11 w-full rounded-control border-2 border-input bg-card pr-4 pl-11 text-base outline-none sm:text-body focus-visible:border-foreground focus-visible:ring-[3px] focus-visible:ring-ring/25"
           />
         </div>
         <Button onClick={() => setCreating(true)}>
