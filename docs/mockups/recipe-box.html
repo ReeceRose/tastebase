@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tastebase — Recipe Box</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --desk: #d9e0d8;
+    --card: #fffffd;
+    --rule: #c3d6e8;
+    --margin: #e07a6f;
+    --ink: #22304d;
+    --pencil: #6b7488;
+    --tab-a: #f6d77a;
+    --tab-b: #a9d1c2;
+    --tab-c: #f2b8a8;
+    --tab-d: #c5c9ef;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--desk); }
+  body { margin: 0; color: var(--ink); font: 15px/1.5 "Atkinson Hyperlegible", system-ui, sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .top { display: flex; align-items: center; gap: 24px; padding: 20px 40px 0; }
+  .brand { font: 26px "Young Serif", serif; }
+  .search { margin-left: auto; display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 6px; padding: 9px 14px; width: 340px; color: var(--pencil); box-shadow: 0 1px 0 #b9c2b8; }
+  .add { background: var(--ink); color: #fff; border: 0; border-radius: 6px; padding: 10px 16px; font: 700 14px "Atkinson Hyperlegible"; cursor: pointer; }
+  .who { display: flex; }
+  .who span { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; border: 2px solid var(--desk); margin-left: -8px; }
+
+  .tabs { display: flex; gap: 4px; padding: 28px 40px 0; }
+  .tab { padding: 10px 22px 12px; border-radius: 10px 10px 0 0; font-weight: 700; font-size: 14px; position: relative; top: 4px; }
+  .tab.on { top: 0; padding-bottom: 16px; }
+  .tab small { font-weight: 400; opacity: .7; margin-left: 6px; }
+
+  .box { background: var(--tab-a); margin: 0 40px 40px; border-radius: 0 10px 10px 10px; padding: 28px; }
+  .filters { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+  .chip { background: rgba(255,255,255,.6); border-radius: 999px; padding: 6px 14px; font-size: 13px; }
+  .chip.on { background: var(--ink); color: #fff; }
+  .filters .count { margin-left: auto; font: 22px "Caveat", cursive; }
+
+  .layout { display: grid; grid-template-columns: 1fr 520px; gap: 28px; align-items: start; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+
+  .card { background: var(--card); border-radius: 3px; padding: 14px 18px 14px 34px; position: relative; min-height: 168px;
+    background-image: linear-gradient(var(--card) 40px, transparent 40px), repeating-linear-gradient(transparent 0 25px, var(--rule) 25px 26px);
+    box-shadow: 0 1px 0 rgba(34,48,77,.12), 0 6px 14px -8px rgba(34,48,77,.35); }
+  .card::before { content: ""; position: absolute; left: 22px; top: 0; bottom: 0; width: 1px; background: var(--margin); }
+  .card::after { content: ""; position: absolute; left: 0; right: 0; top: 40px; height: 2px; background: var(--margin); opacity: .7; }
+  .card:nth-child(3n+1) { transform: rotate(-.4deg); }
+  .card:nth-child(3n+2) { transform: rotate(.35deg); }
+  .card.sel { outline: 3px solid var(--ink); outline-offset: 3px; }
+  .card h3 { margin: 0; font: 17px/26px "Young Serif", serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .meta { margin-top: 12px; line-height: 26px; font-size: 13.5px; }
+  .card .by { position: absolute; right: 14px; bottom: 8px; font: 20px "Caveat", cursive; color: var(--pencil); }
+  .lock { font-size: 12px; background: #eef0f6; border-radius: 4px; padding: 1px 6px; margin-left: 6px; color: var(--pencil); }
+  .fav { color: var(--margin); }
+
+  .detail { background: var(--card); border-radius: 3px; position: relative; padding: 22px 28px 28px 48px;
+    background-image: linear-gradient(var(--card) 108px, transparent 108px), repeating-linear-gradient(transparent 0 27px, var(--rule) 27px 28px);
+    box-shadow: 0 2px 0 rgba(34,48,77,.12), 0 18px 30px -16px rgba(34,48,77,.45); }
+  .detail::before { content: ""; position: absolute; left: 32px; top: 0; bottom: 0; width: 1px; background: var(--margin); }
+  .detail h2 { margin: 0; font: 30px/1.15 "Young Serif", serif; }
+  .detail .sub { color: var(--pencil); margin-top: 6px; font-size: 14px; }
+  .detail h4 { font: 700 13px/28px "Atkinson Hyperlegible"; margin: 0; color: var(--margin); }
+  .ing, .steps { margin: 0; padding: 0; list-style: none; line-height: 28px; font-size: 14.5px; }
+  .ing b { display: inline-block; min-width: 72px; }
+  .steps { counter-reset: s; }
+  .steps li { counter-increment: s; padding-left: 26px; position: relative; }
+  .steps li::before { content: counter(s); position: absolute; left: 0; font: 700 22px/28px "Caveat", cursive; color: var(--margin); }
+  .note { position: absolute; right: -14px; top: 128px; width: 190px; background: #fff59d; padding: 12px 14px; transform: rotate(2.5deg);
+    font: 21px/1.15 "Caveat", cursive; box-shadow: 0 6px 12px -6px rgba(0,0,0,.35); }
+  .note small { display: block; font-size: 16px; margin-top: 6px; color: var(--pencil); }
+  .actions { display: flex; gap: 10px; margin-top: 12px; }
+  .ghost { background: transparent; border: 1.5px solid var(--ink); border-radius: 6px; padding: 7px 14px; font: 700 13px "Atkinson Hyperlegible"; color: var(--ink); }
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">Tastebase</div>
+    <label class="search">⌕ <span>Search recipes, ingredients, tags</span></label>
+    <button class="add">Add a recipe</button>
+    <div class="who">
+      <span style="background:#f6d77a">M</span><span style="background:#a9d1c2">T</span><span style="background:#f2b8a8">P</span><span style="background:#c5c9ef">S</span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <a class="tab on" style="background:var(--tab-a)" href="#">All recipes<small>48</small></a>
+    <a class="tab" style="background:var(--tab-c)" href="#">Favourites<small>9</small></a>
+    <a class="tab" style="background:var(--tab-b)" href="#">Recently opened</a>
+    <a class="tab" style="background:var(--tab-d)" href="#">Tags</a>
+    <a class="tab" style="background:#e3e6e2" href="#">Templates</a>
+  </nav>
+
+  <main class="box">
+    <div class="filters">
+      <span class="chip on">Everything</span>
+      <span class="chip">Under 30 minutes</span>
+      <span class="chip">Highly rated</span>
+      <span class="chip">Easy</span>
+      <span class="chip">Only mine</span>
+      <span class="count">48 cards in the box</span>
+    </div>
+    <div class="layout">
+      <div class="grid" id="grid"></div>
+      <article class="detail">
+        <h2>Weeknight chana masala</h2>
+        <div class="sub">Indian · Serves 4 · 10 min prep, 20 min cook</div>
+        <div class="actions"><button class="add">Start cooking</button><button class="ghost">Edit</button><button class="ghost">♥ Saved</button></div>
+        <div class="note">Double the ginger if Theo's eating. Trust me.<small>— Priya</small></div>
+        <h4 style="margin-top:28px">Ingredients</h4>
+        <ul class="ing" id="ing"></ul>
+        <h4 style="margin-top:28px">Method</h4>
+        <ol class="steps" id="steps"></ol>
+      </article>
+    </div>
+  </main>
+
+<script>
+const recipes = [
+  ["Weeknight chana masala","Indian","30 min","Priya",{fav:1,sel:1}],
+  ["Charred leek & white bean soup","French","45 min","Theo",{}],
+  ["Grandma Rosa's Sunday ragù","Italian","3 h 20 min","Maya",{fav:1}],
+  ["Miso-glazed aubergine","Japanese","35 min","Sam",{priv:1}],
+  ["Blistered tomato galette","French","1 h 10 min","Maya",{}],
+  ["Sticky gochujang chicken","Korean","40 min","Theo",{fav:1}],
+  ["Lemon-ricotta pancakes","American","25 min","Sam",{}],
+  ["Turmeric fish curry","Sri Lankan","50 min","Priya",{priv:1}],
+];
+document.getElementById("grid").innerHTML = recipes.map(([t,c,time,by,f]) => `
+  <a href="#" class="card${f.sel?" sel":""}">
+    <h3>${t}</h3>
+    <div class="meta">${c}${f.priv?'<span class="lock">Private</span>':""}<br>${time}${f.fav?' <span class="fav">♥</span>':""}</div>
+    <span class="by">${by}</span>
+  </a>`).join("");
+const ing = [["2 tbsp","neutral oil"],["1 tsp","cumin seeds"],["1 large","onion, finely chopped"],["3 cloves","garlic, grated"],["1 thumb","ginger, grated"],["2 tsp","garam masala"],["½ tsp","ground turmeric"],["400 g","chopped tomatoes"],["2 tins","chickpeas, drained"],["½","lemon, juiced"]];
+document.getElementById("ing").innerHTML = ing.map(([q,i]) => `<li><b>${q}</b>${i}</li>`).join("");
+const steps = ["Warm the oil and fry cumin seeds until they crackle.","Add onion with a pinch of salt; cook until deep golden, 8–10 min.","Stir in garlic, ginger and spices for one minute.","Add tomatoes and chickpeas; simmer 15 min, crushing a few.","Finish with lemon and plenty of coriander."];
+document.getElementById("steps").innerHTML = steps.map(s => `<li>${s}</li>`).join("");
+</script>
+</body>
+</html>

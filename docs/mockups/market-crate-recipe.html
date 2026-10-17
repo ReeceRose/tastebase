@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tastebase — Market Crate (recipe)</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #f1f3ec; --ink: #172015; --leek: #234a2f; --leek-soft: #3c6b45; --tomato: #e2412e; --turmeric: #f4b400; --aubergine: #4d2463; --radish: #ef7fa0; --herb: #8cc152; --sky: #7cc4e6; --white: #ffffff; }
+  * { box-sizing: border-box; }
+  html, body { background: var(--paper); }
+  body { margin: 0; color: var(--ink); font: 15px/1.5 "Bricolage Grotesque", system-ui, sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 3px solid var(--turmeric); outline-offset: 2px; }
+
+  .app { display: grid; grid-template-columns: 236px 1fr; }
+  .side { background: var(--leek); color: #e6efdf; padding: 26px 18px; display: flex; flex-direction: column; gap: 4px; min-height: 100%; }
+  .logo { font-weight: 800; font-size: 26px; letter-spacing: -.03em; color: #fff; padding: 0 10px 22px; display: flex; align-items: center; gap: 10px; }
+  .logo i { width: 26px; height: 26px; border-radius: 50% 50% 50% 4px; background: var(--tomato); display: inline-block; }
+  .nav { padding: 10px 12px; border-radius: 12px; font-weight: 600; display: flex; justify-content: space-between; }
+  .nav.on { background: #fff; color: var(--leek); }
+  .nav small { opacity: .6; font-weight: 400; }
+  .group { margin: 22px 12px 6px; font-size: 13px; opacity: .65; }
+  .addbtn { margin-top: auto; background: var(--turmeric); color: var(--ink); border: 0; border-radius: 14px; padding: 14px; font: 800 15px "Bricolage Grotesque"; }
+
+  main { padding: 26px 36px 44px; }
+  .back { font-weight: 600; font-size: 14px; display: inline-flex; gap: 6px; margin-bottom: 14px; }
+
+  .hero { background: var(--turmeric); border-radius: 28px; padding: 30px 34px; display: grid; grid-template-columns: 1fr 260px; gap: 24px; position: relative; overflow: hidden; }
+  .by { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .by span { width: 30px; height: 30px; border-radius: 50%; background: var(--radish); display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+  h1 { font-size: 72px; line-height: .92; letter-spacing: -.04em; margin: 14px 0 12px; font-weight: 800; }
+  .lede { max-width: 52ch; margin: 0 0 18px; font-size: 16px; }
+  .facts { display: flex; gap: 10px; flex-wrap: wrap; }
+  .fact { background: var(--white); border-radius: 16px; padding: 10px 16px; min-width: 104px; }
+  .fact b { display: block; font-size: 24px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; }
+  .fact span { font-size: 13px; font-weight: 600; opacity: .7; }
+  .acts { position: absolute; right: 30px; bottom: 28px; display: flex; gap: 10px; z-index: 2; }
+  .btn { border: 0; border-radius: 14px; padding: 13px 20px; font: 800 15px "Bricolage Grotesque"; background: var(--ink); color: #fff; }
+  .btn.alt { background: var(--white); color: var(--ink); }
+  .bowl { position: relative; }
+  .bowl .b { position: absolute; right: -60px; top: -70px; width: 330px; height: 330px; border-radius: 50%; background: var(--tomato); }
+  .bowl .pea { position: absolute; width: 42px; height: 42px; border-radius: 50%; background: #f6d58b; box-shadow: inset -5px -6px 0 rgba(0,0,0,.08); }
+  .bowl .leaf { position: absolute; width: 50px; height: 24px; border-radius: 0 100% 0 100%; background: var(--herb); }
+
+  .cols { display: grid; grid-template-columns: 360px 1fr 280px; gap: 20px; margin-top: 22px; align-items: start; }
+  .panel { background: var(--white); border-radius: 24px; padding: 22px; }
+  .panel h2 { margin: 0; font-size: 24px; letter-spacing: -.02em; font-weight: 800; }
+  .ph { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .serves { display: inline-flex; align-items: center; gap: 4px; background: var(--paper); border-radius: 999px; padding: 3px; font-weight: 800; }
+  .serves button { width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--white); font: 800 16px "Bricolage Grotesque"; }
+  .serves b { min-width: 22px; text-align: center; }
+  .ing { list-style: none; margin: 0; padding: 0; }
+  .ing li { display: grid; grid-template-columns: 22px 74px 1fr; gap: 8px; align-items: center; padding: 9px 0; border-top: 2px solid var(--paper); font-size: 15px; }
+  .ing .tick { width: 20px; height: 20px; border-radius: 7px; border: 2px solid var(--ink); }
+  .ing li.got { opacity: .45; }
+  .ing li.got .tick { background: var(--herb); border-color: var(--herb); }
+  .ing b { font-weight: 800; }
+
+  .steps { list-style: none; margin: 0; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 48px 1fr; gap: 14px; background: var(--white); border-radius: 20px; padding: 16px 18px; font-size: 16px; }
+  .steps li::before { content: counter(s); width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 20px; background: var(--paper); }
+  .steps li:nth-child(1)::before { background: var(--herb); }
+  .steps li:nth-child(2)::before { background: var(--turmeric); }
+  .steps li:nth-child(3)::before { background: var(--radish); }
+  .steps li:nth-child(4)::before { background: var(--tomato); color: #fff; }
+  .steps li:nth-child(5)::before { background: var(--sky); }
+  .steps small { display: block; font-weight: 600; opacity: .6; margin-top: 4px; font-size: 13px; }
+  .mh { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 0 12px; }
+  .mh h2 { margin: 0; font-size: 24px; letter-spacing: -.02em; font-weight: 800; }
+
+  .note { border-radius: 20px 20px 20px 6px; padding: 14px 16px; margin-bottom: 12px; font-size: 15px; }
+  .note .w { display: flex; gap: 8px; align-items: center; font-weight: 800; font-size: 13px; margin-bottom: 4px; }
+  .note .w span { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.8); display: grid; place-items: center; font-size: 11px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .tags span { border: 2px solid var(--ink); border-radius: 999px; padding: 4px 12px; font-weight: 600; font-size: 13px; }
+  .sh { font-weight: 800; font-size: 18px; margin: 4px 0 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="logo"><i></i>Tastebase</div>
+    <a class="nav on" href="#">All recipes <small>48</small></a>
+    <a class="nav" href="#">Favourites <small>9</small></a>
+    <a class="nav" href="#">Recently opened</a>
+    <a class="nav" href="#">Tags</a>
+    <a class="nav" href="#">Templates</a>
+    <div class="group">Quick picks</div>
+    <a class="nav" href="#">Under 30 minutes</a>
+    <a class="nav" href="#">Highly rated</a>
+    <a class="nav" href="#">Easy wins</a>
+    <button class="addbtn">+ Add a recipe</button>
+  </aside>
+  <main>
+    <a class="back" href="#">← All recipes</a>
+    <section class="hero">
+      <div>
+        <div class="by"><span>P</span>Priya's recipe · shared with the house</div>
+        <h1>Weeknight chana masala</h1>
+        <p class="lede">The one we make when nobody planned dinner. Pantry chickpeas, a proper onion base and lemon at the end.</p>
+        <div class="facts">
+          <div class="fact"><b>10 min</b><span>Prep</span></div>
+          <div class="fact"><b>20 min</b><span>Cook</span></div>
+          <div class="fact"><b>Easy</b><span>Difficulty</span></div>
+          <div class="fact"><b>4.8</b><span>6 ratings</span></div>
+        </div>
+      </div>
+      <div class="bowl" aria-hidden="true">
+        <div class="b"></div>
+        <div class="pea" style="right:120px;top:-10px"></div><div class="pea" style="right:70px;top:30px"></div><div class="pea" style="right:150px;top:50px"></div><div class="pea" style="right:30px;top:-30px"></div><div class="pea" style="right:100px;top:90px"></div>
+        <div class="leaf" style="right:10px;top:70px;transform:rotate(35deg)"></div><div class="leaf" style="right:170px;top:110px;transform:rotate(-25deg)"></div>
+      </div>
+      <div class="acts"><button class="btn alt">Edit</button><button class="btn alt">♥ Saved</button><button class="btn">Start cooking</button></div>
+    </section>
+
+    <div class="cols">
+      <section class="panel">
+        <div class="ph"><h2>Ingredients</h2><span class="serves"><button aria-label="Fewer servings">−</button><b>4</b><button aria-label="More servings">+</button></span></div>
+        <ul class="ing" id="ing"></ul>
+      </section>
+
+      <section>
+        <div class="mh"><h2>Method</h2><span style="font-weight:600;opacity:.6">5 steps · 30 min</span></div>
+        <ol class="steps">
+          <li><div>Warm the oil and fry the cumin seeds until they crackle.<small>30 sec</small></div></li>
+          <li><div>Add the onion with a pinch of salt. Cook until deep golden.<small>8–10 min</small></div></li>
+          <li><div>Stir in garlic, ginger and the ground spices for a minute so nothing catches.<small>1 min</small></div></li>
+          <li><div>Add tomatoes and chickpeas. Simmer, crushing a few to thicken.<small>15 min</small></div></li>
+          <li><div>Finish with lemon juice and a big handful of coriander.</div></li>
+        </ol>
+      </section>
+
+      <aside>
+        <div class="sh">From the house</div>
+        <div class="note" style="background:var(--radish)"><div class="w"><span>P</span>Priya</div>Double the ginger if Theo's eating.</div>
+        <div class="note" style="background:var(--herb)"><div class="w"><span>T</span>Theo</div>Spinach stirred in at the end. Excellent.</div>
+        <div class="note" style="background:var(--sky)"><div class="w"><span>M</span>Maya</div>Freezes well in two-portion tubs.</div>
+        <div class="tags"><span>Vegan</span><span>Pantry</span><span>Weeknight</span><span>Freezer-friendly</span></div>
+      </aside>
+    </div>
+  </main>
+</div>
+<script>
+const ing = [["2 tbsp","neutral oil",1],["1 tsp","cumin seeds",1],["1 large","onion, chopped"],["3 cloves","garlic, grated"],["1 thumb","ginger, grated"],["2 tsp","garam masala"],["½ tsp","ground turmeric"],["400 g","chopped tomatoes"],["2 tins","chickpeas"],["½","lemon"]];
+document.getElementById("ing").innerHTML = ing.map(([q,i,g]) => `<li class="${g?"got":""}"><span class="tick"></span><b>${q}</b><span>${i}</span></li>`).join("");
+</script>
+</body>
+</html>

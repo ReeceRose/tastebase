@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tastebase — Riso Zine</title>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Karla:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #eceeec; --pink: #ff48b0; --teal: #00a1a6; --yellow: #ffe14d; --blue: #3255a4; --ink: #1d1f2a; --dim: #5c6070; }
+  * { box-sizing: border-box; }
+  html, body { background: var(--paper); }
+  body { margin: 0; color: var(--ink); font: 15px/1.5 "Karla", system-ui, sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+  .disp { font-family: "Bowlby One", sans-serif; font-weight: 400; }
+
+  .top { display: flex; align-items: center; gap: 26px; padding: 22px 44px; }
+  .brand { font: 26px "Bowlby One"; position: relative; color: var(--blue); }
+  .brand::after { content: "Tastebase"; position: absolute; left: 3px; top: 2px; color: var(--pink); mix-blend-mode: multiply; }
+  .top nav { display: flex; gap: 6px; font-weight: 800; font-size: 14px; }
+  .top nav a { padding: 6px 12px; border-radius: 999px; }
+  .top nav a.on { background: var(--ink); color: var(--paper); }
+  .search { margin-left: auto; border: 2px solid var(--ink); border-radius: 999px; padding: 8px 16px; width: 280px; color: var(--dim); font-size: 14px; }
+  .add { background: var(--pink); border: 2px solid var(--ink); border-radius: 999px; padding: 8px 16px; font: 800 14px "Karla"; }
+
+  .hero { position: relative; padding: 20px 44px 10px; height: 250px; overflow: hidden; }
+  .hero h1 { position: relative; margin: 0; font: 128px/.85 "Bowlby One"; color: var(--teal); letter-spacing: -.01em; z-index: 1; }
+  .hero h1 span { position: absolute; left: 5px; top: 4px; color: var(--pink); mix-blend-mode: multiply; }
+  .blob { position: absolute; border-radius: 50%; mix-blend-mode: multiply; }
+  .halftone { position: absolute; background-image: radial-gradient(var(--blue) 30%, transparent 32%); background-size: 10px 10px; mix-blend-mode: multiply; opacity: .8; }
+  .hero p { position: relative; z-index: 1; max-width: 46ch; font-size: 16px; font-weight: 600; margin: 14px 0 0; }
+
+  .cloud { display: flex; flex-wrap: wrap; gap: 10px; padding: 18px 44px 30px; align-items: center; }
+  .tag { border: 2px solid var(--ink); border-radius: 999px; padding: 6px 16px; font-weight: 800; background: var(--paper); }
+  .tag sup { font-weight: 600; font-size: 11px; margin-left: 4px; }
+  .tag.l { font: 28px "Bowlby One"; padding: 6px 20px; }
+  .tag.m { font-size: 19px; }
+
+  .shelf { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 0 44px 48px; }
+  .zine { position: relative; border: 2px solid var(--ink); border-radius: 6px; background: #f8f8f6; overflow: hidden; }
+  .cover { height: 170px; position: relative; overflow: hidden; border-bottom: 2px solid var(--ink); }
+  .cover b { position: absolute; left: 12px; bottom: 12px; font: 26px/1 "Bowlby One"; color: var(--ink); z-index: 2; background: #f8f8f6; border: 2px solid var(--ink); border-radius: 6px; padding: 6px 10px 8px; }
+  .zine .body { padding: 12px 14px 14px; }
+  .zine ul { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+  .zine li { padding: 5px 0; border-top: 1.5px dashed #c8cbd2; display: flex; justify-content: space-between; }
+  .zine li:first-child { border-top: 0; }
+  .zine li small { color: var(--dim); }
+  .zine .more { margin-top: 8px; font-weight: 800; font-size: 13px; color: var(--blue); }
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">Tastebase</div>
+    <nav><a href="#">Recipes</a><a href="#">Favourites</a><a href="#">Recent</a><a class="on" href="#">Tags</a><a href="#">Templates</a></nav>
+    <div class="search">Search tags and recipes</div>
+    <button class="add">Add a recipe</button>
+  </header>
+
+  <section class="hero">
+    <div class="blob" style="width:260px;height:260px;background:var(--yellow);right:180px;top:-40px"></div>
+    <div class="blob" style="width:200px;height:200px;background:var(--pink);right:70px;top:40px;opacity:.85"></div>
+    <div class="halftone" style="width:220px;height:220px;right:250px;top:60px;border-radius:50%"></div>
+    <h1>Tags<span>Tags</span></h1>
+    <p>32 tags across 48 recipes. Pick one to see everything filed under it, or combine a few.</p>
+  </section>
+
+  <div class="cloud">
+    <a class="tag l" href="#" style="background:var(--yellow)">Weeknight<sup>17</sup></a>
+    <a class="tag m" href="#">Vegetarian<sup>21</sup></a>
+    <a class="tag" href="#" style="background:var(--teal);color:#fff">Pantry<sup>12</sup></a>
+    <a class="tag m" href="#">Freezer-friendly<sup>9</sup></a>
+    <a class="tag" href="#">Baking<sup>8</sup></a>
+    <a class="tag l" href="#" style="background:var(--pink)">Sunday cooking<sup>7</sup></a>
+    <a class="tag" href="#">Feeds a crowd<sup>6</sup></a>
+    <a class="tag" href="#">Spicy<sup>6</sup></a>
+    <a class="tag m" href="#">Soups<sup>5</sup></a>
+    <a class="tag" href="#">Breakfast<sup>5</sup></a>
+    <a class="tag" href="#">One pot<sup>5</sup></a>
+    <a class="tag" href="#">Gluten-free<sup>4</sup></a>
+    <a class="tag" href="#">Picnic<sup>3</sup></a>
+    <a class="tag" href="#">Christmas<sup>2</sup></a>
+  </div>
+
+  <div class="shelf" id="shelf"></div>
+<script>
+const covers = {
+  a: `<div class="blob" style="width:180px;height:180px;background:var(--yellow);left:-30px;top:-40px"></div><div class="blob" style="width:150px;height:150px;background:var(--teal);right:-20px;top:10px"></div>`,
+  b: `<div class="blob" style="width:220px;height:220px;background:var(--pink);left:40px;top:-60px"></div><div class="halftone" style="inset:0"></div>`,
+  c: `<div class="blob" style="width:120px;height:120px;background:var(--teal);left:20px;top:10px"></div><div class="blob" style="width:160px;height:160px;background:var(--yellow);right:-10px;top:-30px"></div><div class="blob" style="width:90px;height:90px;background:var(--pink);right:70px;top:60px"></div>`,
+  d: `<div class="halftone" style="width:200px;height:200px;left:-40px;top:-60px;border-radius:50%;background-image:radial-gradient(var(--pink) 30%, transparent 32%)"></div><div class="blob" style="width:170px;height:170px;background:var(--blue);right:-30px;top:-20px;opacity:.85"></div>`,
+};
+const zines = [
+  ["Weeknight","a",[["Weeknight chana masala","30 min"],["Sticky gochujang chicken","40 min"],["Pasta e ceci","30 min"]],17],
+  ["Sunday cooking","b",[["Grandma Rosa's ragù","3 h 20"],["Blistered tomato galette","1 h 10"],["Roast squash tagine","45 min"]],7],
+  ["Pantry","c",[["Pasta e ceci","30 min"],["Weeknight chana masala","30 min"],["Smashed chickpea sandwich","10 min"]],12],
+  ["Freezer-friendly","d",[["Charred leek & bean soup","45 min"],["Turmeric fish curry","50 min"],["Grandma Rosa's ragù","3 h 20"]],9],
+];
+document.getElementById("shelf").innerHTML = zines.map(([n,c,rs,count]) => `
+  <a href="#" class="zine"><div class="cover">${covers[c]}<b>${n}</b></div>
+  <div class="body"><ul>${rs.map(([r,t]) => `<li><span>${r}</span><small>${t}</small></li>`).join("")}</ul><div class="more">All ${count} recipes</div></div></a>`).join("");
+</script>
+</body>
+</html>
