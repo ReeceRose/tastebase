@@ -17,3 +17,6 @@ Vitest with Testing Library handles unit and integration coverage. Place specs i
 
 ## Commit & Pull Request Guidelines
 Write imperative, present-tense commits (`Add nutrition parser`) and squash noise before pushing. Each PR needs a crisp problem statement, screenshots or recordings for UI changes, linked issues, and call-outs for migrations or env updates. Before requesting review run `pnpm lint:check`, `pnpm type-check`, `pnpm test`, plus relevant diagnostics (`pnpm architecture`, `pnpm import-issues:ci`). Never commit secrets, `.env.local`, or SQLite artifacts.
+
+## Releases
+Releases are cut with `./scripts/release.sh`, which writes `CHANGELOG.md`, bumps `package.json`, and tags; CI then publishes `ghcr.io/reecerose/tastebase`. See `docs/RELEASES.md`.

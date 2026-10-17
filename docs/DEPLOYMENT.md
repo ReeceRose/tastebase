@@ -1,221 +1,191 @@
 # Tastebase Deployment Guide
 
-Tastebase is designed for local Docker deployment with persistent SQLite storage. This guide covers deployment options for various environments.
+Tastebase runs as a single Docker container with a SQLite database and a folder of photos. This guide covers installing it, keeping it up to date, backups, and putting it behind a reverse proxy.
 
-## Quick Start (Using Pre-built Image)
+## The image
 
-The easiest way to deploy Tastebase is using the pre-built Docker image from Docker Hub:
+| Item | Value |
+| --- | --- |
+| **Image** | `ghcr.io/reecerose/tastebase` |
+| **Tags** | `latest` (newest release) and one per release, e.g. `0.1.0` |
+| **Architectures** | `linux/amd64`, `linux/arm64` |
+| **Port** | `3000` |
+| **Health check** | `GET /api/health` (no sign-in needed) |
+| **Runs as** | uid/gid `1001` (`nextjs`) |
+
+### Volumes
+
+| Container path | Holds |
+| --- | --- |
+| `/app/data` | The SQLite database (`DATABASE_URL=file:/app/data/tastebase.db`) |
+| `/app/uploads` | Recipe photos |
+
+Mount both. Without them, every recipe and photo is lost when the container is recreated.
+
+### Environment variables
+
+| Variable | Required | Example |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | `file:/app/data/tastebase.db` |
+| `BETTER_AUTH_SECRET` | Yes | output of `openssl rand -base64 48` |
+| `BETTER_AUTH_URL` | Yes | `http://192.168.1.100:3000` or `https://recipes.example.com` |
+| `ENCRYPTION_SECRET` | Yes | a second, different `openssl rand -base64 48` |
+| `CURRENT_ENCRYPTION_VERSION` | No | `1` |
+
+`BETTER_AUTH_URL` must match the address in people's browsers, including the port, or sign-in won't work. Full reference: [environment-variables.md](./environment-variables.md).
+
+## Option 1: Docker Compose (recommended)
 
 ```bash
-# Create directory
 mkdir tastebase && cd tastebase
+curl -O https://raw.githubusercontent.com/ReeceRose/tastebase/main/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/ReeceRose/tastebase/main/.env.docker.example
+```
 
-# Download docker-compose.yml
-curl -O https://raw.githubusercontent.com/reecerose/tastebase/main/docker-compose.yml
-curl -O https://raw.githubusercontent.com/reecerose/tastebase/main/.env.docker.example
+Edit `.env`: generate `BETTER_AUTH_SECRET` and `ENCRYPTION_SECRET` with `openssl rand -base64 48` (one each), and set `BETTER_AUTH_URL`. Then:
 
-# Configure
-cp .env.docker.example .env
-nano .env  # Add your secrets (see below)
-
-# Deploy
+```bash
 docker compose up -d
+docker compose logs -f   # watch the first start; Ctrl+C to stop watching
 ```
 
-### Using Docker Hub Image
+Open your `BETTER_AUTH_URL` and create the first account.
 
-Update `docker-compose.yml` to use the published image:
-
-```yaml
-services:
-  tastebase:
-    image: reecerose/tastebase:latest  # Use Docker Hub image
-    # ... rest of config
-```
-
-## Building from Source
-
-If you prefer to build from source instead of using the Docker Hub image:
-
-### 1. Clone or Download Repository
+## Option 2: docker run
 
 ```bash
-git clone https://github.com/reecerose/tastebase.git
-cd tastebase
-```
-
-### 2. Configure Environment
-
-```bash
-# Copy environment template
-cp .env.docker.example .env
-
-# Generate secure secrets
-node -e "console.log('BETTER_AUTH_SECRET=' + require('crypto').randomBytes(32).toString('hex'))"
-node -e "console.log('ENCRYPTION_SECRET=' + require('crypto').randomBytes(32).toString('hex'))"
-
-# Edit .env with your values
-nano .env
-```
-
-**Required Environment Variables:**
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `BETTER_AUTH_SECRET` | Authentication secret (min 32 chars) | Generate with crypto |
-| `BETTER_AUTH_URL` | Your application URL | `http://192.168.1.100:3000` |
-| `ENCRYPTION_SECRET` | API key encryption secret (64 chars) | Generate with crypto |
-| `CURRENT_ENCRYPTION_VERSION` | Encryption version (default: 1) | `1` |
-
-### 3. Deploy with Docker Compose
-
-```bash
-# Build and start
-docker compose up -d
-
-# View logs
-docker compose logs -f
-
-# Stop
-docker compose down
-
-# Update to latest
-git pull
-docker compose up -d --build
-```
-
-### 4. Access Your Instance
-
-Open `http://YOUR_SERVER_IP:3000` in your browser and create your first account!
-
-## Deployment Options
-
-### Option 1: Docker Compose (Recommended)
-
-**Advantages:**
-- Simple configuration with `docker-compose.yml`
-- Easy updates with `git pull && docker compose up -d --build`
-- Named volumes for data persistence
-- Built-in healthchecks
-
-**Steps:** See Quick Start above
-
-### Option 2: Docker Run
-
-```bash
-# Create volumes
 docker volume create tastebase-data
 docker volume create tastebase-uploads
 
-# Run container
 docker run -d \
   --name tastebase \
   --restart unless-stopped \
   -p 3000:3000 \
-  -e NODE_ENV=production \
   -e DATABASE_URL=file:/app/data/tastebase.db \
-  -e BETTER_AUTH_SECRET="your-secret-here" \
+  -e BETTER_AUTH_SECRET="<openssl rand -base64 48>" \
   -e BETTER_AUTH_URL="http://YOUR_IP:3000" \
-  -e ENCRYPTION_SECRET="your-encryption-secret-here" \
+  -e ENCRYPTION_SECRET="<a different openssl rand -base64 48>" \
   -v tastebase-data:/app/data \
   -v tastebase-uploads:/app/uploads \
-  tastebase:latest
+  ghcr.io/reecerose/tastebase:latest
 ```
 
-### Option 3: Unraid
+## Option 3: Unraid
 
-See [DEPLOYMENT_UNRAID.md](./DEPLOYMENT_UNRAID.md) for detailed Unraid-specific instructions.
+See [DEPLOYMENT_UNRAID.md](./DEPLOYMENT_UNRAID.md).
 
-## Data Persistence
+## Using host folders instead of named volumes
 
-Tastebase uses two Docker volumes for persistent storage:
-
-| Volume | Purpose | Contents |
-|--------|---------|----------|
-| `tastebase-data` | Database | SQLite database file |
-| `tastebase-uploads` | User uploads | Recipe images and attachments |
-
-**Backup Your Data:**
+On a NAS you may want the data in a folder you can see and back up, such as `/srv/tastebase`. The container runs as uid `1001`, so it needs to own those folders:
 
 ```bash
-# Backup database and uploads
-docker compose down
-tar -czf tastebase-backup-$(date +%Y%m%d).tar.gz \
-  -C /var/lib/docker/volumes/tastebase-data/_data . \
-  -C /var/lib/docker/volumes/tastebase-uploads/_data .
-docker compose up -d
-
-# Restore from backup
-docker compose down
-tar -xzf tastebase-backup-20250107.tar.gz \
-  -C /var/lib/docker/volumes/tastebase-data/_data \
-  -C /var/lib/docker/volumes/tastebase-uploads/_data
-docker compose up -d
+mkdir -p /srv/tastebase/data /srv/tastebase/uploads
+sudo chown -R 1001:1001 /srv/tastebase
 ```
 
-## Updating Tastebase
-
-### Docker Compose Method
-
-```bash
-# Pull latest code
-git pull
-
-# Rebuild and restart
-docker compose up -d --build
-
-# View logs to confirm
-docker compose logs -f
+```yaml
+volumes:
+  - /srv/tastebase/data:/app/data
+  - /srv/tastebase/uploads:/app/uploads
 ```
 
-### Docker Run Method
+If the folders aren't writable by `1001`, the container exits on start with a SQLite "unable to open database file" error.
 
-```bash
-# Stop and remove old container
-docker stop tastebase
-docker rm tastebase
+## Updating
 
-# Pull latest code and rebuild
-git pull
-docker build -t tastebase:latest .
-
-# Start new container (volumes persist)
-docker run -d [... same flags as before ...]
-```
-
-## Port Configuration
-
-By default, Tastebase runs on port `3000`. To change:
+Releases are listed in [CHANGELOG.md](../CHANGELOG.md) and on the [Releases page](https://github.com/ReeceRose/tastebase/releases). Database migrations run automatically when the new container starts.
 
 **Docker Compose:**
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+**docker run:**
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:latest
+docker stop tastebase && docker rm tastebase
+docker run -d ...   # same flags as before; the volumes keep your data
+```
+
+To upgrade on your own schedule, pin a version (`ghcr.io/reecerose/tastebase:0.1.0`) instead of `latest`, and change it when you're ready. Back up before upgrading.
+
+### Building from source
+
+To run unreleased code, build the image yourself. In `docker-compose.yml`, replace the `image:` line with `build: .`, then:
+
+```bash
+git clone https://github.com/ReeceRose/tastebase.git
+cd tastebase
+cp .env.docker.example .env   # fill it in
+docker compose up -d --build
+```
+
+## Backups
+
+Everything lives in the two volumes. These commands stop Tastebase so the database is consistent, then write one archive of both volumes to the current folder. They use the container name `tastebase` from the Compose file.
+
+```bash
+# Back up
+docker compose stop
+docker run --rm --volumes-from tastebase -v "$PWD":/backup alpine \
+  tar czf /backup/tastebase-$(date +%Y%m%d).tar.gz -C /app data uploads
+docker compose start
+
+# Restore (replaces current data)
+docker compose stop
+docker run --rm --volumes-from tastebase -v "$PWD":/backup alpine \
+  sh -c "cd /app && tar xzf /backup/tastebase-20261017.tar.gz"
+docker compose start
+```
+
+If you use host folders, back those folders up directly while the container is stopped.
+
+### Moving from a development install
+
+```bash
+docker compose up -d && docker compose stop   # create the container and volumes
+docker cp ./tastebase.db tastebase:/app/data/tastebase.db
+docker cp ./uploads/. tastebase:/app/uploads/
+docker run --rm --volumes-from tastebase alpine chown -R 1001:1001 /app/data /app/uploads
+docker compose start
+```
+
+## Changing the port
+
 ```yaml
 ports:
-  - "8080:3000"  # Access via port 8080
+  - "8080:3000"   # reach Tastebase on port 8080
 ```
 
-**Docker Run:**
-```bash
--p 8080:3000  # Access via port 8080
+Update `BETTER_AUTH_URL` to match.
+
+## Reverse proxy and HTTPS
+
+Put Tastebase behind a reverse proxy to serve it on a domain with HTTPS, then set `BETTER_AUTH_URL` to the `https://` address.
+
+### Caddy
+
+```caddy
+recipes.example.com {
+    reverse_proxy localhost:3000
+}
 ```
-
-**Don't forget to update `BETTER_AUTH_URL` accordingly!**
-
-## Reverse Proxy Setup
 
 ### Nginx
 
 ```nginx
 server {
     listen 80;
-    server_name recipes.yourdomain.com;
+    server_name recipes.example.com;
+    client_max_body_size 10m;
 
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -223,154 +193,64 @@ server {
 }
 ```
 
-### Traefik (Docker Labels)
+`client_max_body_size` matters: photo uploads go up to 10 MB, and Nginx rejects anything over 1 MB by default.
+
+### Traefik (Docker labels)
 
 ```yaml
 labels:
   - "traefik.enable=true"
-  - "traefik.http.routers.tastebase.rule=Host(`recipes.yourdomain.com`)"
+  - "traefik.http.routers.tastebase.rule=Host(`recipes.example.com`)"
   - "traefik.http.routers.tastebase.entrypoints=websecure"
   - "traefik.http.routers.tastebase.tls.certresolver=letsencrypt"
   - "traefik.http.services.tastebase.loadbalancer.server.port=3000"
 ```
 
-### Caddy
+A Cloudflare Tunnel also works, and doesn't need any open ports.
 
-```caddy
-recipes.yourdomain.com {
-    reverse_proxy localhost:3000
-}
+## Health check
+
+```bash
+curl http://localhost:3000/api/health
+# {"status":"ok","timestamp":"...","services":{"database":"connected","server":"running"}}
 ```
 
-## SSL/HTTPS Setup
-
-For production deployments with custom domains, use one of these options:
-
-1. **Reverse Proxy with Let's Encrypt** (Recommended)
-   - Use Nginx/Traefik/Caddy with automatic SSL certificates
-   - Handles certificate renewal automatically
-
-2. **Cloudflare Tunnel**
-   - Zero-config SSL with Cloudflare's free tier
-   - No port forwarding required
-
-3. **Self-Signed Certificate**
-   - For internal/private networks only
+It returns `503` if the database can't be reached. The Compose file already uses it for the container health check.
 
 ## Troubleshooting
 
-### Container won't start
+**The container keeps restarting.** Run `docker compose logs tastebase`. The usual causes:
+
+- **"Invalid environment variables"**: the log names the variable. It's usually `ENCRYPTION_SECRET`. Regenerate it with `openssl rand -base64 48`, which has the mix of characters it requires.
+- **"unable to open database file"**: the data folder isn't writable by uid `1001`. See [Using host folders](#using-host-folders-instead-of-named-volumes).
+- **Port already in use**: change the host side of `ports:`.
+
+**Sign-in loops back to the sign-in page.** `BETTER_AUTH_URL` doesn't match the address in the browser (check the scheme, host and port).
+
+**Migration errors on start.** Migrations run automatically and the container won't start if one fails. Restore your last backup and [open an issue](https://github.com/ReeceRose/tastebase/issues) with the log.
+
+**Start completely fresh.** This deletes every recipe, account and photo:
 
 ```bash
-# Check logs
-docker compose logs tastebase
-
-# Common issues:
-# - Missing environment variables
-# - Port 3000 already in use
-# - Permission issues with volumes
-```
-
-### Database migration errors
-
-```bash
-# Run migrations manually
-docker compose exec tastebase pnpm run db:migrate
-```
-
-### Permission issues
-
-```bash
-# Fix volume permissions
-docker compose down
-docker volume rm tastebase-data tastebase-uploads
-docker compose up -d
-```
-
-### Reset everything
-
-```bash
-# WARNING: This deletes all data
 docker compose down -v
 docker compose up -d
 ```
 
-## Security Recommendations
+More: [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).
 
-1. **Change Default Secrets**: Always generate unique secrets for production
-2. **Use HTTPS**: Set up SSL/TLS for public-facing deployments
-3. **Firewall Rules**: Restrict access to port 3000 if not using reverse proxy
-4. **Regular Backups**: Schedule automated backups of volumes
-5. **Update Regularly**: Keep Tastebase updated with latest security patches
+## Security checklist
 
-## Performance Tuning
+1. Generate unique secrets; never reuse the examples.
+2. Use HTTPS for anything reachable from outside your home network.
+3. If you're not using a reverse proxy, don't expose port 3000 to the internet.
+4. Schedule backups.
+5. Keep up with releases.
 
-### Database Optimization
+## Support
 
-SQLite is optimized for local deployment. For better-sqlite3 performance:
-
-```bash
-# Rebuild better-sqlite3 with optimal flags (done automatically in Dockerfile)
-# No action needed - already optimized!
-```
-
-### File Upload Limits
-
-Default: 10MB per file. To change:
-
-```yaml
-environment:
-  - MAX_FILE_SIZE=52428800  # 50MB in bytes
-```
-
-## Health Monitoring
-
-Tastebase includes a health check endpoint:
-
-```bash
-# Check health
-curl http://localhost:3000/api/health
-
-# Response:
-# {"status": "ok", "timestamp": "2025-01-07T..."}
-```
-
-Docker Compose healthcheck is pre-configured:
-```yaml
-healthcheck:
-  test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-  interval: 30s
-  timeout: 10s
-  retries: 3
-  start_period: 40s
-```
-
-## Migration from Development
-
-If you've been running Tastebase locally for development:
-
-1. **Export your data:**
-   ```bash
-   cp data/tastebase.db ~/tastebase-backup.db
-   cp -r uploads ~/tastebase-uploads-backup
-   ```
-
-2. **Deploy with Docker**
-
-3. **Import your data:**
-   ```bash
-   docker compose down
-   docker cp ~/tastebase-backup.db tastebase:/app/data/tastebase.db
-   docker cp ~/tastebase-uploads-backup/. tastebase:/app/uploads/
-   docker compose up -d
-   ```
-
-## Support & Community
-
-- **Issues**: [GitHub Issues](https://github.com/reecerose/tastebase/issues)
-- **Documentation**: [docs/](./docs/)
-- **Contributing**: [CONTRIBUTING.md](../CONTRIBUTING.md)
+- **Issues**: [GitHub Issues](https://github.com/ReeceRose/tastebase/issues)
+- **Releases**: [GitHub Releases](https://github.com/ReeceRose/tastebase/releases)
 
 ## License
 
-See [LICENSE](../LICENSE) file for details.
+MIT. See [LICENSE](../LICENSE).

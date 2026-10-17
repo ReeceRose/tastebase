@@ -1,5 +1,6 @@
 import type { RecipeDifficulty } from "@/lib/types";
 import type { ImageProcessingMethod } from "@/lib/types/ai-types";
+import type { PendingImage } from "@/lib/types/recipe-types";
 
 export enum RecipeImportSource {
   JSON_LD = "json_ld",
@@ -56,6 +57,9 @@ export interface RecipeImportResult {
   sourceUrl: string | null;
   sourceName: string | null;
   rawText: string | null;
+  imageUrl: string | null;
+  image: PendingImage | null;
+  photoUrls: string[];
   warnings: string[];
 }
 
@@ -69,4 +73,30 @@ export interface RecipeImportCapabilities {
 export interface FetchedPage {
   url: string;
   html: string;
+}
+
+export interface CapturedImage {
+  data: string;
+  mimeType: string;
+}
+
+// A photo found on the recipe page. The extension sends the image itself
+// when the browser could load it; otherwise only the address is known.
+export interface PhotoSuggestion {
+  url: string;
+  image: CapturedImage | null;
+}
+
+export interface CapturedPage extends FetchedPage {
+  image: CapturedImage | null;
+  photos: PhotoSuggestion[];
+}
+
+// A recipe already in Tastebase that was imported from the same page.
+export interface SavedRecipeMatch {
+  slug: string;
+  title: string;
+  savedBy: string;
+  isOwn: boolean;
+  savedAt: Date;
 }

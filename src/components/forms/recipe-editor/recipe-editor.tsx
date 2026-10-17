@@ -21,6 +21,7 @@ import {
 } from "@/lib/server-actions/recipe-actions";
 import { attachImageToRecipe } from "@/lib/server-actions/recipe-image-actions";
 import { ButtonVariant, EditorSection, RecipeEditorMode } from "@/lib/types";
+import type { PhotoSuggestion } from "@/lib/types/import-types";
 import type {
   PendingImage,
   RecipeEditorValues,
@@ -41,6 +42,9 @@ interface RecipeEditorProps {
   recipe: RecipeWithRelations | null;
   initialValues: RecipeEditorValues;
   notice: string | null;
+  initialPhotos?: PendingImage[];
+  photoSuggestions?: PhotoSuggestion[];
+  onPhotosChange?: (photos: PendingImage[]) => void;
   onStartOver?: () => void;
 }
 
@@ -67,13 +71,16 @@ export function RecipeEditor({
   recipe,
   initialValues,
   notice,
+  initialPhotos = [],
+  photoSuggestions = [],
+  onPhotosChange,
   onStartOver,
 }: RecipeEditorProps) {
   const router = useRouter();
   const form = useForm<RecipeEditorValues>({ defaultValues: initialValues });
   const [isSaving, startSaving] = useTransition();
   const [images, setImages] = useState<RecipeImage[]>(recipe?.images ?? []);
-  const [pending, setPending] = useState<PendingImage[]>([]);
+  const [pending, setPending] = useState<PendingImage[]>(initialPhotos);
   const [sectionErrors, setSectionErrors] = useState<
     Partial<Record<EditorSection, string>>
   >({});
@@ -85,6 +92,10 @@ export function RecipeEditor({
   const draftKey = `tastebase:draft:${userId}:${recipe?.id ?? "new"}`;
   const draft = useRecipeDraft(draftKey, values, isDirty && !isSaving);
   const automaticSwatch = swatchFor(recipe?.id ?? draftKey);
+
+  useEffect(() => {
+    onPhotosChange?.(pending);
+  }, [pending, onPhotosChange]);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -325,6 +336,7 @@ export function RecipeEditor({
               onImagesChange={setImages}
               pending={pending}
               onPendingChange={setPending}
+              suggestions={photoSuggestions}
             />
             <EditorDetails automaticSwatch={automaticSwatch} />
             <EditorSharing />

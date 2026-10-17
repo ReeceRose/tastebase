@@ -439,19 +439,13 @@ All development scripts include comprehensive error handling:
 - **Graceful Failures**: Scripts continue when possible, report issues clearly
 - **Recovery Guidance**: Scripts provide next steps when failures occur
 
-## Integration with CI/CD
+## CI mode
 
-Many scripts support CI mode for automated testing:
+CI (`.github/workflows/ci.yml`) runs lint, type check, tests and a Docker build; it doesn't run these scripts. Many of them have a `--ci` mode that exits non-zero on problems, which is handy in a pre-push hook or for a quick gate before opening a PR:
 
 ```bash
-# CI-friendly health checks
 pnpm run health-check:ci
-
-# Performance analysis in CI
 pnpm run performance:ci
-
-# Automated cleanup in CI
-pnmp run debug:auth cleanup
 ```
 
 This comprehensive development workflow ensures:

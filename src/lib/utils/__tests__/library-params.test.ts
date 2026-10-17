@@ -22,6 +22,7 @@ describe("parseLibraryParams", () => {
       difficulty: null,
       cuisine: null,
       tags: [],
+      listId: null,
       maxTime: null,
       sort: null,
       visibility: LibraryVisibility.ALL,

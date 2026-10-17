@@ -149,6 +149,7 @@ export enum LibraryScope {
   ALL = "all",
   FAVOURITES = "favourites",
   RECENT = "recent",
+  LIST = "list",
 }
 
 // Settings sections
@@ -157,6 +158,7 @@ export enum SettingsSection {
   HOUSEHOLD = "household",
   UNITS = "units",
   IMPORT = "import",
+  SAVING = "saving",
   TEMPLATES = "templates",
   STORAGE = "storage",
   SECURITY = "security",
@@ -214,6 +216,13 @@ export enum EditorSection {
 export enum RecipeEditorMode {
   CREATE = "create",
   EDIT = "edit",
+}
+
+export enum ExtensionPresence {
+  UNKNOWN = "unknown",
+  INSTALLED = "installed",
+  MISSING = "missing",
+  UNSUPPORTED = "unsupported",
 }
 
 export enum AddRecipeStep {

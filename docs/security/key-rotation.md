@@ -46,8 +46,8 @@ cp .env.local .env.local.backup-$(date +%Y%m%d-%H%M%S)
 ### Step 2: Generate New Encryption Key
 
 ```bash
-# Generate secure 64-character key
-node -e "console.log('New encryption key:', require('crypto').randomBytes(32).toString('hex'))"
+# Generate a secure 64-character key
+openssl rand -base64 48
 ```
 
 **Save this key securely** - you'll need it for the next steps.

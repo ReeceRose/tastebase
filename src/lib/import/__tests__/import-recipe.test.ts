@@ -20,6 +20,7 @@ vi.mock("@/lib/ai/recipe-cleanup", () => ({
 
 import {
   importRecipeFromImage,
+  importRecipeFromPage,
   importRecipeFromText,
   importRecipeFromUrl,
 } from "@/lib/import/import-recipe";
@@ -117,6 +118,50 @@ describe("importRecipeFromUrl", () => {
     expect(result.source).toBe(RecipeImportSource.AI_TEXT);
     expect(result.recipe.title).toBe("AI Soup");
     expect(result.sourceName).toBe("Story Blog");
+  });
+});
+
+describe("importRecipeFromPage", () => {
+  it("reads a page the browser extension captured without fetching it", async () => {
+    const result = await importRecipeFromPage(
+      {
+        url: "https://cooking.nytimes.com/recipes/1-soup",
+        html: `<html><head><meta property="og:site_name" content="NYT Cooking"><script type="application/ld+json">${JSON.stringify(
+          {
+            "@type": "Recipe",
+            name: "Soup",
+            recipeIngredient: ["1 onion"],
+            recipeInstructions: ["Chop the onion."],
+          },
+        )}</script></head><body></body></html>`,
+      },
+      null,
+    );
+
+    expect(mocks.fetchRecipePage).not.toHaveBeenCalled();
+    expect(result.source).toBe(RecipeImportSource.JSON_LD);
+    expect(result.recipe.title).toBe("Soup");
+    expect(result.sourceUrl).toBe("https://cooking.nytimes.com/recipes/1-soup");
+    expect(result.sourceName).toBe("NYT Cooking");
+  });
+
+  it("falls back to the share image and resolves it against the page", async () => {
+    const result = await importRecipeFromPage(
+      {
+        url: "https://example.com/recipes/soup",
+        html: `<html><head><meta property="og:image" content="/img/soup.jpg"><script type="application/ld+json">${JSON.stringify(
+          {
+            "@type": "Recipe",
+            name: "Soup",
+            recipeIngredient: ["1 onion"],
+            recipeInstructions: ["Chop the onion."],
+          },
+        )}</script></head><body></body></html>`,
+      },
+      null,
+    );
+
+    expect(result.imageUrl).toBe("https://example.com/img/soup.jpg");
   });
 });
 

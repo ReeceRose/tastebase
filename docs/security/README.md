@@ -22,7 +22,7 @@ Step-by-step procedures for rotating encryption keys:
 
 ### 1. Generate Encryption Key
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+openssl rand -base64 48
 ```
 
 ### 2. Add to Environment

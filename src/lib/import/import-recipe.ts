@@ -7,6 +7,7 @@ import { fetchRecipePage } from "@/lib/import/fetch-page";
 import { htmlToText } from "@/lib/import/html-to-text";
 import { extractJsonLdRecipe } from "@/lib/import/json-ld-parser";
 import { extractTextFromImage } from "@/lib/import/ocr";
+import { findPagePhotos } from "@/lib/import/page-photos";
 import { parseRecipeText } from "@/lib/import/text-recipe-parser";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
 import {
@@ -14,10 +15,12 @@ import {
   ImageProcessingMethod,
 } from "@/lib/types/ai-types";
 import {
+  type FetchedPage,
   type RecipeImportResult,
   RecipeImportSource,
   type RecipeParsingResult,
 } from "@/lib/types/import-types";
+import { photoKey } from "@/lib/utils/photo-suggestions";
 
 const logger = createOperationLogger("recipe-import");
 
@@ -41,12 +44,28 @@ function hostnameOf(url: string): string {
   return new URL(url).hostname.replace(/^www\./, "");
 }
 
+function absoluteHttpUrl(value: string | null, base: string): string | null {
+  if (!value) {
+    return null;
+  }
+  try {
+    const url = new URL(value, base);
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 interface TextImportOptions {
   aiConfig: AIProviderConfig | null;
   forceAI: boolean;
   titleHint: string | null;
   sourceUrl: string | null;
   sourceName: string | null;
+  imageUrl: string | null;
+  photoUrls: string[];
   baseSource: RecipeImportSource;
   baseConfidenceCap: number;
 }
@@ -64,6 +83,9 @@ async function importFromParsedText(
     sourceUrl: options.sourceUrl,
     sourceName: options.sourceName,
     rawText: text,
+    imageUrl: options.imageUrl,
+    image: null,
+    photoUrls: options.photoUrls,
     warnings: [],
   };
 
@@ -105,11 +127,31 @@ export async function importRecipeFromUrl(
   url: string,
   aiConfig: AIProviderConfig | null,
 ): Promise<RecipeImportResult> {
-  const page = await fetchRecipePage(url);
+  return importRecipeFromPage(await fetchRecipePage(url), aiConfig);
+}
+
+// Used directly for pages the browser extension has already loaded, which
+// covers sites that block server-side fetches or need the user's login.
+export async function importRecipeFromPage(
+  page: FetchedPage,
+  aiConfig: AIProviderConfig | null,
+): Promise<RecipeImportResult> {
   const jsonLd = extractJsonLdRecipe(page.html);
   const pageText = htmlToText(page.html);
   const sourceName =
     jsonLd?.siteName ?? pageText.siteName ?? hostnameOf(page.url);
+  const imageUrl = absoluteHttpUrl(
+    jsonLd?.imageUrl ?? pageText.imageUrl,
+    page.url,
+  );
+  const stepImageUrls = (jsonLd?.stepImageUrls ?? []).flatMap((url) => {
+    const absolute = absoluteHttpUrl(url, page.url);
+    return absolute ? [absolute] : [];
+  });
+  const mainPhotoKey = imageUrl ? photoKey(imageUrl) : null;
+  const photoUrls = findPagePhotos(page.html, page.url, stepImageUrls).filter(
+    (url) => photoKey(url) !== mainPhotoKey,
+  );
 
   if (
     jsonLd?.recipe.title &&
@@ -131,6 +173,9 @@ export async function importRecipeFromUrl(
       sourceUrl: page.url,
       sourceName,
       rawText: pageText.text,
+      imageUrl,
+      image: null,
+      photoUrls,
       warnings: [],
     };
   }
@@ -146,6 +191,8 @@ export async function importRecipeFromUrl(
     titleHint: jsonLd?.recipe.title ?? pageText.title,
     sourceUrl: page.url,
     sourceName,
+    imageUrl,
+    photoUrls,
     baseSource: RecipeImportSource.TEXT_PARSER,
     baseConfidenceCap: 1,
   });
@@ -162,6 +209,8 @@ export async function importRecipeFromText(
     titleHint: null,
     sourceUrl: null,
     sourceName: null,
+    imageUrl: null,
+    photoUrls: [],
     baseSource: RecipeImportSource.TEXT_PARSER,
     baseConfidenceCap: 1,
   });
@@ -197,6 +246,9 @@ export async function importRecipeFromImage(
           sourceUrl: null,
           sourceName: null,
           rawText: null,
+          imageUrl: null,
+          image: null,
+          photoUrls: [],
           warnings: [],
         };
       }
@@ -216,6 +268,9 @@ export async function importRecipeFromImage(
       sourceUrl: null,
       sourceName: null,
       rawText: "",
+      imageUrl: null,
+      image: null,
+      photoUrls: [],
       warnings: [
         "No text could be read from this image. Try a sharper, well-lit photo.",
       ],
@@ -233,6 +288,8 @@ export async function importRecipeFromImage(
     titleHint: null,
     sourceUrl: null,
     sourceName: null,
+    imageUrl: null,
+    photoUrls: [],
     baseSource: RecipeImportSource.OCR_TEXT_PARSER,
     baseConfidenceCap: Math.max(ocr.confidence, 0.3),
   });

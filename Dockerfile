@@ -1,4 +1,7 @@
 FROM node:24-alpine AS base
+# Install the pnpm version pinned in package.json's packageManager field.
+COPY package.json /tmp/package.json
+RUN npm install -g "$(node -p 'require("/tmp/package.json").packageManager')" && rm /tmp/package.json
 
 # Install dependencies only when needed
 # Note: Alpine uses musl libc, not glibc. better-sqlite3 must be compiled from source.
@@ -8,11 +11,10 @@ WORKDIR /app
 
 # Install dependencies without scripts first (avoids husky)
 COPY package.json pnpm-lock.yaml* ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod=false --ignore-scripts
+RUN pnpm i --frozen-lockfile --prod=false --ignore-scripts
 
 # Compile better-sqlite3 from source (required for Alpine/musl)
-RUN corepack enable pnpm && \
-    cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
+RUN cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
     npm run build-release
 
 # Production dependencies only
@@ -20,11 +22,10 @@ FROM base AS prod-deps
 RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile --prod --ignore-scripts
+RUN pnpm i --frozen-lockfile --prod --ignore-scripts
 
 # Compile better-sqlite3 from source (required for Alpine/musl)
-RUN corepack enable pnpm && \
-    cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
+RUN cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
     npm run build-release
 
 # Rebuild the source code only when needed
@@ -45,10 +46,20 @@ ENV NEXT_TELEMETRY_DISABLED=1 \
     BETTER_AUTH_SECRET="build-time-secret-min-32-chars-long" \
     BETTER_AUTH_URL="http://localhost:3000" \
     ENCRYPTION_SECRET="build-time-encryption-secret-must-be-64-chars-long-placeholder"
-RUN corepack enable pnpm && pnpm build
+RUN pnpm build
 
 # Production image - minimal runtime
 FROM node:24-alpine AS runner
+
+ARG VERSION=dev
+ARG COMMIT=unknown
+
+LABEL org.opencontainers.image.source="https://github.com/ReeceRose/tastebase" \
+      org.opencontainers.image.title="Tastebase" \
+      org.opencontainers.image.description="Self-hosted recipe manager for households and groups" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${COMMIT}"
 
 # Install only runtime dependencies
 RUN apk add --no-cache dumb-init && \
@@ -69,7 +80,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Copy only runtime-required external packages (defined in serverExternalPackages)
-COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules/.pnpm/@node-rs+argon2@* ./node_modules/.pnpm/
 COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules/.pnpm/pino@* ./node_modules/.pnpm/
 COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules/.pnpm/pino-pretty@* ./node_modules/.pnpm/
 COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules/.pnpm/better-sqlite3@* ./node_modules/.pnpm/

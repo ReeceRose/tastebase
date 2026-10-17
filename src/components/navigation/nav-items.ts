@@ -2,6 +2,7 @@ import {
   Clock,
   Heart,
   House,
+  LayoutList,
   type LucideIcon,
   NotebookText,
   Tags,
@@ -36,6 +37,7 @@ export const PRIMARY_NAV: NavItem[] = [
     icon: Heart,
     countKey: NavCountKey.FAVOURITES,
   },
+  { title: "Lists", href: "/recipes/lists", icon: LayoutList },
   { title: "Recent", href: "/recipes/recent", icon: Clock },
   { title: "Tags", href: "/recipes/tags", icon: Tags },
 ];
@@ -43,7 +45,7 @@ export const PRIMARY_NAV: NavItem[] = [
 export const MOBILE_NAV: NavItem[] = [
   PRIMARY_NAV[0],
   PRIMARY_NAV[1],
-  PRIMARY_NAV[2],
+  { ...PRIMARY_NAV[3], matchPrefixes: ["/recipes/favourites"] },
 ];
 
 export const QUICK_PICKS: QuickPick[] = [
@@ -56,6 +58,7 @@ const RESERVED_RECIPE_PATHS = new Set([
   "/recipes/favourites",
   "/recipes/favorites",
   "/recipes/recent",
+  "/recipes/lists",
   "/recipes/tags",
   "/recipes/new",
 ]);

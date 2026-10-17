@@ -9,6 +9,7 @@ import { PhotoStrip } from "@/components/recipes/photo-strip";
 import type { MeasurementUnit, TemperatureUnit } from "@/lib/types";
 import type {
   RecipeCookSummary,
+  RecipeListOption,
   RecipeWithRelations,
 } from "@/lib/types/recipe-types";
 import { resolveSwatch } from "@/lib/utils/swatches";
@@ -18,6 +19,7 @@ interface RecipePageProps {
   recipe: RecipeWithRelations;
   currentUserId: string;
   isFavourite: boolean;
+  lists: RecipeListOption[];
   cooks: RecipeCookSummary;
   measurementSystem: MeasurementUnit;
   temperatureUnit: TemperatureUnit;
@@ -35,6 +37,7 @@ export function RecipePage({
   recipe,
   currentUserId,
   isFavourite,
+  lists,
   cooks,
   measurementSystem,
   temperatureUnit,
@@ -66,6 +69,7 @@ export function RecipePage({
         swatch={swatch}
         currentUserId={currentUserId}
         isFavourite={isFavourite}
+        lists={lists}
         averageRating={averageRating(recipe)}
         cooks={cooks}
       />

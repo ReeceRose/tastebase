@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Save to Tastebase</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <img src="icons/icon-32.png" alt="" width="22" height="22" />
+      <span class="bar-title">Tastebase</span>
+      <button id="settings-button" class="bar-button" type="button" aria-label="Change Tastebase address" hidden>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+    </header>
+
+    <main>
+      <section id="view-loading" class="view" aria-busy="true">
+        <div class="photo skeleton"></div>
+        <div class="skeleton line short"></div>
+        <div class="skeleton line tall"></div>
+        <div class="skeleton line"></div>
+      </section>
+
+      <section id="view-recipe" class="view" hidden>
+        <div id="recipe-photo" class="photo">
+          <img id="recipe-image" alt="" />
+        </div>
+        <p id="recipe-site" class="caption muted"></p>
+        <h1 id="recipe-title" class="recipe-title">Recipe</h1>
+        <ul id="recipe-facts" class="facts"></ul>
+        <div id="saved-notice" class="saved-notice" hidden>
+          <p id="saved-text"></p>
+          <button id="open-saved-button" class="button button-accent button-block" type="button">Open it in Tastebase</button>
+        </div>
+        <button id="save-button" class="button button-accent button-block" type="button">
+          <span id="save-label">Save to Tastebase</span>
+        </button>
+        <p class="caption muted center">Opens in Tastebase so you can check it before saving.</p>
+      </section>
+
+      <section id="view-no-recipe" class="view" hidden>
+        <h1>No recipe found here</h1>
+        <p class="muted">
+          This page doesn't list its recipe in a way Tastebase can read
+          directly. You can still send it over and Tastebase will pick out what
+          it can.
+        </p>
+        <button id="save-anyway-button" class="button button-outline button-block" type="button">
+          Send the page anyway
+        </button>
+      </section>
+
+      <section id="view-not-a-page" class="view" hidden>
+        <h1 id="not-a-page-title">Open a recipe first</h1>
+        <p id="not-a-page-text" class="muted">
+          Go to a recipe on any site, then click the Tastebase icon or press
+          Alt+Shift+T.
+        </p>
+      </section>
+
+      <section id="view-signed-out" class="view" hidden>
+        <h1>Sign in to Tastebase</h1>
+        <p id="signed-out-text" class="muted">
+          You're signed out of <strong class="tastebase-address"></strong> in
+          this browser.
+        </p>
+        <button id="sign-in-button" class="button button-accent button-block" type="button">Sign in and save</button>
+      </section>
+
+      <section id="view-unreachable" class="view" hidden>
+        <h1>Can't reach Tastebase</h1>
+        <p class="muted">
+          Nothing answered at <strong class="tastebase-address"></strong>. Check
+          that Tastebase is running, or change the address.
+        </p>
+        <button id="retry-button" class="button button-outline button-block" type="button">Try again</button>
+      </section>
+
+      <section id="view-setup" class="view" hidden>
+        <h1>Connect your Tastebase</h1>
+        <p class="muted">Use the address you open Tastebase at.</p>
+        <form id="setup-form" class="setup">
+          <div class="field">
+            <label for="setup-address">Tastebase address</label>
+            <input id="setup-address" class="input" type="text" inputmode="url" autocomplete="url" placeholder="localhost:3000" required />
+          </div>
+          <p id="setup-error" class="message-error" role="alert" hidden></p>
+          <button class="button button-accent button-block" type="submit">Connect</button>
+        </form>
+      </section>
+
+      <p id="error" class="message-error" role="alert" hidden></p>
+    </main>
+
+    <footer id="footer" class="footer caption muted" hidden>
+      <span id="footer-status"></span>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

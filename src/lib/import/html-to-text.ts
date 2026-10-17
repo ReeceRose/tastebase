@@ -3,10 +3,11 @@ import * as cheerio from "cheerio";
 export interface PageText {
   title: string | null;
   siteName: string | null;
+  imageUrl: string | null;
   text: string;
 }
 
-const NOISE_SELECTORS = [
+export const NOISE_SELECTORS = [
   "script",
   "style",
   "noscript",
@@ -70,6 +71,10 @@ export function htmlToText(html: string): PageText {
     $("title").first().text().trim() ||
     null;
   const siteName = readMeta($, "og:site_name");
+  const imageUrl =
+    readMeta($, "og:image") ||
+    readMeta($, "og:image:url") ||
+    readMeta($, "twitter:image");
 
   $(NOISE_SELECTORS).remove();
 
@@ -92,7 +97,7 @@ export function htmlToText(html: string): PageText {
     .filter((line) => line.length > 0)
     .join("\n");
 
-  return { title, siteName, text };
+  return { title, siteName, imageUrl, text };
 }
 
 export function stripHtml(value: string): string {

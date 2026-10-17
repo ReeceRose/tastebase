@@ -11,10 +11,9 @@ import { visibleTo } from "@/lib/search/recipe-summaries";
 import { getAuthenticatedUser } from "@/lib/server-actions/base";
 import type { RecipeCookSummary } from "@/lib/types/recipe-types";
 import { isNextRedirectError } from "@/lib/utils";
+import { COOK_REPEAT_WINDOW_MS } from "@/lib/utils/recipe-constants";
 
 const logger = createOperationLogger("recipe-cook-actions");
-
-const REPEAT_WINDOW_MS = 2 * 60 * 60 * 1000;
 
 interface CookResult {
   success: boolean;
@@ -35,7 +34,7 @@ export async function recordRecipeCook(recipeId: string): Promise<CookResult> {
       return { success: false, recorded: false, error: "Recipe not found" };
     }
 
-    const since = new Date(Date.now() - REPEAT_WINDOW_MS);
+    const since = new Date(Date.now() - COOK_REPEAT_WINDOW_MS);
     const [recent] = await db
       .select({ id: recipeCooks.id })
       .from(recipeCooks)

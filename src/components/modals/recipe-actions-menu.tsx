@@ -1,6 +1,12 @@
 "use client";
 
-import { CookingPot, MoreHorizontal, Share2, Trash2 } from "lucide-react";
+import {
+  Check,
+  CookingPot,
+  MoreHorizontal,
+  Share2,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -13,23 +19,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { recordRecipeCook } from "@/lib/server-actions/recipe-cook-actions";
+import type { RecipeCookSummary } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
+import { COOK_REPEAT_WINDOW_MS } from "@/lib/utils/recipe-constants";
 
 interface RecipeActionsMenuProps {
   recipeId: string;
   title: string;
   canDelete: boolean;
+  cooks: RecipeCookSummary;
+  currentUserId: string;
   className?: string;
+}
+
+function justCookedByUser(cooks: RecipeCookSummary, currentUserId: string) {
+  if (!cooks.lastCookedAt || cooks.lastCookedBy?.id !== currentUserId) {
+    return false;
+  }
+  return (
+    Date.now() - new Date(cooks.lastCookedAt).getTime() < COOK_REPEAT_WINDOW_MS
+  );
 }
 
 export function RecipeActionsMenu({
   recipeId,
   title,
   canDelete,
+  cooks,
+  currentUserId,
   className,
 }: RecipeActionsMenuProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const justCooked = justCookedByUser(cooks, currentUserId);
 
   const share = async () => {
     const url = window.location.href.replace(/\/cook$/, "");
@@ -70,10 +92,17 @@ export function RecipeActionsMenu({
           <MoreHorizontal className="size-5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
-          <DropdownMenuItem onSelect={markCooked}>
-            <CookingPot />
-            Mark as cooked
-          </DropdownMenuItem>
+          {justCooked ? (
+            <DropdownMenuItem disabled>
+              <Check />
+              Marked as cooked
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onSelect={markCooked}>
+              <CookingPot />
+              {cooks.count > 0 ? "Cooked it again" : "Mark as cooked"}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={share}>
             <Share2 />
             Share link

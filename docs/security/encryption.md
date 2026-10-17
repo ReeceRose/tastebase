@@ -28,21 +28,11 @@ BETTER_AUTH_SECRET="your-separate-auth-secret"
 
 ### Generate Secure Encryption Key
 
-**Method 1: Using Node.js (Recommended)**
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+openssl rand -base64 48
 ```
 
-**Method 2: Using built-in generator**
-```bash
-# After app is running
-node -e "console.log(require('./src/lib/crypto/encryption').generateSecureSecret(64))"
-```
-
-**Method 3: Online generator**
-Use a reputable password generator with these settings:
-- Length: 64 characters
-- Include: Uppercase, lowercase, numbers, special characters
+This gives 64 characters with upper case, lower case, numbers and symbols. Don't use hex output (`openssl rand -hex 32` or `randomBytes(32).toString('hex')`): it only has lower case and numbers, so it fails the variety check below.
 
 ### Key Requirements
 
@@ -92,7 +82,7 @@ Key rotation allows you to change encryption keys while preserving access to exi
 
 2. **Generate new encryption key**
    ```bash
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   openssl rand -base64 48
    ```
 
 3. **Add new key to environment**
@@ -147,7 +137,7 @@ cp tastebase.db.backup tastebase.db
 **Error: "ENCRYPTION_SECRET must have good entropy"**
 ```bash
 # Your key is too simple. Generate a new one:
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+openssl rand -base64 48
 ```
 
 **Error: "Decryption failed - invalid or corrupted data"**

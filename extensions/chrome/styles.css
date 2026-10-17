@@ -1,0 +1,198 @@
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("fonts/bricolage-grotesque-latin.woff2") format("woff2");
+}
+
+:root {
+  --paper: #f1f3ec;
+  --surface: #ffffff;
+  --ink: #172015;
+  --ink-muted: #5d6657;
+  --line: #d9ddd0;
+  --muted: #e9ece2;
+  --leek: #234a2f;
+  --leek-foreground: #e6efdf;
+  --turmeric: #f4b400;
+  --turmeric-deep: #e08a00;
+  --danger: #b42318;
+  --danger-soft: #fbe9e7;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #111a13;
+    --surface: #1a271c;
+    --ink: #eef1e8;
+    --ink-muted: #a3ad9c;
+    --line: #2c3b2e;
+    --muted: #223225;
+    --danger: #ff8a7a;
+    --danger-soft: #3a1d19;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font:
+    15px / 1.45 "Bricolage Grotesque",
+    system-ui,
+    sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+p {
+  margin: 0;
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.caption {
+  font-size: 13px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 150ms;
+}
+
+.button:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+.button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.button-accent {
+  color: #172015;
+  background: var(--turmeric);
+}
+
+.button-accent:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--turmeric) 85%, var(--turmeric-deep));
+}
+
+.button-outline {
+  background: transparent;
+  border-color: var(--ink);
+}
+
+.button-outline:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.button-block {
+  width: 100%;
+}
+
+.link-button {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  outline: none;
+}
+
+.input:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+.message-error {
+  padding: 10px 14px;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-radius: 14px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.skeleton {
+  background: var(--muted);
+  border-radius: 999px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .skeleton {
+    animation: none;
+  }
+}

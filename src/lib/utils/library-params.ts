@@ -59,6 +59,7 @@ export function parseLibraryParams(
     difficulty: enumValue(RecipeDifficulty, first(params.difficulty)),
     cuisine: first(params.cuisine),
     tags,
+    listId: null,
     maxTime: positiveInt(first(params.maxTime)),
     sort:
       enumValue(LibrarySort, rawSort) ??

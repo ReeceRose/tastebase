@@ -131,109 +131,35 @@ pnpm run check-usage:verbose   # Detailed analysis with debug info
 pnpm run check-usage:json      # JSON output for automation
 
 # Local Deployment (Docker)
-docker-compose up -d      # Start Tastebase locally
-docker-compose down       # Stop Tastebase
-docker-compose pull       # Update to latest version
+docker compose up -d      # Start Tastebase locally
+docker compose down       # Stop Tastebase
+docker compose pull       # Update to latest version
+
+# Releases
+./scripts/release.sh      # Tag a release; CI publishes the image (docs/RELEASES.md)
 ```
 
 ## CI/CD Integration
 
-The codebase includes comprehensive health monitoring and build verification integrated into GitHub Actions workflows for automated quality gates:
+One workflow, `.github/workflows/ci.yml`, modelled on the Reclaim repo. It runs on pull requests to `main`, pushes to `main`, and `v*.*.*` tags.
 
-### GitHub Actions Workflows
+### Jobs
 
-**Codebase Health** (`.github/workflows/codebase-health.yml`):
-The health check workflow provides:
+1. **App**: `pnpm install --frozen-lockfile`, `pnpm run lint:check`, `pnpm run type-check`, `pnpm run test`
+2. **Docker** (needs App):
+   - PRs and `main`: builds the image for `linux/amd64` to prove it builds. Nothing is pushed.
+   - Tags: builds `linux/amd64` + `linux/arm64` and pushes `ghcr.io/reecerose/tastebase:<version>` and `:latest` using `GITHUB_TOKEN`
 
-- **Matrix Strategy**: Parallel execution of all health checks for fast feedback
-- **Critical vs Non-Critical**: Distinguishes between blocking and informational issues
-- **Smart Caching**: Optimized pnpm and dependency caching for performance
-- **Multi-Trigger**: Runs on push, PR, schedule, and manual dispatch
-- **Artifact Generation**: Comprehensive health reports uploaded as CI artifacts
-- **PR Comments**: Automated health report comments on pull requests
+pnpm's version comes from the `packageManager` field in `package.json` (CI and the Dockerfile both read it), so bump it there. Dependabot (`.github/dependabot.yml`) opens weekly grouped PRs for npm packages and GitHub Actions.
 
-**Docker Build Verification** (`.github/workflows/docker-build-verify.yml`):
-Verifies Docker builds on every PR and main branch push:
+The health check scripts (`pnpm run health-check`, `architecture`, `import-issues`, etc.) are **not** run in CI. Run them locally; `pnpm run health-check:quick` covers the critical ones (debug code, relative imports, circular dependencies).
 
-- **Fast Verification**: Single platform build (amd64) for quick feedback
-- **No Registry Push**: Builds locally without polluting Docker Hub
-- **Build Caching**: GitHub Actions cache for faster subsequent builds
-- **PR Protection**: Prevents merging PRs with broken Docker builds
-- **Triggers**: Runs on PRs to main, pushes to main, and manual dispatch
+### Testing locally
 
-**Docker Release** (`.github/workflows/docker-build.yml`):
-Builds and publishes production Docker images on version tags:
-
-- **Multi-Platform**: Builds for linux/amd64 and linux/arm64
-- **Semantic Versioning**: Automatically tags images based on version tags
-- **Docker Hub**: Pushes to reecerose/tastebase registry
-- **Metadata Updates**: Syncs README.md to Docker Hub description
-- **Triggers**: Only runs on version tags (v1.0.0, v2.1.3, etc.) and manual dispatch
-
-### Workflow Jobs
-
-**Codebase Health Jobs:**
-1. **health-check**: Matrix job running all health monitors in parallel
-2. **health-report**: Generates comprehensive health report artifacts
-3. **quick-health**: Fast critical-only checks for immediate PR feedback
-4. **security-health**: Security and dependency analysis
-
-**Docker Build Jobs:**
-1. **verify-build**: Verifies Docker build succeeds (PRs and main)
-2. **build**: Builds and pushes multi-platform images (version tags only)
-
-### Quality Gates
-
-**Critical Checks (Block CI/Deployment):**
-- Code Quality: Debug code (console.log, debugger statements)
-- Architecture: Relative imports, route structure violations
-- Import Issues: Circular dependencies, import violations
-- Docker Build: Container build must succeed
-
-**Non-Critical Checks (Informational):**
-- Performance: Optimization opportunities
-- Test Coverage: Missing tests and coverage gaps
-- Unused Code: Dead code and unused exports
-
-### Local CI Testing
-
-**Health Checks:**
 ```bash
-# Run all health checks (matches CI)
-pnpm run health-check:ci
-
-# Quick critical checks (matches PR quick-health job)
-pnpm run health-check:quick
-
-# Verbose output for debugging CI failures
-pnpm run health-check:verbose
-
-# Only show failed checks
-pnpm run health-check:failed
+pnpm run lint:check && pnpm run type-check && pnpm run test   # matches the App job
+docker build -t tastebase:test .                                # matches the Docker job
 ```
-
-**Docker Build Verification:**
-```bash
-# Test Docker build locally (matches CI verification)
-docker build -t tastebase:test .
-
-# Test with buildx (matches CI exactly)
-docker buildx build --platform linux/amd64 -t tastebase:test .
-
-# Full multi-platform test (matches release build)
-docker buildx build --platform linux/amd64,linux/arm64 -t tastebase:test .
-```
-
-### CI Integration Benefits
-
-- **Fast Feedback**: Quick checks run in <5 minutes for PR feedback
-- **Parallel Execution**: All checks run simultaneously for efficiency
-- **Docker Verification**: Catches broken builds before merging
-- **Smart Failure Handling**: Critical vs non-critical failure distinction
-- **Rich Reporting**: Detailed health reports with actionable insights
-- **Artifact Storage**: 30-day retention of health reports for analysis
-- **PR Integration**: Automated health report comments on pull requests
-- **Release Automation**: Tag-based releases with multi-platform Docker builds
 
 ## Architecture Patterns
 
@@ -407,21 +333,14 @@ CURRENT_ENCRYPTION_VERSION=  # Version for key rotation (default: 1)
 
 ### Generating Secure Encryption Keys
 
-For production deployment, generate a secure encryption key:
-
 ```bash
-# Generate 64-character encryption secret
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-
-# Or use the built-in helper (once app is running)
-node -e "console.log(require('./src/lib/crypto/encryption').generateSecureSecret(64))"
+openssl rand -base64 48   # run once per secret
 ```
 
-**Security Requirements:**
+**Security Requirements** (enforced by `src/lib/config/env.ts`):
 - `ENCRYPTION_SECRET` must be different from `BETTER_AUTH_SECRET`
-- Must be exactly 64 characters with good entropy
-- Must include uppercase, lowercase, numbers, AND special characters
-- Use quotes around the value in .env files to handle special characters
+- At least 32 characters, entropy above 4 bits per character, and at least three of: uppercase, lowercase, numbers, symbols
+- Hex secrets (`randomBytes(32).toString('hex')`) fail the check, so don't suggest them
 - Store securely and never commit to version control
 
 ## Adding New Features
@@ -499,7 +418,7 @@ Follow this step-by-step process to add new features consistently:
 
 **Tastebase is designed for local Docker deployment:**
 
-- **Docker-first**: Use `docker-compose up -d` for simple deployment
+- **Docker-first**: Published image `ghcr.io/reecerose/tastebase`; users run `docker compose up -d` with `docker-compose.yml` and `.env.docker.example`
 - **Minimal runtime**: Optimized Alpine-based image with Node.js 24 for best performance
 - **Local SQLite**: Database stored in Docker volumes for persistence (`/app/data`)
 - **Image uploads**: Recipe images stored in separate volume (`/app/uploads`)
@@ -515,49 +434,25 @@ The Dockerfile uses multi-stage builds for maximum efficiency:
 - **Dependencies**: Separate dev and production dependency stages
 - **Builder**: Compiles application with all build tools
 - **Runtime**: Minimal production image with only necessary files
-- **Security**: Non-root user, proper signal handling with dumb-init
+- **Security**: Non-root user (uid 1001, so host-folder mounts must be owned by 1001), proper signal handling with dumb-init
 - **Volumes**: Persistent mounts for database (`/app/data`) and uploads (`/app/uploads`)
 
 ### Release Process
 
-**Tastebase uses Git tags for releases** (not branches). This provides immutable version history and integrates seamlessly with Docker Hub.
-
-**Creating a Release:**
+Copied from the Reclaim repo. Full guide: `docs/RELEASES.md`.
 
 ```bash
-# 1. Ensure you're on main and up to date
-git checkout main
-git pull origin main
-
-# 2. Create and push a version tag (triggers Docker build)
-git tag -a v1.0.0 -m "Release v1.0.0: Description of changes"
-git push origin v1.0.0
-
-# 3. GitHub Actions automatically:
-#    - Builds multi-platform Docker image (amd64, arm64)
-#    - Pushes to Docker Hub with tags: v1.0.0, 1.0, 1, latest
-#    - Updates Docker Hub description from README.md
+./scripts/release.sh          # patch bump
+./scripts/release.sh minor    # or major, or an explicit vX.Y.Z
 ```
 
-**Version Tag Format:**
-- Use semantic versioning: `v1.0.0`, `v2.1.3`, etc.
-- Tags must start with `v` to trigger the workflow
-- Major releases: `v1.0.0`, `v2.0.0` (breaking changes)
-- Minor releases: `v1.1.0`, `v1.2.0` (new features)
-- Patch releases: `v1.0.1`, `v1.0.2` (bug fixes)
+The script, run from `main`:
+1. Generates release notes from commits since the last tag with `claude -p` (falls back to the raw commit list)
+2. Adds the entry to the top of `CHANGELOG.md` and sets `package.json`'s `version`
+3. Commits `Release vX.Y.Z`, pushes, creates and pushes the annotated tag
+4. Creates the GitHub Release with `gh`, using the same notes
 
-**Docker Image Tags Generated:**
-```bash
-# For tag v1.2.3, these images are created:
-reecerose/tastebase:v1.2.3    # Full version
-reecerose/tastebase:1.2        # Minor version
-reecerose/tastebase:1          # Major version
-reecerose/tastebase:latest     # Latest release
-reecerose/tastebase:sha-abc123 # Git commit SHA
-```
-
-**Manual Workflow Trigger:**
-The Docker build can also be triggered manually from GitHub Actions if needed.
+Pushing the tag triggers CI, which publishes `ghcr.io/reecerose/tastebase:X.Y.Z` and `:latest`. `CHANGELOG.md` is the source of truth; `##` is reserved for version headings.
 
 ## Common Workflows
 

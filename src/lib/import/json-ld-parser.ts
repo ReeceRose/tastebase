@@ -14,6 +14,7 @@ import type {
   ParsedInstruction,
   RecipeParsingResult,
 } from "@/lib/types/import-types";
+import { sizeFromUrl } from "@/lib/utils/photo-suggestions";
 
 const logger = createOperationLogger("json-ld-parser");
 
@@ -30,6 +31,8 @@ type JsonObject = { [key: string]: JsonValue };
 export interface JsonLdRecipe {
   recipe: RecipeParsingResult;
   siteName: string | null;
+  imageUrl: string | null;
+  stepImageUrls: string[];
 }
 
 const MAX_TAGS = 20;
@@ -217,6 +220,86 @@ function normalizeRecipe(node: JsonObject): RecipeParsingResult {
   };
 }
 
+interface ImageCandidate {
+  url: string;
+  width: number;
+  landscape: boolean;
+}
+
+// Treated as wider than any resized copy: an image address without a size
+// hint is usually the original upload.
+const ORIGINAL_WIDTH = 100000;
+const LARGE_WIDTH = 1000;
+
+function readPixels(value: JsonValue | undefined): number {
+  const pixels = Number.parseInt(String(value ?? 0), 10);
+  return Number.isNaN(pixels) ? 0 : pixels;
+}
+
+function imageCandidate(value: JsonValue): ImageCandidate | null {
+  const url = isObject(value) ? (value.url ?? value.contentUrl) : value;
+  if (typeof url !== "string" || !url.trim()) {
+    return null;
+  }
+  const declared = isObject(value)
+    ? { width: readPixels(value.width), height: readPixels(value.height) }
+    : null;
+  const size =
+    declared && declared.width > 0 ? declared : sizeFromUrl(url.trim());
+  if (!size) {
+    return { url: url.trim(), width: ORIGINAL_WIDTH, landscape: false };
+  }
+  return {
+    url: url.trim(),
+    width: size.width,
+    landscape: size.height > 0 && size.width > size.height,
+  };
+}
+
+function betterImage(
+  best: ImageCandidate,
+  candidate: ImageCandidate,
+): ImageCandidate {
+  const bestLarge = best.width >= LARGE_WIDTH;
+  const candidateLarge = candidate.width >= LARGE_WIDTH;
+  if (bestLarge && candidateLarge && candidate.landscape !== best.landscape) {
+    return candidate.landscape ? candidate : best;
+  }
+  return candidate.width > best.width ? candidate : best;
+}
+
+// Recipes list one image or several crops of it. A large landscape crop makes
+// the best main photo, then the biggest one.
+function readImageUrl(value: JsonValue | undefined): string | null {
+  if (value === undefined) {
+    return null;
+  }
+  const candidates = (Array.isArray(value) ? value : [value])
+    .map(imageCandidate)
+    .filter((candidate) => candidate !== null);
+  if (candidates.length === 0) {
+    return null;
+  }
+  return candidates.reduce(betterImage).url;
+}
+
+function readStepImages(value: JsonValue | undefined, depth = 0): string[] {
+  if (value === undefined || depth > MAX_SEARCH_DEPTH) {
+    return [];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => readStepImages(item, depth + 1));
+  }
+  if (!isObject(value)) {
+    return [];
+  }
+  const own = readImageUrl(value.image);
+  return [
+    ...(own ? [own] : []),
+    ...readStepImages(value.itemListElement, depth + 1),
+  ];
+}
+
 function readSiteName(node: JsonObject, scripts: JsonValue[]): string | null {
   const publisher = node.publisher;
   if (publisher !== undefined) {
@@ -261,6 +344,8 @@ export function extractJsonLdRecipe(html: string): JsonLdRecipe | null {
       return {
         recipe: normalizeRecipe(node),
         siteName: readSiteName(node, scripts),
+        imageUrl: readImageUrl(node.image ?? node.thumbnailUrl),
+        stepImageUrls: readStepImages(node.recipeInstructions),
       };
     }
   }

@@ -27,15 +27,19 @@ AI is optional. Provider keys (OpenAI, Anthropic, Google) are **not** environmen
 
 ## Generating secrets
 
-```bash
-# BETTER_AUTH_SECRET
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+Run this once for each secret, so `BETTER_AUTH_SECRET` and `ENCRYPTION_SECRET` get different values:
 
-# ENCRYPTION_SECRET (64 characters, mixed character types)
-node -e "const c=require('crypto');const s='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#%^*_-+=';let o='';for(let i=0;i<64;i++)o+=s[c.randomInt(s.length)];console.log(o)"
+```bash
+openssl rand -base64 48
 ```
 
-Wrap values containing symbols in double quotes in `.env` files.
+That gives 64 characters with the mix of upper case, lower case, numbers and symbols `ENCRYPTION_SECRET` requires. Hex output (`openssl rand -hex 32`, `randomBytes(32).toString('hex')`) is **rejected** for `ENCRYPTION_SECRET` because it only has lower case and numbers.
+
+Without `openssl`:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
+```
 
 ## Storage locations
 

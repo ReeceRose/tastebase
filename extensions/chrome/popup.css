@@ -1,0 +1,168 @@
+body {
+  width: 360px;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 10px 16px;
+  color: var(--leek-foreground);
+  background: var(--leek);
+}
+
+.bar img {
+  border-radius: 6px;
+}
+
+.bar-title {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+.bar-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  outline: none;
+}
+
+.bar-button:hover,
+.bar-button[aria-pressed="true"] {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.bar-button:focus-visible {
+  box-shadow: 0 0 0 3px var(--turmeric);
+}
+
+main {
+  padding: 16px;
+}
+
+.view {
+  display: grid;
+  gap: 12px;
+}
+
+.view h1 {
+  font-size: 24px;
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--muted);
+  border-radius: 22px;
+}
+
+.photo.skeleton {
+  border-radius: 22px;
+}
+
+.photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.line {
+  height: 14px;
+}
+
+.line.short {
+  width: 40%;
+}
+
+.line.tall {
+  height: 26px;
+  width: 85%;
+}
+
+.recipe-title {
+  font-size: 26px;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#recipe-site {
+  margin-bottom: -6px;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.facts:empty {
+  display: none;
+}
+
+.facts li {
+  padding: 5px 12px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+  border-radius: 999px;
+}
+
+.center {
+  text-align: center;
+}
+
+.setup {
+  display: grid;
+  gap: 12px;
+}
+
+#error {
+  margin-top: 12px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--line);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #3c9a52;
+}
+
+.saved-notice {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--turmeric) 22%, var(--surface));
+  border-radius: 14px;
+}
+
+/* Last so it beats the display rules above at equal specificity. */
+[hidden] {
+  display: none;
+}

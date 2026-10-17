@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Save to Tastebase</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="page">
+      <img src="icons/icon-128.png" alt="" width="56" height="56" />
+      <h1>Save to Tastebase</h1>
+      <p class="lead muted">
+        Bring any recipe you're looking at into Tastebase, photo included.
+        It works on sites that block automated imports and on subscriber sites
+        you're signed in to.
+      </p>
+
+      <form id="setup-form" class="card">
+        <div class="field">
+          <label for="setup-address">Your Tastebase address</label>
+          <input id="setup-address" class="input" type="text" inputmode="url" autocomplete="url" placeholder="localhost:3000" required />
+        </div>
+        <p id="setup-error" class="message-error" role="alert" hidden></p>
+        <button class="button button-accent" type="submit">Connect</button>
+      </form>
+
+      <section id="connected" class="card" hidden>
+        <h2>You're connected</h2>
+        <p class="muted">
+          Recipes will open in <strong id="connected-address"></strong>.
+        </p>
+        <ol class="steps">
+          <li>Pin Save to Tastebase: click the puzzle piece in Chrome's toolbar, then the pin.</li>
+          <li>Open a recipe and click the Tastebase icon, or press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd>.</li>
+          <li>Check the recipe in Tastebase, then save it.</li>
+        </ol>
+        <button id="change-address" class="link-button" type="button">Change address</button>
+      </section>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

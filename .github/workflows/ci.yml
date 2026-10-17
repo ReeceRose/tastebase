@@ -2,134 +2,107 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
+    tags: ["v*.*.*"]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  lint-and-type-check:
+  app:
+    name: App
     runs-on: ubuntu-latest
+    env:
+      SKIP_ENV_VALIDATION: true
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      # Version comes from the packageManager field in package.json.
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
         with:
-          version: 9
+          node-version: "24"
+          cache: pnpm
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: "pnpm"
-
-      - name: Install ripgrep
-        run: |
-          curl -LO https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep_13.0.0_amd64.deb
-          sudo dpkg -i ripgrep_13.0.0_amd64.deb
-
-      - name: Install dependencies
+      - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Run type check
-        run: pnpm run type-check
-
-      - name: Run linter
+      - name: Lint
         run: pnpm run lint:check
 
+      - name: Type check
+        run: pnpm run type-check
 
-      - name: Check for unused dependencies
-        run: pnpm run unused-deps:ci
-
-  test:
-    runs-on: ubuntu-latest
-    env:
-      SKIP_ENV_VALIDATION: true
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run tests
+      - name: Test
         run: pnpm run test
 
-  build:
+  docker:
+    name: Docker
+    needs: [app]
     runs-on: ubuntu-latest
-    needs: [lint-and-type-check, test]
-    env:
-      SKIP_ENV_VALIDATION: true
-      DATABASE_URL: "file:/tmp/test.db"
-      BETTER_AUTH_SECRET: "test-secret-at-least-32-chars-long"
-      BETTER_AUTH_URL: "http://localhost:3000"
-      OLLAMA_BASE_URL: "http://localhost:11434"
-      ENCRYPTION_SECRET: "test-encryption-secret-must-be-exactly-64-chars-long-12345678901"
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: docker/setup-buildx-action@v3
+
+      # PRs and main: prove the image builds (amd64 only, nothing pushed).
+      - name: Build image (validate)
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        uses: docker/build-push-action@v6
         with:
-          version: 9
+          context: .
+          platforms: linux/amd64
+          push: false
+          provenance: false
+          sbom: false
+          build-args: |
+            VERSION=dev
+            COMMIT=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # Tags: build both architectures and push to GHCR.
+      - uses: docker/setup-qemu-action@v3
+        if: startsWith(github.ref, 'refs/tags/v')
+
+      - name: Log in to GHCR
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/login-action@v3
         with:
-          node-version: 22.x
-          cache: "pnpm"
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build project
-        run: pnpm run build
-
-  code-quality:
-    runs-on: ubuntu-latest
-    # This job runs independently and doesn't block other jobs
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
-    continue-on-error: true
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Extract metadata
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          version: 9
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Build and push
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/build-push-action@v6
         with:
-          node-version: 22.x
-          cache: "pnpm"
-
-      - name: Install ripgrep
-        run: |
-          curl -LO https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep_13.0.0_amd64.deb
-          sudo dpkg -i ripgrep_13.0.0_amd64.deb
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check for unused code
-        run: pnpm run unused-code:ci
-        continue-on-error: true
-
-      - name: Run comprehensive health checks
-        run: pnpm run health-check:ci
-        continue-on-error: true
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false
+          sbom: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.meta.outputs.version }}
+            COMMIT=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

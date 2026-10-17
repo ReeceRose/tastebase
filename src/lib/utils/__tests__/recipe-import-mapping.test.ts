@@ -31,6 +31,9 @@ const RESULT: RecipeImportResult = {
   sourceUrl: "https://example.com/chili",
   sourceName: "Example",
   rawText: null,
+  imageUrl: null,
+  image: null,
+  photoUrls: [],
   warnings: [],
 };
 

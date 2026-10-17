@@ -29,6 +29,12 @@ export const SETTINGS_SECTIONS: SettingsItem[] = [
       "Imports work without AI. Add a provider if you want help with messy text and photos.",
   },
   {
+    id: SettingsSection.SAVING,
+    label: "Saving recipes",
+    description:
+      "Save recipes from other sites in your browser or straight from your phone.",
+  },
+  {
     id: SettingsSection.TEMPLATES,
     label: "Note templates",
     description: "Starting points for the notes you leave on recipes.",

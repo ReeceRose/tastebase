@@ -35,10 +35,11 @@ const signInSchema = z.object({
 
 type SignInFormData = z.infer<typeof signInSchema>;
 
-export function SignInForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+interface SignInFormProps extends React.ComponentProps<"div"> {
+  returnTo: string;
+}
+
+export function SignInForm({ className, returnTo, ...props }: SignInFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -74,8 +75,12 @@ export function SignInForm({
         setError(result.error.message || "Sign in failed");
         setIsLoading(false);
       } else {
-        // Successful sign in, redirect to home
-        router.push("/");
+        if (returnTo === "/") {
+          router.push(returnTo);
+        } else {
+          // A full load lets the browser extension hand over a waiting recipe.
+          window.location.assign(returnTo);
+        }
       }
     } catch (err) {
       console.error("Sign-in error:", err);

@@ -354,11 +354,11 @@ The project includes Husky pre-commit hooks that run:
 - Staged file validation
 
 #### Continuous Integration
-GitHub Actions workflow runs:
-- All health checks in parallel
-- Test coverage reporting
-- Build validation
-- Architecture compliance
+`.github/workflows/ci.yml` runs on every pull request and push to `main`:
+- Lint (`pnpm run lint:check`), type check and unit tests
+- A Docker image build, to prove the image still builds
+
+The health check scripts (`pnpm run health-check` and friends) are not part of CI; run them locally before larger changes.
 
 ### Performance Optimization
 
@@ -434,30 +434,18 @@ pnpm run performance:blocking
 
 ## Deployment
 
-### Local Docker Development
+### Testing the image locally
 ```bash
-# Build and run locally
-docker-compose up -d
+# Build the image from your working copy
+docker build -t tastebase:test .
 
-# View logs  
-docker-compose logs -f tastebase
-
-# Rebuild after changes
-docker-compose build --no-cache tastebase
+# Or run it through Compose: replace `image:` with `build: .` in docker-compose.yml, then
+cp .env.docker.example .env   # fill in the secrets
+docker compose up -d --build
+docker compose logs -f tastebase
 ```
 
-### Production Deployment
-```bash
-# Build production image
-docker build -t tastebase:latest .
-
-# Run production container
-docker run -d \
-  -p 3000:3000 \
-  -v tastebase-data:/app/data \
-  -e NODE_ENV=production \
-  tastebase:latest
-```
+Production installs use the published image; see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Contributing Guidelines
 
@@ -480,11 +468,7 @@ docker run -d \
 - [ ] Health checks pass
 
 ### Release Process
-1. Update version in `package.json`
-2. Update `CHANGELOG.md`
-3. Create GitHub release
-4. Build and publish Docker image
-5. Update documentation
+Run `./scripts/release.sh` (patch), `./scripts/release.sh minor`, or `./scripts/release.sh v1.2.3` from an up-to-date `main`. It writes the `CHANGELOG.md` entry, bumps `package.json`, commits and tags, and creates the GitHub Release. CI then builds and pushes the image to `ghcr.io/reecerose/tastebase`. Full details: [RELEASES.md](./RELEASES.md).
 
 ## Troubleshooting Development Issues
 
@@ -518,7 +502,6 @@ pnpm run db:migrate
 2. Run health checks: `pnpm run health-check:verbose`
 3. Review application logs in console
 4. Check GitHub Issues for similar problems
-5. Use GitHub Discussions for questions
 
 ---
 

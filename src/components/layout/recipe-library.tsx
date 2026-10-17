@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 import { RecipeLibraryToolbar } from "@/components/forms/recipe-library-toolbar";
 import { RecipeLibraryResults } from "@/components/lists/recipe-library-results";
 import {
@@ -17,6 +17,7 @@ interface LibrarySectionProps {
 
 interface RecipeLibraryProps extends LibrarySectionProps {
   title: string;
+  actions?: ReactNode;
 }
 
 async function LibraryToolbarLoader({
@@ -37,15 +38,19 @@ async function LibraryToolbarLoader({
 
 export function RecipeLibrary({
   title,
+  actions,
   filters,
   basePath,
   currentUserId,
 }: RecipeLibraryProps) {
   return (
     <div className="space-y-6">
-      <h1 className="text-[32px] leading-none font-extrabold tracking-[-0.03em] lg:text-title">
-        {title}
-      </h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="min-w-0 wrap-break-word text-[32px] leading-none font-extrabold tracking-[-0.03em] lg:text-title">
+          {title}
+        </h1>
+        {actions}
+      </div>
 
       <Suspense fallback={<RecipeLibraryToolbarSkeleton />}>
         <LibraryToolbarLoader

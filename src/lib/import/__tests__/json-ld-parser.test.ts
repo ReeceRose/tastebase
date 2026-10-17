@@ -120,4 +120,35 @@ describe("extractJsonLdRecipe", () => {
       extractJsonLdRecipe(page({ "@type": "Article", name: "News" })),
     ).toBeNull();
   });
+
+  it("picks a landscape photo over a larger square crop", () => {
+    const result = extractJsonLdRecipe(
+      page({
+        "@type": "Recipe",
+        name: "Cookies",
+        image: [
+          {
+            "@type": "ImageObject",
+            url: "https://img.example.com/square.jpg",
+            width: 1800,
+            height: 1800,
+          },
+          {
+            "@type": "ImageObject",
+            contentUrl: "https://img.example.com/wide.jpg",
+            width: 1600,
+            height: 900,
+          },
+        ],
+      }),
+    );
+    expect(result?.imageUrl).toBe("https://img.example.com/wide.jpg");
+  });
+
+  it("reads a plain image string", () => {
+    const result = extractJsonLdRecipe(
+      page({ "@type": "Recipe", name: "Soup", image: "/photos/soup.jpg" }),
+    );
+    expect(result?.imageUrl).toBe("/photos/soup.jpg");
+  });
 });

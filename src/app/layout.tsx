@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider } from "@/components/theme/theme-provider";
@@ -16,6 +16,10 @@ const bricolage = Bricolage_Grotesque({
   axes: ["opsz"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#234a2f",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(env.BETTER_AUTH_URL),
   title: "Tastebase - The recipes your house actually cooks",
@@ -31,6 +35,7 @@ export const metadata: Metadata = {
     "cooking app",
     "recipe organizer",
   ],
+  appleWebApp: { capable: true, title: "Tastebase" },
   authors: [{ name: "Tastebase" }],
   creator: "Tastebase",
   publisher: "Tastebase",

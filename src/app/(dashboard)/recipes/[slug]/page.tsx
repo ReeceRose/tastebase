@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth/auth";
 import { getRecipeBySlug } from "@/lib/server-actions/recipe-actions";
 import { getRecipeCookSummary } from "@/lib/server-actions/recipe-cook-actions";
 import { getRecipeFavoriteStatus } from "@/lib/server-actions/recipe-favorites-actions";
+import { getRecipeListOptions } from "@/lib/server-actions/recipe-list-actions";
 import { trackRecipeView } from "@/lib/server-actions/recipe-tracking-actions";
 import { MeasurementUnit, TemperatureUnit } from "@/lib/types";
 
@@ -36,9 +37,10 @@ async function RecipeDetailContent({
     throw new Error(result.error || "Failed to load recipe");
   }
 
-  const [favoriteStatus, cooks] = await Promise.all([
+  const [favoriteStatus, cooks, lists] = await Promise.all([
     getRecipeFavoriteStatus(result.data.id).catch(() => undefined),
     getRecipeCookSummary(result.data.id).catch(() => undefined),
+    getRecipeListOptions(result.data.id).catch(() => undefined),
     trackRecipeView(result.data.id).catch(() => undefined),
   ]);
 
@@ -47,6 +49,7 @@ async function RecipeDetailContent({
       recipe={result.data}
       currentUserId={currentUserId}
       isFavourite={favoriteStatus?.data?.isFavorited ?? false}
+      lists={lists ?? []}
       cooks={cooks ?? { count: 0, lastCookedAt: null, lastCookedBy: null }}
       measurementSystem={measurementSystem}
       temperatureUnit={temperatureUnit}

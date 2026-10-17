@@ -2,9 +2,10 @@
 
 import { Star, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useTransition } from "react";
+import { type Dispatch, type SetStateAction, useTransition } from "react";
 import { toast } from "sonner";
 import { EditorSectionCard } from "@/components/forms/recipe-editor/editor-field";
+import { EditorPhotoSuggestions } from "@/components/forms/recipe-editor/editor-photo-suggestions";
 import { ImageUpload } from "@/components/recipe-images/image-upload";
 import {
   attachImageToRecipe,
@@ -13,6 +14,7 @@ import {
   setHeroImage,
 } from "@/lib/server-actions/recipe-image-actions";
 import { EditorSection } from "@/lib/types";
+import type { PhotoSuggestion } from "@/lib/types/import-types";
 import type { PendingImage, RecipeImage } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
 import { mimeTypeFor } from "@/lib/utils/recipe-editor-values";
@@ -23,7 +25,8 @@ interface EditorPhotosProps {
   images: RecipeImage[];
   onImagesChange: (images: RecipeImage[]) => void;
   pending: PendingImage[];
-  onPendingChange: (pending: PendingImage[]) => void;
+  onPendingChange: Dispatch<SetStateAction<PendingImage[]>>;
+  suggestions: PhotoSuggestion[];
 }
 
 interface UploadedFile {
@@ -45,6 +48,7 @@ export function EditorPhotos({
   onImagesChange,
   pending,
   onPendingChange,
+  suggestions,
 }: EditorPhotosProps) {
   const [isWorking, startWork] = useTransition();
 
@@ -220,6 +224,14 @@ export function EditorPhotos({
             </li>
           ))}
         </ul>
+      )}
+
+      {!recipeId && (
+        <EditorPhotoSuggestions
+          suggestions={suggestions}
+          pending={pending}
+          onPendingChange={onPendingChange}
+        />
       )}
 
       <ImageUpload

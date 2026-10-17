@@ -1,12 +1,11 @@
 # Tastebase Setup Guide
 
-This guide walks you through setting up Tastebase, a local-first personal recipe management application. Tastebase runs on your computer using Docker - no cloud dependencies, no subscriptions, just your recipes stored securely on your own machine.
+This guide walks you through setting up Tastebase, a local-first recipe manager for a household or group. Tastebase runs on your own machine or server using Docker - no cloud dependencies, no subscriptions, just your recipes stored on hardware you control.
 
 ## Prerequisites
 
 **For Docker deployment (recommended):**
-- Docker and Docker Compose
-- Git
+- Docker with Docker Compose
 
 **For development setup:**
 - Node.js 22 or newer (24 recommended)
@@ -17,17 +16,23 @@ This guide walks you through setting up Tastebase, a local-first personal recipe
 
 **The easiest way to get started:**
 
-1. **Clone and start:**
+1. **Download the Compose file and environment template:**
    ```bash
-   git clone <repository-url> tastebase
-   cd tastebase
-   docker-compose up -d
+   mkdir tastebase && cd tastebase
+   curl -O https://raw.githubusercontent.com/ReeceRose/tastebase/main/docker-compose.yml
+   curl -o .env https://raw.githubusercontent.com/ReeceRose/tastebase/main/.env.docker.example
    ```
 
-2. **Access your recipes:**
-   Open [http://localhost:3000](http://localhost:3000) and start adding recipes!
+2. **Fill in `.env`:** run `openssl rand -base64 48` twice and paste one value into `BETTER_AUTH_SECRET` and the other into `ENCRYPTION_SECRET`. Set `BETTER_AUTH_URL` to the address you'll open Tastebase at.
 
-Your data is automatically saved to Docker volumes and will persist even when you restart the container.
+3. **Start it:**
+   ```bash
+   docker compose up -d
+   ```
+
+4. **Open your `BETTER_AUTH_URL`** (e.g. [http://localhost:3000](http://localhost:3000)) and create the first account.
+
+Your data is saved to Docker volumes and persists across restarts and upgrades. See [DEPLOYMENT.md](./DEPLOYMENT.md) for backups, updates and reverse proxies.
 
 ## Development Setup
 
@@ -204,52 +209,14 @@ Tastebase uses BetterAuth for simple email/password authentication:
 
 Recipe images and attachments are stored locally:
 
-- Upload directory configurable via `UPLOAD_DIR`
-- File size limits configurable via `MAX_FILE_SIZE`
+- Stored in `./uploads` (`/app/uploads` in Docker)
+- Up to 10 MB per photo
 - Automatic image optimization for web display
 - Support for common image formats (JPG, PNG, WebP)
 
 ## Deployment
 
-### Docker Deployment (Recommended)
-
-**Production deployment with Docker:**
-
-```bash
-# Use docker-compose for easy deployment
-docker-compose up -d
-
-# Or build and run manually
-docker build -t tastebase .
-docker run -d \
-  -p 3000:3000 \
-  -v tastebase-data:/app/data \
-  -v tastebase-uploads:/app/uploads \
-  --name tastebase \
-  tastebase
-```
-
-**Benefits of Docker deployment:**
-- **Data persistence**: Your recipes are safely stored in Docker volumes
-- **Easy updates**: Pull new versions without losing data
-- **Isolation**: No conflicts with your system
-- **Portability**: Run on any machine with Docker
-- **Backup friendly**: Simply backup Docker volumes
-
-**Managing your deployment:**
-```bash
-# Update to latest version
-docker-compose pull && docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Backup your data
-docker run --rm -v tastebase-data:/data -v $(pwd):/backup alpine tar czf /backup/tastebase-backup.tar.gz -C /data .
-
-# Stop the application
-docker-compose down
-```
+Use the published image, `ghcr.io/reecerose/tastebase`, as in the [Quick Start](#quick-start-docker---recommended). [DEPLOYMENT.md](./DEPLOYMENT.md) covers `docker run`, host folders, updates, backups and reverse proxies, and [DEPLOYMENT_UNRAID.md](./DEPLOYMENT_UNRAID.md) covers Unraid.
 
 ## Troubleshooting
 

@@ -50,7 +50,21 @@ export async function RecipeLibraryResults({
       return (
         <EmptyState
           title="No favourites yet"
-          description="Tap Save on any recipe to keep it here, so the ones you cook again and again are always close."
+          description="Tap Save on any recipe and tick Favourites, so the ones you cook again and again are always close."
+          action={
+            <Button asChild>
+              <Link href="/recipes">Browse recipes</Link>
+            </Button>
+          }
+        />
+      );
+    }
+
+    if (filters.scope === LibraryScope.LIST) {
+      return (
+        <EmptyState
+          title="Nothing in this list yet"
+          description="Open any recipe and use Save to put it in this list."
           action={
             <Button asChild>
               <Link href="/recipes">Browse recipes</Link>

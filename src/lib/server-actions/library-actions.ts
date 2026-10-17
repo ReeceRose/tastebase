@@ -11,6 +11,7 @@ import {
 } from "@/lib/search/recipe-summaries";
 import { getAuthenticatedUser } from "@/lib/server-actions/base";
 import { getHouseholdMembers } from "@/lib/server-actions/household-actions";
+import { getRecipeListRecipeIds } from "@/lib/server-actions/recipe-list-actions";
 import { getAllUserTags } from "@/lib/server-actions/recipe-tags-actions";
 import {
   LibraryScope,
@@ -49,6 +50,17 @@ async function favouriteIds(userId: string): Promise<string[]> {
   return rows.map((row) => row.recipeId);
 }
 
+async function scopedRecipeIds(
+  filters: LibraryFilters,
+  userId: string,
+): Promise<string[] | undefined> {
+  if (filters.scope === LibraryScope.FAVOURITES) return favouriteIds(userId);
+  if (filters.scope === LibraryScope.LIST && filters.listId) {
+    return getRecipeListRecipeIds(filters.listId);
+  }
+  return undefined;
+}
+
 export async function getLibraryPage(
   filters: LibraryFilters,
 ): Promise<LibraryResult> {
@@ -71,10 +83,7 @@ export async function getLibraryPage(
       cuisine: filters.cuisine ? [filters.cuisine] : undefined,
       tags: filters.tags.length > 0 ? filters.tags : undefined,
       maxTotalTime: filters.maxTime ?? undefined,
-      recipeIds:
-        filters.scope === LibraryScope.FAVOURITES
-          ? await favouriteIds(user.id)
-          : undefined,
+      recipeIds: await scopedRecipeIds(filters, user.id),
       sortBy: sort.sortBy,
       sortOrder: sort.order,
       recordHistory: false,

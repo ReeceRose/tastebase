@@ -3,11 +3,13 @@
 import { Camera, Link2, Loader2, PenLine, Type } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
+import { ExtensionSuggestionCard } from "@/components/cards/extension-suggestion-card";
 import { RecipeImageUpload } from "@/components/forms/recipe-image-upload";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useExtensionPresence } from "@/hooks/use-extension-presence";
 import { getRecipeImportCapabilitiesAction } from "@/lib/server-actions/recipe-import-actions";
-import { ButtonVariant } from "@/lib/types";
+import { ButtonVariant, ExtensionPresence } from "@/lib/types";
 import {
   type RecipeImportCapabilities,
   RecipeImportInput,
@@ -18,6 +20,7 @@ interface AddRecipeStartProps {
   isImporting: boolean;
   importingLabel: string | null;
   error: string | null;
+  initialUrl: string;
   onImportUrl: (url: string) => void;
   onImportText: (text: string) => void;
   onImportImage: (image: File) => void;
@@ -35,6 +38,7 @@ export function AddRecipeStart({
   isImporting,
   importingLabel,
   error,
+  initialUrl,
   onImportUrl,
   onImportText,
   onImportImage,
@@ -42,11 +46,15 @@ export function AddRecipeStart({
 }: AddRecipeStartProps) {
   const urlId = useId();
   const textId = useId();
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(initialUrl);
   const [text, setText] = useState("");
   const [other, setOther] = useState<RecipeImportInput | null>(null);
   const [capabilities, setCapabilities] =
     useState<RecipeImportCapabilities | null>(null);
+  const extension = useExtensionPresence();
+  const suggestExtension =
+    extension === ExtensionPresence.INSTALLED ||
+    extension === ExtensionPresence.MISSING;
 
   useEffect(() => {
     getRecipeImportCapabilitiesAction().then((response) => {
@@ -69,10 +77,13 @@ export function AddRecipeStart({
           Add a recipe
         </h1>
         <p className="mt-3 max-w-[56ch] text-lead text-muted-foreground">
-          Paste a link and Tastebase pulls out the ingredients and steps. You'll
-          check everything before it's saved.
+          {suggestExtension
+            ? "Save it straight from the recipe site, or paste a link. You'll check everything before it's saved."
+            : "Paste a link and Tastebase pulls out the ingredients and steps. You'll check everything before it's saved."}
         </p>
       </div>
+
+      <ExtensionSuggestionCard presence={extension} />
 
       <form
         className="rounded-tile bg-card p-5 sm:p-6"
@@ -82,7 +93,7 @@ export function AddRecipeStart({
         }}
       >
         <label htmlFor={urlId} className="mb-2 block text-meta">
-          Recipe link
+          {suggestExtension ? "Or paste a recipe link" : "Recipe link"}
         </label>
         <div className="flex flex-col gap-2.5 sm:flex-row">
           <div className="relative flex-1">
@@ -105,7 +116,9 @@ export function AddRecipeStart({
           <Button
             type="submit"
             size="lg"
-            variant={ButtonVariant.ACCENT}
+            variant={
+              suggestExtension ? ButtonVariant.DEFAULT : ButtonVariant.ACCENT
+            }
             disabled={!url.trim() || isImporting}
             className="h-14 px-7 text-base"
           >

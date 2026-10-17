@@ -30,7 +30,46 @@ A simple, local-first recipe management application designed for shared instance
 - **Deployment**: Docker with persistent volumes
 - **Development**: TypeScript, Vitest, Biome
 
-## 🛠️ Quick Start
+## 🐳 Run Tastebase with Docker
+
+Tastebase is published as a Docker image for `linux/amd64` and `linux/arm64` (Apple Silicon, Raspberry Pi 4/5) at `ghcr.io/reecerose/tastebase`.
+
+1. **Grab the Compose file and environment template:**
+   ```bash
+   mkdir tastebase && cd tastebase
+   curl -O https://raw.githubusercontent.com/ReeceRose/tastebase/main/docker-compose.yml
+   curl -o .env https://raw.githubusercontent.com/ReeceRose/tastebase/main/.env.docker.example
+   ```
+
+2. **Fill in `.env`:**
+   - `BETTER_AUTH_SECRET` and `ENCRYPTION_SECRET`: run `openssl rand -base64 48` once for each. They must be different.
+   - `BETTER_AUTH_URL`: the address people will type, e.g. `http://192.168.1.100:3000`
+
+3. **Start it:**
+   ```bash
+   docker compose up -d
+   ```
+
+4. **Open Tastebase** at your `BETTER_AUTH_URL` and create the first account. Everyone else in the house signs up from the same page.
+
+Recipes live in the `tastebase-data` volume and photos in `tastebase-uploads`, so both survive restarts and upgrades. Migrations run automatically when the container starts.
+
+### Updating
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+`latest` always points at the newest release. To control when you upgrade, pin a version in `docker-compose.yml` (e.g. `ghcr.io/reecerose/tastebase:0.1.0`). Release notes are in [CHANGELOG.md](CHANGELOG.md) and on the [Releases page](https://github.com/ReeceRose/tastebase/releases).
+
+### More deployment guides
+
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - `docker run`, backups, reverse proxies and HTTPS
+- **[Unraid](docs/DEPLOYMENT_UNRAID.md)** - Compose Manager or the Docker tab
+- **[Environment Variables](docs/environment-variables.md)** - Every setting
+
+## 🛠️ Local Development
 
 ### Prerequisites
 
@@ -42,8 +81,8 @@ A simple, local-first recipe management application designed for shared instance
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-url> recipe-app
-   cd recipe-app
+   git clone https://github.com/ReeceRose/tastebase.git
+   cd tastebase
    ```
 
 2. **Install dependencies:**
@@ -62,7 +101,7 @@ A simple, local-first recipe management application designed for shared instance
    ```bash
    cp .env.example .env.local
    ```
-   Fill in your environment variables (see [Environment Variables](#environment-variables) section).
+   Fill in your environment variables (see [Environment Variables](#-environment-variables)).
 
 4. **Database setup:**
    ```bash
@@ -79,144 +118,45 @@ A simple, local-first recipe management application designed for shared instance
 6. **Access the application:**
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 🐳 Docker Deployment (Recommended)
-
-**The easiest way to run Tastebase is with Docker:**
-
-1. **Pull and run the latest release:**
-   ```bash
-   docker pull reecerose/tastebase:latest
-   docker-compose up -d
-   ```
-
-2. **Access your recipes:**
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-3. **Your data is safe:**
-   All recipes and images are stored in Docker volumes and persist between restarts.
-
-### Docker Image Versions
-
-Tastebase releases follow semantic versioning with multiple tag options:
-
-```bash
-# Latest stable release (recommended)
-docker pull reecerose/tastebase:latest
-
-# Specific version (for pinning)
-docker pull reecerose/tastebase:v1.0.0
-docker pull reecerose/tastebase:1.0    # Minor version
-docker pull reecerose/tastebase:1      # Major version
-
-# Specific commit (for testing)
-docker pull reecerose/tastebase:sha-abc123
-```
-
-**Updating to a new release:**
-```bash
-docker-compose pull  # Pull latest images
-docker-compose up -d # Restart with new version
-```
-
-### Why Docker?
-
-- **Zero configuration** - Works out of the box
-- **Data persistence** - Your recipes are safely stored in volumes
-- **Easy updates** - Pull new versions without losing data
-- **Isolated environment** - No conflicts with your system
-- **Cross-platform** - Runs the same on Windows, Mac, and Linux
-
 ## 📁 Project Structure
 
 ```
-recipe-app/
+tastebase/
 ├── src/
 │   ├── app/
-│   │   ├── (public)/          # Unauthenticated pages
-│   │   │   └── auth/          # Sign-in/sign-up pages
-│   │   ├── profile/           # Protected profile page
-│   │   ├── api/               # API routes and webhooks
-│   │   └── page.tsx           # Main dashboard page
+│   │   ├── (public)/          # Sign-in, sign-up, password reset
+│   │   ├── (dashboard)/       # Signed-in pages (recipes, search, settings)
+│   │   └── api/               # Auth, health check and image routes
 │   ├── components/            # UI components organized by purpose
 │   │   ├── ui/                # ShadCN base components
-│   │   ├── layout/            # Dashboard layout components
-│   │   ├── auth/              # Authentication components
-│   │   ├── forms/             # All form components
-│   │   ├── lists/             # List and table components
-│   │   ├── cards/             # Card components
-│   │   ├── skeletons/         # Loading state components
-│   │   └── theme/             # Theme components
-│   ├── lib/                   # Utilities organized by category
-│   │   ├── auth/              # Authentication & user management
-│   │   ├── config/            # Configuration files
-│   │   ├── logging/           # Logging utilities
-│   │   └── utils/             # General utilities
+│   │   ├── layout/            # App shell and page layouts
+│   │   ├── forms/             # Forms, including the recipe editor
+│   │   ├── lists/ cards/      # Lists, tiles and cards
+│   │   ├── modals/            # Dialogs and menus
+│   │   ├── navigation/        # Sidebar and tab bar
+│   │   └── skeletons/         # Loading states
+│   ├── db/                    # Drizzle schema and migrations
+│   ├── lib/                   # Server actions, import, auth, types, utilities
+│   ├── hooks/                 # React hooks
 │   └── proxy.ts               # Route protection
-├── db/                        # Database schema and migrations
+├── extensions/                # "Save to Tastebase" browser extension
+├── scripts/                   # Release script and codebase health checks
 ├── docs/                      # Documentation
-├── uploads/                   # Recipe images storage
 └── public/                    # Static assets
 ```
 
 ## 🔧 Environment Variables
 
-Create a `.env.local` file with the following variables:
+| Variable | Required | What it does |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | Path to the SQLite file, e.g. `tastebase.db` locally or `file:/app/data/tastebase.db` in Docker |
+| `BETTER_AUTH_SECRET` | Yes | Signs sessions |
+| `BETTER_AUTH_URL` | Yes | The address people use to reach Tastebase |
+| `ENCRYPTION_SECRET` | Yes | Encrypts the AI keys people add in Settings. Must differ from `BETTER_AUTH_SECRET` |
+| `CURRENT_ENCRYPTION_VERSION` | No | Bump when rotating `ENCRYPTION_SECRET` (default `1`) |
+| `OLLAMA_BASE_URL` | No | Default Ollama address (default `http://localhost:11434`) |
 
-```bash
-# Database
-DATABASE_URL="file:./recipes.db"
-
-# Authentication (BetterAuth)
-BETTER_AUTH_SECRET="your-secret-key-here"
-BETTER_AUTH_URL="http://localhost:3000"
-
-# API Key Encryption (Required for AI features)
-ENCRYPTION_SECRET="your-separate-64-character-encryption-secret"
-CURRENT_ENCRYPTION_VERSION=1
-
-# AI Services (Choose one)
-OPENAI_API_KEY="sk-..."
-# OR
-ANTHROPIC_API_KEY="sk-ant-..."
-
-# File Storage
-UPLOAD_DIR="./uploads"
-MAX_FILE_SIZE="10485760"
-
-# App Configuration
-NODE_ENV="development"
-```
-
-### 🔐 Security Setup
-
-**Generate secure encryption key:**
-```bash
-# Generate a 64-character encryption secret
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-**⚠️ Security Requirements:**
-- `ENCRYPTION_SECRET` must be **different** from `BETTER_AUTH_SECRET`
-- Must be at least 32 characters (64 recommended)
-- Must have good entropy and character variety
-- **Never commit secrets to version control**
-- Store securely in production environments
-
-### Required vs Optional
-
-**Required for basic functionality:**
-- `DATABASE_URL` - SQLite database file path
-- `BETTER_AUTH_SECRET` - Authentication secret key
-- `BETTER_AUTH_URL` - Application URL for auth callbacks
-
-**Required for AI features:**
-- `ENCRYPTION_SECRET` - Secure API key encryption
-- `OPENAI_API_KEY` OR `ANTHROPIC_API_KEY` - For recipe parsing
-
-**Optional:**
-- `UPLOAD_DIR` - Custom upload directory (defaults to ./uploads)
-- `MAX_FILE_SIZE` - Max file size in bytes (defaults to 10MB)
-- `CURRENT_ENCRYPTION_VERSION` - Key rotation version (defaults to 1)
+Generate each secret with `openssl rand -base64 48`. AI provider keys are not environment variables: each person adds their own in **Settings**, stored encrypted. Details and troubleshooting: [docs/environment-variables.md](docs/environment-variables.md).
 
 ## 🎯 Available Scripts
 
@@ -242,12 +182,13 @@ pnpm lint               # Run linting
 pnpm type-check         # Run TypeScript checks
 
 # Docker
-docker-compose up -d    # Start with Docker
-docker-compose down     # Stop Docker containers
-docker-compose logs     # View container logs
+docker compose up -d        # Start with Docker
+docker compose down         # Stop Docker containers
+docker compose logs -f      # View container logs
+docker build -t tastebase . # Build the image from source
 
-# Deployment
-docker build -t recipe-app .  # Build Docker image
+# Releases (maintainers)
+./scripts/release.sh        # Tag a release; CI publishes the image (docs/RELEASES.md)
 ```
 
 ## 🍳 Recipe Management Features
@@ -260,7 +201,9 @@ docker build -t recipe-app .  # Build Docker image
 - **Recipe Validation** - Ensure all required fields are present
 
 ### Recipe Import
-- **Link Import** - Reads recipe data from most recipe sites, then falls back to the page text
+- **Link Import** - Reads recipe data from most recipe sites, then falls back to the page text. The recipe photo comes in as the main photo, and the other photos on the page are offered to pick from
+- **Browser Extension** - [Save to Tastebase](extensions/chrome/README.md) imports the page you're viewing, including sites that block automated imports (Serious Eats, Allrecipes) and subscriber sites you're signed in to (NYT Cooking)
+- **Save from your phone** - Install Tastebase on Android to share recipe links straight into it, or set up an iPhone Shortcut (steps in Settings → Saving recipes)
 - **Text Import** - Paste a recipe and it is split into ingredients and steps
 - **Photo Import** - OCR on the server, or an AI vision model if you've added one
 - **Review in the editor** - Imports open in the editor so you can check everything before saving
@@ -323,22 +266,6 @@ The database uses a modular schema approach with SQLite:
 - **User profiles**: Basic user information and preferences
 - **Route protection**: Automatic redirect to login for protected routes
 
-## 🐳 Docker Deployment
-
-The application is designed for easy self-hosting with Docker:
-
-- **One-command deployment** - `docker-compose up -d`
-- **Persistent storage** - SQLite database and uploads preserved across restarts
-- **Volume mounting** - Data stored in Docker volumes for easy backup
-- **Environment configuration** - All settings via environment variables
-- **Production ready** - Optimized Docker image for production use
-
-### Docker Configuration
-- **Multi-stage build** - Optimized production image
-- **Volume persistence** - Database and uploads survive container restarts
-- **Health checks** - Automatic container health monitoring
-- **Easy updates** - Simple pull and restart for updates
-
 ## 🧪 Testing
 
 Tests are organized by feature and type:
@@ -347,29 +274,11 @@ Tests are organized by feature and type:
 - Integration tests for complete recipe workflows
 - AI parsing tests for import functionality
 
-## 🚢 Deployment
+## 🚢 Where to Run It
 
-### Docker Deployment (Recommended)
-
-1. **Build the Docker image:**
-   ```bash
-   docker build -t recipe-app .
-   ```
-
-2. **Run with Docker Compose:**
-   ```bash
-   docker-compose up -d
-   ```
-
-3. **Access the application:**
-   Open [http://localhost:3000](http://localhost:3000)
-
-### Self-Hosting Options
-
-- **VPS/Cloud Server** - Deploy on any Linux server with Docker
-- **Home Server** - Perfect for personal use on home network
-- **NAS Systems** - Compatible with Synology, QNAP, etc.
-- **Raspberry Pi** - Lightweight deployment for personal use
+- **Home server or NAS** - Synology, QNAP, Unraid, TrueNAS
+- **Raspberry Pi** - The arm64 image runs on a Pi 4 or 5
+- **VPS** - Any Linux server with Docker, behind a reverse proxy for HTTPS
 
 ## 📖 Adding New Features
 
@@ -484,12 +393,14 @@ Documentation lives in the `docs/` directory:
 - **[Architecture Guide](docs/architecture.md)** - How the code is organized
 - **[Development Guide](docs/DEVELOPMENT.md)** - Workflows, code quality and debugging
 - **[Security](docs/security/README.md)** - Encryption of stored AI keys and key rotation
+- **[Releasing](docs/RELEASES.md)** - Cutting a release and how CI publishes the image
 
 ## 🎯 Quick Links
 
 - **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
+- **Releases**: [GitHub Releases](https://github.com/ReeceRose/tastebase/releases) and [CHANGELOG.md](CHANGELOG.md)
+- **Image**: [ghcr.io/reecerose/tastebase](https://github.com/ReeceRose/tastebase/pkgs/container/tastebase)
+- **Issues**: [GitHub Issues](https://github.com/ReeceRose/tastebase/issues)
 - **PRD**: [Product Requirements Document](docs/plans/PRD.md)
 
 ## 📄 License

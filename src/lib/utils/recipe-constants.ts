@@ -197,3 +197,5 @@ export const RECIPE_CONSTANTS = {
     },
   },
 } as const;
+
+export const COOK_REPEAT_WINDOW_MS = 2 * 60 * 60 * 1000;

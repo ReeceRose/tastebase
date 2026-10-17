@@ -4,6 +4,7 @@ import type { FetchedPage } from "@/lib/types/import-types";
 
 const MAX_REDIRECTS = 5;
 const MAX_HTML_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 15000;
 const USER_AGENT =
   "Mozilla/5.0 (compatible; Tastebase/1.0; self-hosted recipe manager)";
@@ -86,13 +87,17 @@ async function assertPublicHost(url: URL): Promise<void> {
   }
 }
 
-async function readLimitedText(response: Response): Promise<string> {
+async function readLimitedBytes(
+  response: Response,
+  maxBytes: number,
+  tooLargeMessage: string,
+): Promise<Buffer> {
   const declaredLength = Number(response.headers.get("content-length") ?? 0);
-  if (declaredLength > MAX_HTML_BYTES) {
-    throw new PageFetchError("The page is too large to import");
+  if (declaredLength > maxBytes) {
+    throw new PageFetchError(tooLargeMessage);
   }
   if (!response.body) {
-    return "";
+    return Buffer.alloc(0);
   }
 
   const reader = response.body.getReader();
@@ -104,16 +109,25 @@ async function readLimitedText(response: Response): Promise<string> {
       break;
     }
     received += value.byteLength;
-    if (received > MAX_HTML_BYTES) {
+    if (received > maxBytes) {
       await reader.cancel();
-      throw new PageFetchError("The page is too large to import");
+      throw new PageFetchError(tooLargeMessage);
     }
     chunks.push(value);
   }
-  return new TextDecoder().decode(Buffer.concat(chunks));
+  return Buffer.concat(chunks);
 }
 
-export async function fetchRecipePage(input: string): Promise<FetchedPage> {
+interface PublicResponse {
+  url: URL;
+  response: Response;
+}
+
+// Follows redirects by hand so every hop is checked against private networks.
+async function fetchPublic(
+  input: string,
+  accept: string,
+): Promise<PublicResponse> {
   let url = parseImportUrl(input);
   const signal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
 
@@ -123,10 +137,7 @@ export async function fetchRecipePage(input: string): Promise<FetchedPage> {
     const response = await fetch(url, {
       redirect: "manual",
       signal,
-      headers: {
-        "User-Agent": USER_AGENT,
-        Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
-      },
+      headers: { "User-Agent": USER_AGENT, Accept: accept },
     });
 
     if (response.status >= 300 && response.status < 400) {
@@ -138,26 +149,55 @@ export async function fetchRecipePage(input: string): Promise<FetchedPage> {
       continue;
     }
 
-    if (
-      response.status === 401 ||
-      response.status === 402 ||
-      response.status === 403
-    ) {
-      throw new PageFetchError(
-        "This site blocks automated imports or needs a login or subscription. Open the recipe in your browser, copy the text and paste it instead.",
-      );
-    }
-    if (!response.ok) {
-      throw new PageFetchError(`The site returned HTTP ${response.status}`);
-    }
-
-    const contentType = response.headers.get("content-type") ?? "";
-    if (!contentType.includes("html")) {
-      throw new PageFetchError("That link doesn't point to a web page");
-    }
-
-    return { url: url.toString(), html: await readLimitedText(response) };
+    return { url, response };
   }
 
   throw new PageFetchError("The page redirected too many times");
+}
+
+export async function fetchRecipePage(input: string): Promise<FetchedPage> {
+  const { url, response } = await fetchPublic(
+    input,
+    "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+  );
+
+  if (
+    response.status === 401 ||
+    response.status === 402 ||
+    response.status === 403
+  ) {
+    throw new PageFetchError(
+      "This site blocks automated imports or needs a login or subscription. Use the Save to Tastebase browser extension on the recipe page, or copy the text and paste it instead.",
+    );
+  }
+  if (!response.ok) {
+    throw new PageFetchError(`The site returned HTTP ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("html")) {
+    throw new PageFetchError("That link doesn't point to a web page");
+  }
+
+  const html = await readLimitedBytes(
+    response,
+    MAX_HTML_BYTES,
+    "The page is too large to import",
+  );
+  return { url: url.toString(), html: new TextDecoder().decode(html) };
+}
+
+export async function fetchRecipeImage(input: string): Promise<Buffer> {
+  const { response } = await fetchPublic(
+    input,
+    "image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8",
+  );
+  if (!response.ok) {
+    throw new PageFetchError(`The image returned HTTP ${response.status}`);
+  }
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.startsWith("image/")) {
+    throw new PageFetchError("That link doesn't point to an image");
+  }
+  return readLimitedBytes(response, MAX_IMAGE_BYTES, "The image is too large");
 }

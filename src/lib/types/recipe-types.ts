@@ -225,6 +225,7 @@ export interface LibraryFilters {
   difficulty: RecipeDifficulty | null;
   cuisine: string | null;
   tags: string[];
+  listId: string | null;
   maxTime: number | null;
   sort: LibrarySort | null;
   visibility: LibraryVisibility;
@@ -292,6 +293,31 @@ export interface TagTileData {
   swatch: RecipeSwatch;
   recipeCount: number;
   previewTitles: string[];
+}
+
+export interface RecipeListTileData {
+  id: string;
+  href: string;
+  name: string;
+  swatch: RecipeSwatch;
+  recipeCount: number;
+  previewTitles: string[];
+}
+
+export interface RecipeListDetail {
+  id: string;
+  name: string;
+  swatch: RecipeSwatch;
+  chosenSwatch: RecipeSwatch | null;
+}
+
+export interface RecipeListInput {
+  name: string;
+  swatch: RecipeSwatch | null;
+}
+
+export interface RecipeListOption extends RecipeListDetail {
+  containsRecipe: boolean;
 }
 
 export interface HouseholdMemberOverview {

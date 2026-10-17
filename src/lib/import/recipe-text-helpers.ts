@@ -80,6 +80,23 @@ const UNIT_PATTERN = new RegExp(
   `^(${UNIT_NAMES.map((unit) => unit.replace(" ", "\\s+")).join("|")})\\.?(?=\\s|$|,)\\s*(?:of\\s+)?`,
 );
 
+// "2 cups minus 2 tablespoons flour" or "1 cup plus 1 tbsp sugar".
+const ADJUSTMENT_PATTERN = /^(minus|plus|less|\+)\s+/i;
+
+function readAdjustment(rest: string): { text: string; rest: string } | null {
+  const word = rest.match(ADJUSTMENT_PATTERN);
+  if (!word) return null;
+  let remaining = rest.slice(word[0].length);
+  const quantity = remaining.match(QUANTITY_PATTERN);
+  if (!quantity) return null;
+  remaining = remaining.slice(quantity[0].length);
+  const unit = remaining.match(UNIT_PATTERN);
+  if (!unit || remaining.length <= unit[0].length) return null;
+  remaining = remaining.slice(unit[0].length);
+  const text = `${word[1].toLowerCase()} ${quantity[1].trim()} ${unit[1].replace(/\s+/g, " ")}`;
+  return { text, rest: remaining };
+}
+
 const LEADING_MARKER_PATTERN =
   /^(?:[-*•·▪▢☐□◦‣⁃]+\s*|(?:step\s*)?\d+\s*[.):]\s+|\(\d+\)\s+)/i;
 
@@ -127,7 +144,18 @@ export function parseIngredientLine(rawLine: string): ParsedIngredient | null {
     rest = rest.slice(unitMatch[0].length);
   }
 
-  const name = packageSize ? `${rest.trim()} (${packageSize})` : rest.trim();
+  // The adjustment can't be scaled with the main amount, so it's kept with
+  // the name where the cook will still read it.
+  const adjustment = unit ? readAdjustment(rest) : null;
+  if (adjustment) {
+    rest = adjustment.rest;
+  }
+
+  const baseName = packageSize
+    ? `${rest.trim()} (${packageSize})`
+    : rest.trim();
+  const name =
+    adjustment && baseName ? `${baseName}, ${adjustment.text}` : baseName;
   if (name.length === 0) {
     return { name: line, quantity: null, unit: null };
   }

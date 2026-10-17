@@ -1,12 +1,14 @@
 import { getSessionCookie } from "better-auth/cookies";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { RETURN_PATH_PARAM } from "@/lib/utils/return-path";
 
 const publicRoutes = [
   "/auth/sign-in",
   "/auth/sign-up",
   "/auth/reset-password",
   "/api/auth",
+  "/api/health",
 ];
 
 export default async function proxy(req: NextRequest) {
@@ -25,7 +27,18 @@ export default async function proxy(req: NextRequest) {
   const sessionCookie = getSessionCookie(req);
 
   if (!sessionCookie) {
-    return NextResponse.redirect(new URL("/auth/sign-in", req.url));
+    const signIn = new URL("/auth/sign-in", req.url);
+    if (
+      req.method === "GET" &&
+      pathname !== "/" &&
+      !pathname.startsWith("/api")
+    ) {
+      signIn.searchParams.set(
+        RETURN_PATH_PARAM,
+        `${pathname}${req.nextUrl.search}`,
+      );
+    }
+    return NextResponse.redirect(signIn);
   }
 
   return NextResponse.next();

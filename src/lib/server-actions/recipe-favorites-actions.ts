@@ -55,7 +55,7 @@ async function addToFavorites(recipeId: string) {
       .limit(1);
 
     if (existingFavorite.length > 0) {
-      return { success: false, error: "Recipe already in favorites" };
+      return { success: true };
     }
 
     await db.insert(recipeFavorites).values({
@@ -89,7 +89,7 @@ async function removeFromFavorites(recipeId: string) {
       return { success: false, error: "Authentication required" };
     }
 
-    const deletedRows = await db
+    await db
       .delete(recipeFavorites)
       .where(
         and(
@@ -97,10 +97,6 @@ async function removeFromFavorites(recipeId: string) {
           eq(recipeFavorites.userId, session.user.id),
         ),
       );
-
-    if (deletedRows.changes === 0) {
-      return { success: false, error: "Recipe not in favorites" };
-    }
 
     logger.info(
       {
@@ -119,38 +115,8 @@ async function removeFromFavorites(recipeId: string) {
   }
 }
 
-export async function toggleFavorite(recipeId: string) {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    if (!session?.user?.id) {
-      return { success: false, error: "Authentication required" };
-    }
-
-    // Check if already favorited
-    const existingFavorite = await db
-      .select({ id: recipeFavorites.id })
-      .from(recipeFavorites)
-      .where(
-        and(
-          eq(recipeFavorites.recipeId, recipeId),
-          eq(recipeFavorites.userId, session.user.id),
-        ),
-      )
-      .limit(1);
-
-    if (existingFavorite.length > 0) {
-      // Remove from favorites
-      return await removeFromFavorites(recipeId);
-    } else {
-      // Add to favorites
-      return await addToFavorites(recipeId);
-    }
-  } catch (error) {
-    logError(logger, "Failed to toggle recipe favorite", error, { recipeId });
-    return { success: false, error: "Failed to toggle recipe favorite" };
-  }
+export async function setFavourite(recipeId: string, isFavourite: boolean) {
+  return isFavourite ? addToFavorites(recipeId) : removeFromFavorites(recipeId);
 }
 
 export async function getUserFavoriteRecipes(userId?: string) {

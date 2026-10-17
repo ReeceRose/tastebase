@@ -2,10 +2,10 @@ import { ChefHat, Pencil } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { RecipeActionsMenu } from "@/components/modals/recipe-actions-menu";
+import { RecipeSaveMenu } from "@/components/modals/recipe-save-menu";
 import { Button } from "@/components/ui/button";
 import { CircleMotif } from "@/components/ui/circle-motif";
 import { MemberAvatar } from "@/components/ui/member-avatar";
-import { RecipeFavoriteButton } from "@/components/ui/recipe-favorite-button";
 import {
   ButtonVariant,
   RecipeDifficulty,
@@ -13,6 +13,7 @@ import {
 } from "@/lib/types";
 import type {
   RecipeCookSummary,
+  RecipeListOption,
   RecipeWithRelations,
 } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ interface RecipeHeroProps {
   swatch: RecipeSwatch;
   currentUserId: string;
   isFavourite: boolean;
+  lists: RecipeListOption[];
   averageRating: number | null;
   cooks: RecipeCookSummary;
 }
@@ -55,6 +57,7 @@ export function RecipeHero({
   swatch,
   currentUserId,
   isFavourite,
+  lists,
   averageRating,
   cooks,
 }: RecipeHeroProps) {
@@ -161,9 +164,10 @@ export function RecipeHero({
                 Start cooking
               </Link>
             </Button>
-            <RecipeFavoriteButton
+            <RecipeSaveMenu
               recipeId={recipe.id}
-              initialIsFavorited={isFavourite}
+              initialIsFavourite={isFavourite}
+              initialLists={lists}
             />
             {own && (
               <Button variant={ButtonVariant.SECONDARY} size="lg" asChild>
@@ -177,6 +181,8 @@ export function RecipeHero({
               recipeId={recipe.id}
               title={recipe.title}
               canDelete={own}
+              cooks={cooks}
+              currentUserId={currentUserId}
             />
           </div>
         </div>

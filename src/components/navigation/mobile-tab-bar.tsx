@@ -15,7 +15,7 @@ const tabClass =
 
 export function MobileTabBar() {
   const pathname = usePathname();
-  const [home, recipes, favourites] = MOBILE_NAV;
+  const [home, recipes, lists] = MOBILE_NAV;
   const settingsActive = pathname.startsWith("/settings");
 
   const renderTab = (item: NavItem) => {
@@ -55,7 +55,7 @@ export function MobileTabBar() {
         </span>
         Add
       </Link>
-      {renderTab(favourites)}
+      {renderTab(lists)}
       <Link
         href="/settings"
         aria-current={settingsActive ? "page" : undefined}

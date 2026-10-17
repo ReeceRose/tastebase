@@ -32,6 +32,18 @@ describe("parseIngredientLine", () => {
     });
   });
 
+  it.each([
+    [
+      "2 cups minus 2 tablespoons cake flour (8 ½ ounces)",
+      "2",
+      "cups",
+      "cake flour (8 ½ ounces), minus 2 tablespoons",
+    ],
+    ["1 cup plus 1 tbsp sugar", "1", "cup", "sugar, plus 1 tbsp"],
+  ])("keeps a %s adjustment with the name", (line, quantity, unit, name) => {
+    expect(parseIngredientLine(line)).toEqual({ quantity, unit, name });
+  });
+
   it("returns lines without a quantity as the name", () => {
     expect(parseIngredientLine("Salt and pepper to taste")).toEqual({
       quantity: null,

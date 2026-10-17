@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { SaveAnywherePanel } from "@/components/cards/save-anywhere-panel";
 import { AISettingsForm } from "@/components/forms/ai-settings-form";
 import { DeleteAccount } from "@/components/forms/delete-account";
 import { PasswordForm } from "@/components/forms/password-form";
@@ -100,6 +101,8 @@ export default async function SettingsPage({
           )}
 
           {section === SettingsSection.IMPORT && <AISettingsForm />}
+
+          {section === SettingsSection.SAVING && <SaveAnywherePanel />}
 
           {section === SettingsSection.TEMPLATES && <TemplateList />}
 
