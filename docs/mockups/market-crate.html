@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tastebase — Market Crate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f1f3ec;
+    --ink: #172015;
+    --leek: #234a2f;
+    --leek-soft: #3c6b45;
+    --tomato: #e2412e;
+    --turmeric: #f4b400;
+    --aubergine: #4d2463;
+    --radish: #ef7fa0;
+    --herb: #8cc152;
+    --sky: #7cc4e6;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--paper); }
+  body { margin: 0; color: var(--ink); font: 15px/1.45 "Bricolage Grotesque", system-ui, sans-serif; font-optical-sizing: auto; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 3px solid var(--turmeric); outline-offset: 2px; }
+
+  .app { display: grid; grid-template-columns: 236px 1fr; min-height: 100%; }
+  .side { background: var(--leek); color: #e6efdf; padding: 26px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .logo { font-weight: 800; font-size: 26px; letter-spacing: -.03em; color: #fff; padding: 0 10px 22px; display: flex; align-items: center; gap: 10px; }
+  .logo i { width: 26px; height: 26px; border-radius: 50% 50% 50% 4px; background: var(--tomato); display: inline-block; }
+  .nav { padding: 10px 12px; border-radius: 12px; font-weight: 600; display: flex; justify-content: space-between; }
+  .nav.on { background: #fff; color: var(--leek); }
+  .nav:not(.on):hover { background: var(--leek-soft); }
+  .nav small { opacity: .6; font-weight: 400; }
+  .group { margin: 22px 12px 6px; font-size: 13px; opacity: .65; }
+  .addbtn { margin-top: auto; background: var(--turmeric); color: var(--ink); border: 0; border-radius: 14px; padding: 14px; font: 800 15px "Bricolage Grotesque"; cursor: pointer; }
+
+  main { padding: 26px 36px 40px; }
+  .bar { display: flex; gap: 14px; align-items: center; }
+  .search { flex: 1; background: #fff; border: 2px solid var(--ink); border-radius: 14px; padding: 12px 16px; font-size: 15px; color: #69725f; }
+  .me { width: 44px; height: 44px; border-radius: 50%; background: var(--radish); display: grid; place-items: center; font-weight: 800; }
+
+  .hero { margin-top: 24px; background: var(--turmeric); border-radius: 26px; padding: 30px 34px; display: grid; grid-template-columns: 1fr 300px; gap: 20px; position: relative; overflow: hidden; }
+  .hero .who { font-weight: 600; font-size: 15px; }
+  .hero h1 { font-size: 64px; line-height: .95; letter-spacing: -.035em; margin: 10px 0 18px; font-weight: 800; max-width: 12ch; }
+  .facts { display: flex; gap: 10px; flex-wrap: wrap; }
+  .facts span { background: rgba(23,32,21,.1); border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 14px; }
+  .hero .go { margin-top: 22px; display: inline-flex; gap: 10px; }
+  .btn { border: 0; border-radius: 14px; padding: 13px 20px; font: 800 15px "Bricolage Grotesque"; background: var(--ink); color: #fff; cursor: pointer; }
+  .btn.alt { background: #fff; color: var(--ink); }
+  .plate { position: relative; }
+  .plate .bowl { position: absolute; right: -10px; top: -10px; width: 300px; height: 300px; border-radius: 50%; background: var(--tomato); }
+  .plate .pea { position: absolute; width: 46px; height: 46px; border-radius: 50%; background: #f6d58b; box-shadow: inset -5px -6px 0 rgba(0,0,0,.08); }
+  .plate .leaf { position: absolute; width: 54px; height: 26px; border-radius: 0 100% 0 100%; background: var(--herb); }
+
+  .row { display: flex; align-items: baseline; gap: 16px; margin: 34px 0 14px; }
+  .row h2 { margin: 0; font-size: 28px; letter-spacing: -.02em; font-weight: 800; }
+  .chips { display: flex; gap: 8px; margin-left: auto; }
+  .chip { border: 2px solid var(--ink); border-radius: 999px; padding: 5px 14px; font-weight: 600; font-size: 14px; }
+  .chip.on { background: var(--ink); color: #fff; }
+
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .tile { border-radius: 22px; padding: 18px; min-height: 200px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .tile h3 { font-size: 23px; line-height: 1.02; letter-spacing: -.02em; margin: 0; font-weight: 800; max-width: 11ch; position: relative; }
+  .tile .meta { margin-top: auto; display: flex; justify-content: space-between; align-items: end; font-weight: 600; font-size: 13.5px; position: relative; }
+  .tile .by { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.85); color: var(--ink); display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+  .tile .dot { position: absolute; right: -36px; bottom: -56px; width: 140px; height: 140px; border-radius: 50%; opacity: .9; }
+  .priv { font-size: 12px; background: rgba(0,0,0,.18); padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="logo"><i></i>Tastebase</div>
+    <a class="nav on" href="#">All recipes <small>48</small></a>
+    <a class="nav" href="#">Favourites <small>9</small></a>
+    <a class="nav" href="#">Recently opened</a>
+    <a class="nav" href="#">Tags</a>
+    <a class="nav" href="#">Templates</a>
+    <div class="group">Quick picks</div>
+    <a class="nav" href="#">Under 30 minutes</a>
+    <a class="nav" href="#">Highly rated</a>
+    <a class="nav" href="#">Easy wins</a>
+    <button class="addbtn">+ Add a recipe</button>
+  </aside>
+  <main>
+    <div class="bar">
+      <div class="search">Search 48 recipes by name, ingredient or tag</div>
+      <div class="me">P</div>
+    </div>
+
+    <section class="hero">
+      <div>
+        <div class="who">Priya added this on Sunday</div>
+        <h1>Weeknight chana masala</h1>
+        <div class="facts"><span>30 min</span><span>Serves 4</span><span>Indian</span><span>Easy</span></div>
+        <div class="go"><button class="btn">Start cooking</button><button class="btn alt">Open recipe</button></div>
+      </div>
+      <div class="plate" aria-hidden="true">
+        <div class="bowl"></div>
+        <div class="pea" style="right:150px;top:60px"></div>
+        <div class="pea" style="right:96px;top:90px"></div>
+        <div class="pea" style="right:180px;top:130px"></div>
+        <div class="pea" style="right:120px;top:150px"></div>
+        <div class="pea" style="right:60px;top:40px"></div>
+        <div class="pea" style="right:70px;top:170px"></div>
+        <div class="leaf" style="right:140px;top:200px;transform:rotate(-20deg)"></div>
+        <div class="leaf" style="right:30px;top:110px;transform:rotate(40deg)"></div>
+      </div>
+    </section>
+
+    <div class="row">
+      <h2>In the house</h2>
+      <div class="chips"><span class="chip on">Everyone</span><span class="chip">Just mine</span><span class="chip">Private</span></div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+<script>
+const recipes = [
+  ["Charred leek & white bean soup","45 min","T","var(--leek-soft)","#fff","var(--herb)"],
+  ["Grandma Rosa's Sunday ragù","3 h 20","M","var(--tomato)","#fff","#b52a1c"],
+  ["Miso-glazed aubergine","35 min","S","var(--aubergine)","#fff","#7a3b98",1],
+  ["Blistered tomato galette","1 h 10","M","var(--radish)","var(--ink)","var(--tomato)"],
+  ["Sticky gochujang chicken","40 min","T","#c7361f","#fff","var(--turmeric)"],
+  ["Lemon-ricotta pancakes","25 min","S","var(--sky)","var(--ink)","#fff27a"],
+  ["Turmeric fish curry","50 min","P","var(--turmeric)","var(--ink)","#e08a00",1],
+  ["Green goddess grain bowl","20 min","P","var(--herb)","var(--ink)","var(--leek-soft)"],
+];
+document.getElementById("grid").innerHTML = recipes.map(([t,time,by,bg,fg,dot,priv]) => `
+  <a href="#" class="tile" style="background:${bg};color:${fg}">
+    <span class="dot" style="background:${dot}"></span>
+    <h3>${t}</h3>
+    <div class="meta"><span>${time}${priv?'<span class="priv">Private</span>':""}</span><span class="by">${by}</span></div>
+  </a>`).join("");
+</script>
+</body>
+</html>

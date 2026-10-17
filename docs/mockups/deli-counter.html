@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tastebase — Deli Counter</title>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --kraft: #c9a77c; --kraft-dark: #a9865b; --wax: #fbf8f1; --ink: #2b1d14; --stamp: #c8352b; --blue: #2f5aa8; --dim: #6e5a48; }
+  * { box-sizing: border-box; }
+  html, body { background: var(--kraft); }
+  body { margin: 0; color: var(--ink); font: 15px/1.5 "Public Sans", system-ui, sans-serif;
+    background-image: radial-gradient(rgba(80,50,20,.10) 1px, transparent 1.4px); background-size: 7px 7px; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+  .big { font-family: "Big Shoulders Display", sans-serif; }
+
+  .top { display: flex; align-items: center; gap: 28px; padding: 18px 40px; background: var(--ink); color: var(--wax); }
+  .brand { font: 900 30px/1 "Big Shoulders Display"; letter-spacing: .01em; }
+  .top nav { display: flex; gap: 22px; font-weight: 600; font-size: 14px; color: #d8c8b4; }
+  .top nav a.on { color: var(--wax); box-shadow: 0 3px 0 var(--stamp); }
+  .top .search { margin-left: auto; background: #3f2d21; border-radius: 4px; padding: 8px 14px; width: 280px; color: #bfa98f; font-size: 14px; }
+
+  main { display: grid; grid-template-columns: 1fr 420px; gap: 36px; padding: 36px 40px 48px; max-width: 1400px; }
+  h1 { margin: 0; font: 900 84px/.9 "Big Shoulders Display"; text-transform: none; }
+  .intro { max-width: 52ch; color: var(--ink); margin: 14px 0 26px; font-size: 16px; }
+
+  .slip { background: var(--wax); border-radius: 2px; padding: 26px 28px; position: relative; box-shadow: 0 10px 24px -14px rgba(43,29,20,.6);
+    -webkit-mask: radial-gradient(circle 7px at 50% 0, transparent 98%, #000) 0 0/18px 100% repeat-x; mask: radial-gradient(circle 7px at 50% 0, transparent 98%, #000) 0 -1px/18px 100% repeat-x; padding-top: 30px; }
+  .field { display: flex; gap: 10px; }
+  .url { flex: 1; border: 2px solid var(--ink); border-radius: 4px; padding: 14px 16px; font-size: 16px; background: #fff; }
+  .url span { color: var(--dim); }
+  .go { background: var(--stamp); color: #fff; border: 0; border-radius: 4px; padding: 0 24px; font: 900 22px "Big Shoulders Display"; letter-spacing: .02em; cursor: pointer; }
+  .alts { display: flex; gap: 10px; margin-top: 14px; font-size: 14px; }
+  .alts a { border: 1.5px dashed var(--dim); border-radius: 4px; padding: 8px 12px; font-weight: 600; }
+
+  .progress { margin-top: 26px; display: grid; gap: 0; }
+  .p { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px dashed #d6c7b1; font-size: 14.5px; }
+  .p i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink); display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 700; }
+  .p.done i { background: var(--ink); color: var(--wax); }
+  .p.now i { border-color: var(--stamp); border-top-color: transparent; animation: spin 1s linear infinite; }
+  .p small { color: var(--dim); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .p.now i { animation: none; } }
+
+  .ticket { background: var(--wax); padding: 22px 24px 26px; position: relative; box-shadow: 0 10px 24px -14px rgba(43,29,20,.6); }
+  .ticket::after { content: ""; position: absolute; left: 0; right: 0; bottom: -10px; height: 10px; background: radial-gradient(circle 6px at 50% 100%, transparent 98%, var(--wax)) 0 0/16px 10px repeat-x; }
+  .ticket .num { display: flex; justify-content: space-between; align-items: end; border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
+  .ticket .num b { font: 900 54px/.9 "Big Shoulders Display"; }
+  .ticket .num span { font-size: 13px; color: var(--dim); text-align: right; }
+  .ticket h2 { font: 700 34px/1 "Big Shoulders Display"; margin: 16px 0 4px; }
+  .ticket .src { font-size: 13px; color: var(--dim); }
+  .lines { list-style: none; padding: 0; margin: 16px 0 0; font-size: 14px; }
+  .lines li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dotted #cdbda6; }
+  .lines li b { font-weight: 600; }
+  .stamp { position: absolute; right: 22px; top: 118px; transform: rotate(-12deg); border: 3px solid var(--stamp); color: var(--stamp); border-radius: 6px; padding: 4px 10px; font: 900 22px/1 "Big Shoulders Display"; opacity: .85; mix-blend-mode: multiply; }
+  .row { display: flex; gap: 10px; margin-top: 18px; }
+  .btn { flex: 1; background: var(--ink); color: var(--wax); border: 0; border-radius: 4px; padding: 12px; font: 700 14px "Public Sans"; }
+  .btn.alt { background: transparent; color: var(--ink); border: 2px solid var(--ink); }
+  .privacy { display: flex; gap: 0; margin-top: 16px; border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; font-weight: 600; font-size: 13.5px; }
+  .privacy span { flex: 1; text-align: center; padding: 8px; }
+  .privacy .on { background: var(--blue); color: #fff; }
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">TASTEBASE</div>
+    <nav><a href="#">Recipes</a><a href="#">Favourites</a><a href="#">Recent</a><a href="#">Tags</a><a class="on" href="#">Add a recipe</a></nav>
+    <div class="search">Search the counter</div>
+  </header>
+  <main>
+    <section>
+      <h1>Bring in a recipe</h1>
+      <p class="intro">Paste a link and we'll pull out the ingredients, steps and timings. No AI needed for most sites; it's only used as a fallback if you've set it up.</p>
+      <div class="slip">
+        <div class="field">
+          <div class="url">https://www.seriouseats.com/<span>pasta-e-ceci-recipe</span></div>
+          <button class="go">Import</button>
+        </div>
+        <div class="alts"><a href="#">Paste text instead</a><a href="#">Photo of a cookbook page</a><a href="#">Start from a template</a><a href="#">Write it by hand</a></div>
+        <div class="progress">
+          <div class="p done"><i>✓</i><span>Fetched the page</span><small>0.4 s</small></div>
+          <div class="p done"><i>✓</i><span>Found recipe data on the page</span><small>schema.org</small></div>
+          <div class="p done"><i>✓</i><span>Read 9 ingredients and 6 steps</span><small>0.1 s</small></div>
+          <div class="p now"><i></i><span>Downloading the hero photo</span><small>212 KB</small></div>
+          <div class="p"><i></i><span>Ready to review</span><small></small></div>
+        </div>
+      </div>
+    </section>
+    <aside>
+      <div class="ticket">
+        <div class="num"><b>No. 49</b><span>Next in the collection<br>Added by Maya</span></div>
+        <h2>Pasta e ceci</h2>
+        <div class="src">seriouseats.com · Serves 4 · 40 min</div>
+        <div class="stamp">LOOKS GOOD</div>
+        <ul class="lines">
+          <li><span>Olive oil</span><b>3 tbsp</b></li>
+          <li><span>Garlic, sliced</span><b>4 cloves</b></li>
+          <li><span>Rosemary</span><b>1 sprig</b></li>
+          <li><span>Tomato paste</span><b>1 tbsp</b></li>
+          <li><span>Chickpeas, with liquid</span><b>2 tins</b></li>
+          <li><span>Ditalini</span><b>200 g</b></li>
+          <li><span>Parmesan rind</span><b>1</b></li>
+          <li><span>Stock</span><b>1 L</b></li>
+          <li><span>Lemon</span><b>½</b></li>
+        </ul>
+        <div class="privacy"><span class="on">Everyone in the house</span><span>Only me</span></div>
+        <div class="row"><button class="btn alt">Edit first</button><button class="btn">Save to collection</button></div>
+      </div>
+    </aside>
+  </main>
+</body>
+</html>

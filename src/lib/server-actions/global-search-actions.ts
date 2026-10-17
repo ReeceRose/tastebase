@@ -1,18 +1,20 @@
 "use server";
 
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth/auth";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
 import { searchRecipes } from "@/lib/search/recipe-search";
+import { findRecipeSummariesByIds } from "@/lib/search/recipe-summaries";
+import { getAuthenticatedUser } from "@/lib/server-actions/base";
 import { SortOrder } from "@/lib/types";
-import type { RecipeWithDetails } from "@/lib/types/recipe-types";
+import type { RecipeSummary } from "@/lib/types/recipe-types";
+import { isNextRedirectError } from "@/lib/utils";
 
 const logger = createOperationLogger("global-search-actions");
 
 interface GlobalSearchResult {
   success: boolean;
-  recipes: RecipeWithDetails[];
-  error?: string;
+  recipes: RecipeSummary[];
+  total: number;
+  error: string | null;
 }
 
 export async function performGlobalSearch(
@@ -20,41 +22,23 @@ export async function performGlobalSearch(
   limit: number = 8,
 ): Promise<GlobalSearchResult> {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session) {
-      return {
-        success: false,
-        recipes: [],
-        error: "Authentication required",
-      };
-    }
-
-    logger.info(
-      { userId: session.user.id, query, limit },
-      "Performing global search",
-    );
-
-    const searchResult = await searchRecipes(session.user.id, {
+    const user = await getAuthenticatedUser();
+    const result = await searchRecipes(user.id, {
       query: query.trim(),
       limit,
       offset: 0,
-      sortBy: "createdAt",
+      sortBy: "relevance",
       sortOrder: SortOrder.DESC,
+      recordHistory: false,
     });
-
-    return {
-      success: true,
-      recipes: searchResult.recipes,
-    };
+    const recipes = await findRecipeSummariesByIds(
+      user.id,
+      result.recipes.map((recipe) => recipe.id),
+    );
+    return { success: true, recipes, total: result.total, error: null };
   } catch (error) {
-    logError(logger, "Global search failed", error, { query, limit });
-    return {
-      success: false,
-      recipes: [],
-      error: "Search failed",
-    };
+    if (isNextRedirectError(error)) throw error;
+    logError(logger, "Global search failed", error, { query });
+    return { success: false, recipes: [], total: 0, error: "Search failed" };
   }
 }

@@ -1,17 +1,26 @@
-// BetterAuth will be configured here
 import type { Metadata } from "next";
+import { Bricolage_Grotesque } from "next/font/google";
+import Script from "next/script";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { env } from "@/lib/config/env";
 import { Theme } from "@/lib/types";
 import "./globals.css";
 
+const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem("ui-theme");var d=t==="dark"||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);var r=document.documentElement;r.classList.add(d?"dark":"light");r.style.colorScheme=d?"dark":"light";}catch(e){}})();`;
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+  display: "swap",
+  axes: ["opsz"],
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(env.BETTER_AUTH_URL),
-  title:
-    "Tastebase - Your Personal Recipe Collection | AI-Powered Recipe Management",
+  title: "Tastebase - The recipes your house actually cooks",
   description:
-    "Organize your recipes with AI-powered import, beautiful UI, and seamless organization. Perfect for cooking enthusiasts who want to collect and manage recipes in one place.",
+    "A shared recipe collection for your household. Import recipes from a link, a photo or plain text, and keep notes together.",
   keywords: [
     "Tastebase",
     "recipe management",
@@ -72,8 +81,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={bricolage.variable} suppressHydrationWarning>
       <body>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_SCRIPT}
+        </Script>
         <ThemeProvider defaultTheme={Theme.SYSTEM} storageKey="ui-theme">
           {children}
           <Toaster />

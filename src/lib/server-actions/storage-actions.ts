@@ -9,18 +9,11 @@ import { recipeImages, recipes, storageStats, users } from "@/db/schema";
 import { auth } from "@/lib/auth/auth";
 import { env } from "@/lib/config/env";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
+import type { StorageStats } from "@/lib/types/storage-types";
 
 const logger = createOperationLogger("storage-actions");
 
-interface StorageStatsResult {
-  totalRecipes: number;
-  totalImages: number;
-  databaseSizeMB: number;
-  imagesSizeMB: number;
-  totalSizeMB: number;
-  avgRecipeSize: number;
-  lastCalculated: Date;
-}
+type StorageStatsResult = StorageStats;
 
 async function calculateDirectorySize(dirPath: string): Promise<number> {
   try {

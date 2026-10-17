@@ -17,9 +17,10 @@ export async function runMigrations() {
       const Database = (await import("better-sqlite3")).default;
       const { migrate } = await import("drizzle-orm/better-sqlite3/migrator");
 
-      const databasePath =
-        process.env.DATABASE_URL?.replace("file:", "") ||
-        "/app/data/tastebase.db";
+      const databasePath = (process.env.DATABASE_URL || "tastebase.db").replace(
+        "file:",
+        "",
+      );
       const sqlite = new Database(databasePath);
       const db = drizzle(sqlite);
 

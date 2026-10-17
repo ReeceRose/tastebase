@@ -87,7 +87,9 @@ export function ResetPasswordTokenForm({ token }: { token: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Set new password</CardTitle>
+        <CardTitle className="text-[28px] leading-tight tracking-[-0.03em]">
+          Choose a new password
+        </CardTitle>
         <CardDescription>
           Enter your new password below to complete the reset.
         </CardDescription>
@@ -110,7 +112,7 @@ export function ResetPasswordTokenForm({ token }: { token: string }) {
             )}
 
             <div className="grid gap-3">
-              <Label htmlFor={newPasswordId}>New Password</Label>
+              <Label htmlFor={newPasswordId}>New password</Label>
               <Input
                 id={newPasswordId}
                 type="password"
@@ -126,7 +128,7 @@ export function ResetPasswordTokenForm({ token }: { token: string }) {
             </div>
 
             <div className="grid gap-3">
-              <Label htmlFor={confirmPasswordId}>Confirm Password</Label>
+              <Label htmlFor={confirmPasswordId}>Confirm new password</Label>
               <Input
                 id={confirmPasswordId}
                 type="password"

@@ -354,35 +354,41 @@ Tastebase provides comprehensive recipe management capabilities for shared insta
 
 **📖 [Complete Design System Documentation](./docs/design-system.md)**
 
-TasteBase follows a comprehensive design system for consistent, maintainable UI development:
+Tastebase uses the "Market Crate" design system: paper and ink neutrals, a leek-green sidebar, one turmeric accent, and a produce-colour **swatch** for every recipe and person. The redesign is rolling out phase by phase; see `docs/redesign/implementation-plan.md`.
 
 ### Core Design Principles
-- **Clean & Minimal**: No heavy borders, generous white space, focused content
-- **Theme-Aware**: All colors via CSS variables, automatic light/dark mode adaptation
-- **ShadCN-First**: Always use official ShadCN components, extend with className
-- **Consistent Interactions**: 200ms transitions, predictable behavior patterns
+- **Colour is identity**: swatches mark recipes, people and tags. UI chrome stays neutral.
+- **One loud thing per screen**: a hero or tile grid; everything around it stays quiet.
+- **Flat and solid**: no shadows on surfaces (floating layers only use `shadow-float`), 2px ink outlines for interactive things on paper.
+- **Big type, few words**: Bricolage Grotesque, sentence case, Canadian English (favourite, colour).
 
 ### Quick Reference
 ```tsx
-// ✅ Correct color usage
-<Badge variant="outline">Private</Badge>
-<div className="bg-muted text-foreground border-border">Content</div>
-<Button className="hover:bg-primary/90">Action</Button>
+// ✅ Recipe and member colours come from the swatch helpers
+const classes = swatchClasses(resolveSwatch(recipe.id, recipe.swatch));
+<div className={cn("rounded-tile p-5", classes.bg, classes.fg)}>…</div>
+<MemberAvatar userId={user.id} name={user.name} />
 
-// ❌ Never use hard-coded colors
+// ✅ Tokens and type scale
+<h1 className="text-title">Recipes</h1>
+<Panel title="Ingredients">…</Panel>
+<Button variant={ButtonVariant.ACCENT}>Add a recipe</Button>
+
+// ❌ Never hard-code colours or build class names at runtime
 <Badge className="bg-red-600 text-white">Status</Badge>
-<div className="border-blue-500 text-green-800">Content</div>
+<div className={`bg-${colour}-500`}>…</div>
 ```
 
 ### Key Guidelines
-- **Colors**: Only CSS variables (`bg-muted`, `text-foreground`, `border-border`)
-- **Spacing**: `p-6` for main areas, `p-4` for cards, `space-y-8` between sections
-- **Typography**: `text-sm` default, `text-muted-foreground` for secondary text
-- **Icons**: `h-4 w-4` standard, `h-5 w-5` for headers, consistent with text color
+- **Colours**: CSS variables and swatch classes only (`bg-background`, `text-muted-foreground`, `bg-swatch-tomato`)
+- **Type**: `text-hero`, `text-display`, `text-title`, `text-heading`, `text-tile`, `text-lead`, `text-body`, `text-meta`, `text-caption`
+- **Shape**: `rounded-hero` (28px), `rounded-tile` (22px), `rounded-control` (14px), `rounded-full` for chips and avatars
+- **Spacing**: `px-5 lg:px-9` page gutter, `p-6` panels, `gap-4` grids, `space-y-8` between sections
+- **Icons**: Lucide `h-4 w-4` inline, `h-5 w-5` in navigation; drop icons that only repeat their label
 
 **📋 [Design Patterns & Examples](./docs/design-patterns.md)**
 
-Common implementation patterns for forms, lists, cards, loading states, and interactive components.
+Patterns for colours, page headers, panels, chips, empty states, loading and buttons.
 
 ## Environment Variables
 

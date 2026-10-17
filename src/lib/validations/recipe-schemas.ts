@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { RecipeDifficulty, SortOrder } from "@/lib/types";
+import { RecipeDifficulty, RecipeSwatch, SortOrder } from "@/lib/types";
 import { RECIPE_CONSTANTS } from "@/lib/utils/recipe-constants";
 
 const slugSchema = z
@@ -113,6 +113,7 @@ export const createRecipeSchema = z.object({
     .string()
     .max(50, "Cuisine must be 50 characters or less")
     .optional(),
+  swatch: z.nativeEnum(RecipeSwatch).nullable().optional(),
   sourceUrl: z
     .string()
     .max(
@@ -193,6 +194,10 @@ export const recipeSearchSchema = z.object({
   difficulty: z.array(z.nativeEnum(RecipeDifficulty)).optional(),
   maxPrepTime: z.number().min(0, "Max prep time must be positive").optional(),
   maxCookTime: z.number().min(0, "Max cook time must be positive").optional(),
+  maxTotalTime: z.number().int().min(1).optional(),
+  authorId: z.string().optional(),
+  recipeIds: z.array(z.string()).optional(),
+  recordHistory: z.boolean().optional(),
   servings: z.number().int().min(1).optional(),
   cuisine: z.array(z.string()).optional(),
   isPublic: z.boolean().optional(),
@@ -211,6 +216,7 @@ export const recipeSearchSchema = z.object({
       "averageRating",
       "relevance",
       "difficulty",
+      "totalTime",
     ])
     .default("updatedAt"),
   sortOrder: z.nativeEnum(SortOrder).default(SortOrder.DESC),

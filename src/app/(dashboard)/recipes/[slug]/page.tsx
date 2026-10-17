@@ -1,24 +1,32 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { RecipeDetailView } from "@/components/cards/recipe-detail-view";
+import { RecipePage } from "@/components/layout/recipe-page";
 import { RecipeDetailSkeleton } from "@/components/skeletons/recipe-detail-skeleton";
 import { auth } from "@/lib/auth/auth";
 import { getRecipeBySlug } from "@/lib/server-actions/recipe-actions";
+import { getRecipeCookSummary } from "@/lib/server-actions/recipe-cook-actions";
 import { getRecipeFavoriteStatus } from "@/lib/server-actions/recipe-favorites-actions";
 import { trackRecipeView } from "@/lib/server-actions/recipe-tracking-actions";
+import { MeasurementUnit, TemperatureUnit } from "@/lib/types";
 
 interface RecipeDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
+interface RecipeDetailContentProps {
+  recipeSlug: string;
+  currentUserId: string;
+  measurementSystem: MeasurementUnit;
+  temperatureUnit: TemperatureUnit;
+}
+
 async function RecipeDetailContent({
   recipeSlug,
   currentUserId,
-}: {
-  recipeSlug: string;
-  currentUserId: string;
-}) {
+  measurementSystem,
+  temperatureUnit,
+}: RecipeDetailContentProps) {
   const result = await getRecipeBySlug(recipeSlug);
 
   if (!result.success || !result.data) {
@@ -28,17 +36,20 @@ async function RecipeDetailContent({
     throw new Error(result.error || "Failed to load recipe");
   }
 
-  const canEdit = result.data.userId === currentUserId;
-  const [favoriteStatus] = await Promise.all([
+  const [favoriteStatus, cooks] = await Promise.all([
     getRecipeFavoriteStatus(result.data.id).catch(() => undefined),
+    getRecipeCookSummary(result.data.id).catch(() => undefined),
     trackRecipeView(result.data.id).catch(() => undefined),
   ]);
 
   return (
-    <RecipeDetailView
+    <RecipePage
       recipe={result.data}
-      canEdit={canEdit}
-      isFavorited={favoriteStatus?.data?.isFavorited ?? false}
+      currentUserId={currentUserId}
+      isFavourite={favoriteStatus?.data?.isFavorited ?? false}
+      cooks={cooks ?? { count: 0, lastCookedAt: null, lastCookedBy: null }}
+      measurementSystem={measurementSystem}
+      temperatureUnit={temperatureUnit}
     />
   );
 }
@@ -55,16 +66,24 @@ export default async function RecipeDetailPage({
   }
 
   const { slug } = await params;
+  const measurementSystem =
+    session.user.preferredWeightUnit === MeasurementUnit.METRIC
+      ? MeasurementUnit.METRIC
+      : MeasurementUnit.IMPERIAL;
+  const temperatureUnit =
+    session.user.preferredTemperatureUnit === TemperatureUnit.CELSIUS
+      ? TemperatureUnit.CELSIUS
+      : TemperatureUnit.FAHRENHEIT;
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Suspense fallback={<RecipeDetailSkeleton />}>
-        <RecipeDetailContent
-          recipeSlug={slug}
-          currentUserId={session.user.id}
-        />
-      </Suspense>
-    </div>
+    <Suspense fallback={<RecipeDetailSkeleton />}>
+      <RecipeDetailContent
+        recipeSlug={slug}
+        currentUserId={session.user.id}
+        measurementSystem={measurementSystem}
+        temperatureUnit={temperatureUnit}
+      />
+    </Suspense>
   );
 }
 

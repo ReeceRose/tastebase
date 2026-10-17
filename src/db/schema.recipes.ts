@@ -7,7 +7,7 @@ import {
   text,
 } from "drizzle-orm/sqlite-core";
 import { users } from "@/db/schema.base";
-import { RecipeDifficulty } from "@/lib/types";
+import { RecipeDifficulty, RecipeSwatch } from "@/lib/types";
 import { TemplateCategory } from "@/lib/types/template-types";
 
 // Main recipes table
@@ -32,6 +32,18 @@ export const recipes = sqliteTable(
       ],
     }),
     cuisine: text("cuisine"),
+    swatch: text("swatch", {
+      enum: [
+        RecipeSwatch.TOMATO,
+        RecipeSwatch.LEEK,
+        RecipeSwatch.AUBERGINE,
+        RecipeSwatch.BEET,
+        RecipeSwatch.TURMERIC,
+        RecipeSwatch.RADISH,
+        RecipeSwatch.SKY,
+        RecipeSwatch.HERB,
+      ],
+    }),
     sourceUrl: text("source_url"),
     sourceName: text("source_name"),
     isPublic: integer("is_public", { mode: "boolean" })
@@ -260,6 +272,28 @@ export const recipeViews = sqliteTable(
   ],
 );
 
+// Recipe cook tracking
+export const recipeCooks = sqliteTable(
+  "recipe_cooks",
+  {
+    id: text("id").primaryKey(),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    cookedAt: integer("cooked_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+  },
+  (table) => [
+    index("recipe_cooks_recipe_id_idx").on(table.recipeId),
+    index("recipe_cooks_user_id_idx").on(table.userId),
+    index("recipe_cooks_cooked_at_idx").on(table.cookedAt),
+  ],
+);
+
 // Recipe modification history
 export const recipeModifications = sqliteTable(
   "recipe_modifications",
@@ -402,6 +436,7 @@ export const recipesRelations = relations(recipes, ({ one, many }) => ({
   notes: many(recipeNotes),
   favorites: many(recipeFavorites),
   views: many(recipeViews),
+  cooks: many(recipeCooks),
   collections: many(recipeCollectionItems),
 }));
 
@@ -486,6 +521,17 @@ export const recipeViewsRelations = relations(recipeViews, ({ one }) => ({
   }),
 }));
 
+export const recipeCooksRelations = relations(recipeCooks, ({ one }) => ({
+  recipe: one(recipes, {
+    fields: [recipeCooks.recipeId],
+    references: [recipes.id],
+  }),
+  user: one(users, {
+    fields: [recipeCooks.userId],
+    references: [users.id],
+  }),
+}));
+
 export const userSearchHistoryRelations = relations(
   userSearchHistory,
   ({ one }) => ({
@@ -542,6 +588,7 @@ export type RecipeImage = typeof recipeImages.$inferSelect;
 export type RecipeNote = typeof recipeNotes.$inferSelect;
 export type RecipeFavorite = typeof recipeFavorites.$inferSelect;
 export type RecipeView = typeof recipeViews.$inferSelect;
+export type RecipeCook = typeof recipeCooks.$inferSelect;
 export type UserSearchHistory = typeof userSearchHistory.$inferSelect;
 export type RecipeCollection = typeof recipeCollections.$inferSelect;
 export type RecipeCollectionInsert = typeof recipeCollections.$inferInsert;

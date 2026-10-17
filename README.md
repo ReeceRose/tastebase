@@ -4,20 +4,20 @@ A simple, local-first recipe management application designed for shared instance
 
 ## 🚀 Features
 
-- **🏠 Local-First** - Everything stored on your computer, no cloud dependencies
-- **🍳 Recipe Management** - Create, edit, and organize your group's shared recipe collection
-- **📥 Recipe Import** - Import from recipe links, pasted text or photos. Works without AI; optionally add OpenAI, Anthropic, Google or a local Ollama model to clean up messy imports
-- **🔍 Search & Filter** - Find recipes quickly by name, ingredients, or tags
-- **📝 Personal Notes** - Add cooking tips, modifications, and personal notes
-- **🏷️ Organization** - Tag and categorize recipes your way
-- **📱 Responsive Design** - Works great on desktop, tablet, and mobile
-- **🌙 Dark/Light Mode** - Choose your preferred theme
-- **🔐 Multi-User Auth** - Simple authentication with privacy controls for shared instances
-- **👥 Sharing Controls** - Public recipes (shared with all users) or private recipes (personal only)
-- **💾 SQLite Database** - Reliable local storage with full data ownership
+- **🏠 Local-First** - Everything stored on your server, no cloud dependencies
+- **🧺 Made for a household** - Everyone on the instance shares recipes, leaves notes and sees what the house has been cooking
+- **📥 Recipe Import** - Paste a link, the text or a photo of a cookbook page. Works without AI; optionally add OpenAI, Anthropic, Google or a local Ollama model to tidy up messy imports
+- **✍️ One editor** - Paste whole ingredient lists or steps, autosaved drafts on your device, photos, tags and a colour for every recipe
+- **👩‍🍳 Cook mode** - Full-screen steps, timers, ingredient tick-offs and a screen that stays on
+- **⚖️ Scaling and units** - Scale servings up or down and switch metric/imperial on any recipe
+- **🔍 Search & Filter** - Search names, ingredients, steps and notes; filter by cook, time, difficulty, cuisine and tag
+- **📝 House notes and ratings** - Leave notes for everyone, or keep them to yourself
+- **🏡 Home** - New recipes from the house, what you opened last, what's not been made in a while, and recent activity
+- **🔐 Sharing Controls** - Share a recipe with the house or keep it only visible to you
+- **📱 Responsive Design** - Sidebar on desktop, bottom tab bar on phones
+- **🌙 Light and dark** - Follows your device or your choice
+- **💾 SQLite Database** - Reliable local storage; migrations run automatically on start
 - **🐳 Docker Deployment** - Run locally with one simple command
-- **⚡ Modern Stack** - Built with Next.js 16 and modern web technologies
-- **🎨 Clean UI** - Beautiful, intuitive interface built with ShadCN/UI
 
 ## 🏗️ Tech Stack
 
@@ -69,6 +69,7 @@ A simple, local-first recipe management application designed for shared instance
    pnpm run db:migrate
    pnpm run db:seed
    ```
+   Migrations also run automatically whenever the server starts, so after pulling updates you can just restart.
 
 5. **Start development server:**
    ```bash
@@ -253,29 +254,29 @@ docker build -t recipe-app .  # Build Docker image
 
 ### Core Recipe Operations
 - **Create Recipes** - Manual entry with structured forms
-- **Import Recipes** - AI-powered parsing from URLs, text, or images
+- **Import Recipes** - From links, pasted text or photos, with optional AI
 - **Edit & Update** - Full recipe editing with validation
 - **Delete Recipes** - Safe deletion with confirmation
 - **Recipe Validation** - Ensure all required fields are present
 
-### AI-Powered Import
-- **URL Import** - Scrape and parse recipes from any website
-- **Text Import** - Paste recipe text and let AI structure it
-- **Image Import** - OCR + AI parsing for recipe photos
-- **Preview System** - Review parsed recipes before saving
-- **Fallback Handling** - Manual editing when AI parsing fails
+### Recipe Import
+- **Link Import** - Reads recipe data from most recipe sites, then falls back to the page text
+- **Text Import** - Paste a recipe and it is split into ingredients and steps
+- **Photo Import** - OCR on the server, or an AI vision model if you've added one
+- **Review in the editor** - Imports open in the editor so you can check everything before saving
+- **Optional AI tidy-up** - If an AI provider is set up, one click cleans up a messy import
 
 ### Search & Organization
-- **Multi-field Search** - Search by title, tags, ingredients
-- **Smart Filtering** - Filter by tags, cooking time, difficulty
-- **Custom Tags** - Organize recipes with personal tags
-- **Sorting Options** - Sort by date, time, alphabetical
-- **Recipe Collections** - Group related recipes together
+- **Search** - Names, ingredients, steps and notes
+- **Filters** - Cook, total time, difficulty, cuisine, tag and who can see it
+- **Tags** - Coloured tag tiles with counts and previews
+- **Sorting** - Newest, top rated, quickest, A to Z, recently changed
+- **Favourites and recent** - Your saved recipes and the ones you opened last
 
 ### User Experience
-- **Recipe Cards** - Beautiful grid view with images and tags
-- **Recipe Details** - Hero image, metadata, ingredients checklist
-- **Notes System** - Add personal notes and cooking tips
+- **Recipe tiles** - Every recipe gets a colour, so the collection is easy to scan even without photos
+- **Recipe page** - Ingredients with tick-offs and scaling, numbered steps, notes from the house
+- **Cook mode** - One step at a time with timers
 - **Dark/Light Mode** - Theme switching for comfortable cooking
 - **Responsive Design** - Works perfectly on desktop and mobile
 
@@ -301,6 +302,9 @@ The database uses a modular schema approach with SQLite:
 - `tags` - Recipe categorization tags
 - `notes` - User notes and cooking tips
 - `images` - Recipe image metadata and file paths
+- `recipe_favorites`, `recipe_views` - Favourites and recently opened recipes
+- `recipe_cooks` - When someone finished a recipe in cook mode or marked it cooked
+- `recipe_modifications` - A short history of edits, shown in the house activity feed
 
 **Relationships:**
 - One-to-many: Recipe → Ingredients, Steps, Tags, Notes, Images
@@ -309,7 +313,7 @@ The database uses a modular schema approach with SQLite:
 ## 🔐 Authentication Flow
 
 1. Users sign up/in via BetterAuth components
-2. Middleware protects dashboard routes (`middleware.ts`)
+2. The proxy protects dashboard routes (`src/proxy.ts`)
 3. **Single-user system**: Personal recipe collection with secure access
 4. **Session management**: Persistent login sessions with secure cookies
 
@@ -495,11 +499,11 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Built for home cooks and cooking enthusiasts** 🍳
 
-This recipe app is designed to be your group's shared recipe collection with AI-powered import, beautiful UI, and seamless organization. Perfect for families, roommates, cooking clubs, restaurants, or any group who wants to organize recipes together with privacy controls for personal recipes.
+This recipe app is designed to be your group's shared recipe collection: import from anywhere, cook from a clear full-screen view, and keep notes together. Perfect for families, roommates, cooking clubs, restaurants, or any group who wants to organize recipes together with privacy controls for personal recipes.
 
 ### Why Choose This Recipe App?
 
-- ✅ **AI-Powered** - Smart recipe parsing from any source
+- ✅ **Import from anywhere** - Links, pasted text or photos, with optional AI
 - ✅ **Beautiful UI** - Modern, responsive design that's a joy to use
 - ✅ **Self-Hosted** - Your data stays on your server
 - ✅ **Complete Workflow** - From import to cooking with notes and tips

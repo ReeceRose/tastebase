@@ -122,9 +122,12 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Create an account</CardTitle>
+          <CardTitle className="text-[28px] leading-tight tracking-[-0.03em]">
+            Create your account
+          </CardTitle>
           <CardDescription>
-            Enter your information below to create your account
+            Join your house's recipe collection. Everyone here shares recipes
+            and notes.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -250,13 +253,13 @@ export function SignUpForm({
                 )}
               </div>
 
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Recipe Preferences
-                </h3>
+              <details className="group space-y-4 rounded-control bg-background px-4 py-3 open:pb-4">
+                <summary className="cursor-pointer text-sm font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring">
+                  Set your units now (optional)
+                </summary>
 
                 <div className="grid gap-3">
-                  <Label>Temperature Unit</Label>
+                  <Label>Temperature</Label>
                   <Select
                     defaultValue="fahrenheit"
                     onValueChange={(value) =>
@@ -279,7 +282,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-3">
-                  <Label>Weight Unit</Label>
+                  <Label>Weight</Label>
                   <Select
                     defaultValue="imperial"
                     onValueChange={(value) =>
@@ -299,7 +302,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-3">
-                  <Label>Volume Unit</Label>
+                  <Label>Volume</Label>
                   <Select
                     defaultValue="imperial"
                     onValueChange={(value) =>
@@ -317,7 +320,7 @@ export function SignUpForm({
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+              </details>
 
               <div className="flex flex-col gap-3">
                 <Button

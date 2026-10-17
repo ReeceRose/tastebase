@@ -1,29 +1,51 @@
 "use client";
 
+import {
+  LogOut,
+  Monitor,
+  Moon,
+  NotebookPen,
+  Settings,
+  Sun,
+} from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/theme/theme-provider";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { MemberAvatar } from "@/components/ui/member-avatar";
 import { authClient } from "@/lib/auth/auth-client";
+import { AvatarSize, Theme } from "@/lib/types";
 
 interface UserMenuProps {
   user: {
     id: string;
     name?: string | null;
     email: string;
-    image?: string | null;
   };
 }
 
+const THEME_OPTIONS = [
+  { value: Theme.LIGHT, label: "Light", icon: Sun },
+  { value: Theme.DARK, label: "Dark", icon: Moon },
+  { value: Theme.SYSTEM, label: "Match my device", icon: Monitor },
+];
+
 export function UserMenu({ user }: UserMenuProps) {
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
+  const name = user.name || user.email.split("@")[0];
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -35,53 +57,64 @@ export function UserMenu({ user }: UserMenuProps) {
     });
   };
 
-  const initials = user.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-    : user.email[0].toUpperCase();
-
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="flex items-center gap-3 h-auto p-2 cursor-pointer"
-        >
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.image || ""} alt={user.name || user.email} />
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <div className="hidden md:block text-left">
-            <p className="text-sm font-medium leading-none">
-              {user.name || "User"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">Recipe Chef</p>
-          </div>
-        </Button>
+      <DropdownMenuTrigger
+        aria-label="Your account"
+        className="rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      >
+        <MemberAvatar
+          userId={user.id}
+          name={name}
+          size={AvatarSize.LG}
+          decorative
+        />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {user.name || "User"}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
+      <DropdownMenuContent className="w-64" align="end">
+        <DropdownMenuLabel className="flex items-center gap-3 py-2 font-normal">
+          <MemberAvatar userId={user.id} name={name} decorative />
+          <span className="min-w-0">
+            <span className="block truncate font-extrabold">{name}</span>
+            <span className="block truncate text-meta font-normal text-muted-foreground">
               {user.email}
-            </p>
-          </div>
+            </span>
+          </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => router.push("/settings")}
-          className="cursor-pointer"
-        >
-          Settings
+        <DropdownMenuItem asChild>
+          <Link href="/settings">
+            <Settings />
+            Settings
+          </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/settings?section=templates">
+            <NotebookPen />
+            Note templates
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Sun />
+            Appearance
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuRadioGroup
+              value={theme}
+              onValueChange={(value) => setTheme(value as Theme)}
+            >
+              {THEME_OPTIONS.map((option) => (
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
+                  <option.icon />
+                  {option.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+        <DropdownMenuItem onSelect={handleSignOut}>
+          <LogOut />
           Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>

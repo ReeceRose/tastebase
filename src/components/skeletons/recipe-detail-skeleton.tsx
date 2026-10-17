@@ -1,219 +1,57 @@
-import { BookOpen, ChefHat, Clock, Star, Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface RecipeDetailSkeletonProps {
-  hasImages?: boolean;
-  hasNotes?: boolean;
-  className?: string;
-}
-
-export function RecipeDetailSkeleton({
-  hasImages = true,
-  hasNotes = true,
-  className,
-}: RecipeDetailSkeletonProps) {
+export function RecipeDetailSkeleton() {
   return (
-    <div className={`space-y-8 ${className || ""}`}>
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
-                <ChefHat className="h-6 w-6 text-primary" />
-                <Skeleton className="h-8 w-64" />
-                <Skeleton className="h-5 w-12 rounded-full" />
-              </div>
+    <div className="space-y-5" aria-busy="true">
+      <Skeleton className="h-5 w-28 rounded-full" />
 
-              <Skeleton className="h-4 w-3/4 mb-4" />
-              <Skeleton className="h-4 w-1/2 mb-4" />
-
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-                <Skeleton className="h-4 w-2" />
-                <Skeleton className="h-4 w-24" />
-              </div>
-            </div>
-
-            <Skeleton className="h-9 w-9" />
-          </div>
-        </CardHeader>
-      </Card>
-
-      {hasImages && (
-        <Card className="overflow-hidden">
-          <div className="aspect-video relative">
-            <Skeleton className="w-full h-full" />
-          </div>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recipe Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[0, 1, 2, 3].map((index) => (
-              <div
-                key={`metadata-skeleton-${index + 1}`}
-                className="text-center"
-              >
-                <Skeleton className="h-8 w-8 mx-auto mb-2" />
-                <Skeleton className="h-4 w-16 mx-auto mb-1" />
-                <Skeleton className="h-3 w-12 mx-auto" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Recipe Tags</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {[0, 1, 2, 3, 4].map((index) => (
-              <Skeleton
-                key={`tag-skeleton-${index + 1}`}
-                className="h-6 w-16 rounded-full"
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Ingredients
-              <Badge variant="secondary" className="ml-2">
-                <Skeleton className="h-3 w-4" />
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[...Array(8).keys()].map((k) => (
-                <div
-                  key={`ingredient-skeleton-${k + 1}`}
-                  className="flex items-start gap-3"
-                >
-                  <Skeleton className="h-4 w-4 mt-0.5" />
-                  <div className="flex-1">
-                    <Skeleton className="h-4 w-full" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ChefHat className="h-5 w-5" />
-              Instructions
-              <Badge variant="secondary" className="ml-2">
-                <Skeleton className="h-3 w-8" />
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[...Array(6).keys()].map((k) => (
-                <div
-                  key={`instruction-skeleton-${k + 1}`}
-                  className="flex gap-3"
-                >
-                  <Skeleton className="h-6 w-6 rounded-full flex-shrink-0 mt-1" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <div className="flex gap-4">
-                      <Skeleton className="h-3 w-16" />
-                      <Skeleton className="h-3 w-12" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="rounded-hero bg-muted p-6 sm:p-8 lg:p-10">
+        <Skeleton className="h-4 w-56 rounded-full bg-background/60" />
+        <Skeleton className="mt-5 h-14 w-4/5 max-w-xl bg-background/60" />
+        <Skeleton className="mt-3 h-14 w-3/5 max-w-md bg-background/60" />
+        <div className="mt-6 flex flex-wrap gap-2">
+          {[0, 1, 2, 3].map((index) => (
+            <Skeleton
+              key={`recipe-fact-skeleton-${index}`}
+              className="h-14 w-24 rounded-2xl bg-background/60"
+            />
+          ))}
+        </div>
+        <div className="mt-7 flex gap-2.5">
+          <Skeleton className="h-13 w-40 bg-background/60" />
+          <Skeleton className="h-13 w-28 bg-background/60" />
+        </div>
       </div>
 
-      {hasNotes && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Skeleton className="h-5 w-5" />
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-4 w-8" />
-              </CardTitle>
-              <Skeleton className="h-8 w-20" />
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              {[...Array(2).keys()].map((k) => (
-                <Card
-                  key={`note-skeleton-${k + 1}`}
-                  className="transition-colors"
-                >
-                  <CardContent className="pt-4">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-0.5">
-                              {[0, 1, 2, 3, 4].map((starIndex) => (
-                                <Skeleton
-                                  key={`note-star-skeleton-${k}-${starIndex + 1}`}
-                                  className="h-4 w-4"
-                                />
-                              ))}
-                            </div>
-                            <Skeleton className="h-5 w-10" />
-                          </div>
-
-                          <div className="space-y-1">
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-4/5" />
-                          </div>
-                        </div>
-
-                        <Skeleton className="h-8 w-8" />
-                      </div>
-
-                      <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                        <Skeleton className="h-3 w-24" />
-                        <Skeleton className="h-5 w-12" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div className="grid gap-5 lg:grid-cols-[minmax(300px,360px)_1fr] xl:grid-cols-[340px_1fr_280px]">
+        <div className="space-y-3 rounded-tile bg-card p-6">
+          <Skeleton className="h-7 w-36" />
+          {[0, 1, 2, 3, 4, 5].map((index) => (
+            <Skeleton
+              key={`recipe-ingredient-skeleton-${index}`}
+              className="h-5 w-full rounded-full"
+            />
+          ))}
+        </div>
+        <div className="space-y-2.5">
+          <Skeleton className="h-7 w-28" />
+          {[0, 1, 2, 3].map((index) => (
+            <Skeleton
+              key={`recipe-step-skeleton-${index}`}
+              className="h-24 w-full rounded-tile"
+            />
+          ))}
+        </div>
+        <div className="space-y-3 lg:col-span-2 xl:col-span-1">
+          <Skeleton className="h-6 w-36" />
+          {[0, 1].map((index) => (
+            <Skeleton
+              key={`recipe-note-skeleton-${index}`}
+              className="h-24 w-full rounded-tile"
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

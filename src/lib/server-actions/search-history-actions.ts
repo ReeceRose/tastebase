@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import { userSearchHistory } from "@/db/schema.recipes";
@@ -114,5 +114,42 @@ export async function deleteSearchHistoryEntry(query: string): Promise<{
   } catch (error) {
     logError(logger, "Failed to delete search history entry", error, { query });
     return { success: false, error: "Failed to delete search history entry" };
+  }
+}
+
+export async function recordSearchQuery(
+  query: string,
+  resultsCount: number,
+): Promise<{ success: boolean }> {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return { success: true };
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    if (!session?.user?.id) return { success: false };
+
+    const now = new Date();
+    await db
+      .insert(userSearchHistory)
+      .values({
+        userId: session.user.id,
+        query: normalized,
+        resultsCount,
+        runCount: 1,
+        lastSearchedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [userSearchHistory.userId, userSearchHistory.query],
+        set: {
+          resultsCount,
+          runCount: sql`${userSearchHistory.runCount} + 1`,
+          lastSearchedAt: now,
+        },
+      });
+    return { success: true };
+  } catch (error) {
+    logError(logger, "Failed to record search", error);
+    return { success: false };
   }
 }

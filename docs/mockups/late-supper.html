@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tastebase — Late Supper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,100&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #1d1622;
+    --plum: #2a2030;
+    --plum-2: #362a3e;
+    --line: #4a3b52;
+    --text: #f2e8df;
+    --dim: #b8a8b6;
+    --saffron: #f0a830;
+    --rose: #e58f9e;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--night); }
+  body { margin: 0; color: var(--text); font: 15px/1.6 "Figtree", system-ui, sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--saffron); outline-offset: 3px; }
+  .serif { font-family: "Fraunces", serif; font-variation-settings: "SOFT" 100; }
+
+  .top { display: flex; align-items: center; gap: 30px; padding: 22px 48px; border-bottom: 1px solid var(--line); }
+  .brand { font: 600 22px "Fraunces", serif; font-variation-settings: "SOFT" 100; }
+  .brand::first-letter { color: var(--saffron); }
+  .links { display: flex; gap: 26px; color: var(--dim); font-weight: 500; }
+  .links a.on { color: var(--text); }
+  .search { margin-left: auto; background: var(--plum); border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px; width: 300px; color: var(--dim); font-size: 14px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--rose); color: var(--night); display: grid; place-items: center; font-weight: 600; }
+
+  .crumb { padding: 26px 48px 0; color: var(--dim); font-size: 14px; }
+  .head { padding: 10px 48px 30px; display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: end; }
+  h1 { margin: 0; font: 400 76px/0.98 "Fraunces", serif; font-variation-settings: "SOFT" 100, "opsz" 144; letter-spacing: -.02em; max-width: 13ch; }
+  .lede { color: var(--dim); max-width: 56ch; margin: 18px 0 0; font-size: 16px; }
+  .stats { display: flex; gap: 1px; background: var(--line); border-radius: 18px; overflow: hidden; }
+  .stats div { background: var(--plum); padding: 16px 22px; min-width: 112px; }
+  .stats b { display: block; font: 500 30px/1.1 "Fraunces", serif; font-variation-settings: "SOFT" 100; color: var(--saffron); }
+  .stats span { color: var(--dim); font-size: 13px; }
+
+  .body { display: grid; grid-template-columns: 380px 1fr 280px; gap: 28px; padding: 0 48px 48px; }
+  .panel { background: var(--plum); border-radius: 22px; padding: 24px; }
+  .panel h2 { margin: 0 0 4px; font: 500 24px "Fraunces", serif; font-variation-settings: "SOFT" 100; }
+  .scale { display: flex; align-items: center; gap: 10px; color: var(--dim); font-size: 14px; margin-bottom: 14px; }
+  .stepper { display: inline-flex; align-items: center; background: var(--plum-2); border-radius: 999px; }
+  .stepper button { background: none; border: 0; color: var(--text); width: 30px; height: 30px; font-size: 16px; cursor: pointer; }
+  .stepper b { min-width: 22px; text-align: center; color: var(--text); }
+  .ing { list-style: none; margin: 0; padding: 0; }
+  .ing li { display: grid; grid-template-columns: 22px 78px 1fr; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
+  .box { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--dim); }
+  .ing li.done { color: var(--dim); text-decoration: line-through; text-decoration-color: var(--rose); }
+  .ing li.done .box { background: var(--rose); border-color: var(--rose); }
+  .ing .q { color: var(--saffron); font-weight: 600; }
+
+  .steps { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 56px 1fr; gap: 16px; padding: 18px 0; border-top: 1px solid var(--line); color: var(--dim); }
+  .steps li::before { content: counter(s); font: 400 40px/1 "Fraunces", serif; font-variation-settings: "SOFT" 100; color: #75627e; }
+  .steps li.now { color: var(--text); background: var(--plum); border-radius: 18px; border-top-color: transparent; padding: 20px 20px 20px 0; margin: 0 -4px; }
+  .steps li.now::before { color: var(--saffron); padding-left: 20px; }
+  .steps li.now + li { border-top-color: transparent; }
+  .steps .timer { display: inline-flex; margin-top: 10px; background: var(--saffron); color: var(--night); border-radius: 999px; padding: 4px 12px; font-weight: 600; font-size: 13px; }
+  .steps p { margin: 0; font-size: 16.5px; }
+  .method-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+  .method-h h2 { margin: 0; font: 500 24px "Fraunces", serif; font-variation-settings: "SOFT" 100; }
+  .btn { background: var(--saffron); color: var(--night); border: 0; border-radius: 999px; padding: 11px 20px; font: 600 14px "Figtree"; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+
+  .note { background: var(--plum-2); border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+  .note .who { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  .note .who i { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 12px; color: var(--night); }
+  .note p { margin: 0; font: 400 17px/1.4 "Fraunces", serif; font-variation-settings: "SOFT" 100; font-style: italic; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .tags span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; color: var(--dim); }
+  .side-h { font-size: 14px; color: var(--dim); margin: 0 0 10px; font-weight: 500; }
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">Tastebase</div>
+    <nav class="links"><a class="on" href="#">Recipes</a><a href="#">Favourites</a><a href="#">Recent</a><a href="#">Tags</a><a href="#">Templates</a></nav>
+    <div class="search">Search the house collection</div>
+    <div class="avatar">P</div>
+  </header>
+
+  <div class="crumb">Recipes / Indian</div>
+  <section class="head">
+    <div>
+      <h1 class="serif">Weeknight chana masala</h1>
+      <p class="lede">The one we make when nobody planned dinner. Pantry chickpeas, a proper onion base and a squeeze of lemon at the end.</p>
+    </div>
+    <div>
+      <div class="stats">
+        <div><b>10</b><span>min prep</span></div>
+        <div><b>20</b><span>min cook</span></div>
+        <div><b>4.8</b><span>from 6 cooks</span></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px;justify-content:flex-end">
+        <button class="btn ghost">Edit</button><button class="btn ghost">♥ Saved</button><button class="btn">Start cooking</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="body">
+    <div class="panel">
+      <h2>Ingredients</h2>
+      <div class="scale">Serves <span class="stepper"><button aria-label="Fewer servings">−</button><b>4</b><button aria-label="More servings">+</button></span></div>
+      <ul class="ing" id="ing"></ul>
+    </div>
+
+    <div>
+      <div class="method-h"><h2>Method</h2><span style="color:var(--dim);font-size:14px">Step 3 of 5</span></div>
+      <ol class="steps" id="steps"></ol>
+    </div>
+
+    <aside>
+      <p class="side-h">Notes from the house</p>
+      <div class="note"><div class="who"><i style="background:var(--rose)">P</i>Priya</div><p>Double the ginger if Theo's eating.</p></div>
+      <div class="note"><div class="who"><i style="background:var(--saffron)">T</i>Theo</div><p>Made it with spinach stirred in at the end. Excellent.</p></div>
+      <div class="note"><div class="who"><i style="background:#9fc7b8">M</i>Maya</div><p>Freezes well in two-portion tubs.</p></div>
+      <div class="tags"><span>Vegan</span><span>Pantry</span><span>Weeknight</span><span>Freezer-friendly</span></div>
+    </aside>
+  </section>
+<script>
+const ing = [["2 tbsp","neutral oil",1],["1 tsp","cumin seeds",1],["1 large","onion, chopped",1],["3 cloves","garlic, grated"],["1 thumb","ginger, grated"],["2 tsp","garam masala"],["½ tsp","ground turmeric"],["400 g","chopped tomatoes"],["2 tins","chickpeas"],["½","lemon"]];
+document.getElementById("ing").innerHTML = ing.map(([q,i,d]) => `<li class="${d?"done":""}"><span class="box"></span><span class="q">${q}</span><span>${i}</span></li>`).join("");
+const steps = [
+  "Warm the oil and fry the cumin seeds until they crackle.",
+  "Add the onion with a pinch of salt. Cook until deep golden.",
+  "Stir in garlic, ginger, chilli and the ground spices. Keep it moving for a minute so nothing catches.",
+  "Add tomatoes and chickpeas. Simmer, crushing a few against the pan to thicken.",
+  "Finish with lemon juice and a big handful of coriander."];
+document.getElementById("steps").innerHTML = steps.map((s,i) => `<li class="${i===2?"now":""}"><div><p>${s}</p>${i===2?'<span class="timer">1:00 timer</span>':""}${i===1?'<span style="display:block;font-size:13px;margin-top:6px">8–10 min</span>':""}</div></li>`).join("");
+</script>
+</body>
+</html>
