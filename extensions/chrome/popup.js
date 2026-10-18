@@ -21,6 +21,8 @@ const errorMessage = element("error");
 let origin = null;
 let tab = null;
 let preview = null;
+let saving = false;
+let loadCount = 0;
 
 function show(name) {
   for (const view of views) {
@@ -319,17 +321,31 @@ async function load() {
     node.textContent = displayAddress(origin);
   }
   show("loading");
+  const thisLoad = ++loadCount;
+  const isStale = () => thisLoad !== loadCount;
 
   [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const pageUrl = /^https?:/.test(tab?.url ?? "") ? tab.url : null;
-  const [session, page, saved] = await Promise.all([
-    checkSession(origin),
-    readPreview(),
+  const sessionCheck = checkSession(origin);
+  const savedCheck =
     pageUrl && !pageUrl.startsWith(origin)
       ? findSavedRecipe(origin, pageUrl)
-      : null,
-  ]);
+      : Promise.resolve(null);
+
+  // Reading the page is quick, but Tastebase can be slow to answer, so show
+  // the recipe straight away and fill in the rest when it replies.
+  const page = await readPreview();
+  if (isStale()) return;
+  const earlyRecipe = page.kind === "page" && page.preview.found;
+  if (earlyRecipe) {
+    preview = page.preview;
+    renderRecipe(preview);
+  }
+
+  const session = await sessionCheck;
+  if (isStale()) return;
   renderFooter(session);
+  if (saving) return;
 
   if (session.state === SessionState.UNREACHABLE) {
     show("unreachable");
@@ -371,12 +387,13 @@ async function load() {
   }
 
   preview = page.preview;
-  if (preview.found) {
-    renderRecipe(preview);
-    renderSaved(saved);
-  } else {
+  if (!preview.found) {
     show("no-recipe");
+    return;
   }
+  if (!earlyRecipe) renderRecipe(preview);
+  const saved = await savedCheck;
+  if (!isStale() && !saving) renderSaved(saved);
 }
 
 async function showSetup() {
@@ -396,6 +413,7 @@ function setBusy(button, label) {
 }
 
 async function save(button) {
+  saving = true;
   const original = [...button.childNodes];
   showError("");
   setBusy(button, "Opening Tastebase…");
@@ -413,6 +431,7 @@ async function save(button) {
     window.close();
     return;
   }
+  saving = false;
   button.replaceChildren(...original);
   button.disabled = false;
   for (const other of [saveButton, saveAnywayButton]) other.disabled = false;

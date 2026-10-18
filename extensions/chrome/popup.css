@@ -125,6 +125,12 @@ main {
   border-radius: 999px;
 }
 
+.loading-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .center {
   text-align: center;
 }

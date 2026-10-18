@@ -92,6 +92,12 @@ export interface CapturedPage extends FetchedPage {
   photos: PhotoSuggestion[];
 }
 
+// How far the extension has got gathering photos before it sends the page.
+export interface ExtensionPhotoProgress {
+  photosDone: number;
+  photosTotal: number;
+}
+
 // A recipe already in Tastebase that was imported from the same page.
 export interface SavedRecipeMatch {
   slug: string;

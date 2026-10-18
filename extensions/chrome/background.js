@@ -3,6 +3,7 @@ import { getTastebaseOrigin } from "./connection.js";
 // Keep these names in sync with src/hooks/use-extension-page-import.ts.
 const PAGE_EVENT = "tastebase:extension-page";
 const READY_EVENT = "tastebase:extension-ready";
+const PROGRESS_EVENT = "tastebase:extension-progress";
 const SAVE_MESSAGE = "tastebase:save";
 const IMPORT_PATH = "/recipes/new?from=extension";
 const PENDING_KEY = "pendingImports";
@@ -14,6 +15,10 @@ const MIN_PHOTO_WIDTH = 400;
 // Pages waiting to be handed to a Tastebase tab. Kept in memory and, when it
 // fits, in session storage so a restarted service worker can still deliver.
 const pendingInMemory = new Map();
+
+// Photo progress for tabs still waiting on their page. Only needed while the
+// service worker is busy gathering photos, so it isn't stored.
+const progressByTab = new Map();
 
 // Runs in the recipe page. Drops scripts, styles and media so only the
 // markup and the JSON-LD recipe data are sent.
@@ -151,6 +156,19 @@ function deliverPage(page, pageEvent, readyEvent) {
   send();
 }
 
+// Runs in the Tastebase page's own JavaScript world. Keeps the latest
+// progress on the window so a page that hydrates late still gets it.
+function deliverProgress(progress, progressEvent, readyEvent) {
+  const key = "__tastebaseExtensionProgress";
+  const send = () =>
+    window.dispatchEvent(
+      new CustomEvent(progressEvent, { detail: window[key] }),
+    );
+  if (!(key in window)) window.addEventListener(readyEvent, send);
+  window[key] = progress;
+  send();
+}
+
 function toBase64(buffer) {
   const bytes = new Uint8Array(buffer);
   let binary = "";
@@ -207,7 +225,7 @@ async function captureMainPhoto(imageUrl) {
   return blob ? compressPhoto(blob, 2400, 0.9) : null;
 }
 
-async function capturePhotos(urls) {
+async function capturePhotos(urls, onPhotoDone) {
   const photos = urls.map((url) => ({ url, image: null }));
   let budget = PHOTO_BUDGET;
   let next = 0;
@@ -215,16 +233,13 @@ async function capturePhotos(urls) {
     while (next < photos.length) {
       const photo = photos[next++];
       const blob = await fetchImage(photo.url);
-      if (!blob) continue;
-      const image = await compressPhoto(blob, 1600, 0.85);
-      if (!image) {
-        photo.tooSmall = true;
-        continue;
-      }
-      if (image.data.length <= budget) {
+      const image = blob ? await compressPhoto(blob, 1600, 0.85) : null;
+      if (blob && !image) photo.tooSmall = true;
+      if (image && image.data.length <= budget) {
         budget -= image.data.length;
         photo.image = image;
       }
+      onPhotoDone();
     }
   };
   await Promise.all([worker(), worker(), worker(), worker()]);
@@ -287,19 +302,48 @@ async function saveRecipe(tabId, imageUrl) {
     return { ok: false, error: "This page is too large to send to Tastebase." };
   }
 
-  const [image, photos] = await Promise.all([
-    captureMainPhoto(imageUrl),
-    capturePhotos(photoUrls),
-  ]);
+  // Open Tastebase straight away so it can show progress while the photos
+  // load, instead of leaving the popup waiting on them.
   const source = await chrome.tabs.get(tabId);
   const created = await chrome.tabs.create({
     url: `${origin}${IMPORT_PATH}`,
     index: source.index + 1,
     openerTabId: tabId,
   });
-  await rememberPage(created.id, { ...page, image, photos });
-  await deliverIfReady(await chrome.tabs.get(created.id));
+  sendPage(created.id, page, imageUrl, photoUrls).catch(() =>
+    progressByTab.delete(created.id),
+  );
   return { ok: true };
+}
+
+async function sendPage(tabId, page, imageUrl, photoUrls) {
+  const total = photoUrls.length + (imageUrl ? 1 : 0);
+  let done = 0;
+  const onPhotoDone = () => {
+    done += 1;
+    updateProgress(tabId, { photosDone: done, photosTotal: total });
+  };
+  if (total > 0) updateProgress(tabId, { photosDone: 0, photosTotal: total });
+
+  const [image, photos] = await Promise.all([
+    captureMainPhoto(imageUrl).finally(() => {
+      if (imageUrl) onPhotoDone();
+    }),
+    capturePhotos(photoUrls, onPhotoDone),
+  ]);
+  progressByTab.delete(tabId);
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab) return;
+  await rememberPage(tabId, { ...page, image, photos });
+  await deliverIfReady(await chrome.tabs.get(tabId));
+}
+
+function updateProgress(tabId, progress) {
+  progressByTab.set(tabId, progress);
+  chrome.tabs
+    .get(tabId)
+    .then(deliverIfReady)
+    .catch(() => undefined);
 }
 
 async function deliverIfReady(tab) {
@@ -309,12 +353,22 @@ async function deliverIfReady(tab) {
   if (!origin || !tab.url?.startsWith(`${origin}${IMPORT_PATH}`)) return;
 
   const page = await takePage(tabId);
-  if (!page) return;
+  if (page) {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      world: "MAIN",
+      func: deliverPage,
+      args: [page, PAGE_EVENT, READY_EVENT],
+    });
+    return;
+  }
+  const progress = progressByTab.get(tabId);
+  if (!progress) return;
   await chrome.scripting.executeScript({
     target: { tabId },
     world: "MAIN",
-    func: deliverPage,
-    args: [page, PAGE_EVENT, READY_EVENT],
+    func: deliverProgress,
+    args: [progress, PROGRESS_EVENT, READY_EVENT],
   });
 }
 
@@ -335,6 +389,7 @@ chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
+  progressByTab.delete(tabId);
   await takePage(tabId);
 });
 

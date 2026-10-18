@@ -131,6 +131,12 @@ export function RecipeCreationWorkflow({
 
   useExtensionPageImport({
     enabled: fromExtension,
+    onProgress: ({ photosDone, photosTotal }) =>
+      setImportingLabel(
+        photosTotal > 1
+          ? `Gathering photos (${Math.min(photosDone, photosTotal)} of ${photosTotal})…`
+          : "Gathering photos…",
+      ),
     onPage: (page) =>
       runImport(
         `Reading the recipe from ${hostnameOf(page.url)}…`,
@@ -197,7 +203,7 @@ export function RecipeCreationWorkflow({
           importingLabel ??
           (sharedUrl
             ? `Reading the recipe from ${hostnameOf(sharedUrl)}…`
-            : "Getting the page from your browser…")
+            : "Finding the recipe…")
         }
       />
     );
