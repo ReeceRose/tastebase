@@ -4,6 +4,31 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.1 — 2026-10-19
+
+This release lets you find recipes by where they came from and makes the browser extension feel quicker.
+
+### What's Changed
+
+#### Features
+- **Filter by source:** the recipe library has a new "Source" filter that lists every website and cookbook your recipes came from. Websites are grouped by domain, so `www.example.com` and `example.com` appear as one source.
+- **Search by source:** the library search box now matches a recipe's source as well as its name, ingredients and notes.
+
+#### Improvements
+- The browser extension popup shows the recipe as soon as it reads the page, without waiting for your Tastebase server to reply. Whether you're signed in, and whether you've already saved the recipe, appear once the server answers.
+- While the extension gathers photos, Tastebase now shows how many it has collected, so the import screen no longer looks stuck.
+- The extension waits longer (15 seconds, up from 10) before giving up on a page with lots of photos.
+
+#### Fixes
+- When the server replied slowly, the extension popup could reset itself after you clicked save. It now stays put.
+- The v0.1.0 release notes have been rewritten to be clearer.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.1
+```
+
 ## v0.1.0 — 2026-10-17
 
 The first release of Tastebase: a self-hosted recipe collection that your household runs together in Docker.
