@@ -136,7 +136,7 @@ export function RecipeLibraryToolbar({
             type="search"
             value={text}
             onChange={(event) => setText(event.target.value)}
-            placeholder="Search by name, ingredient or note"
+            placeholder="Search by name, ingredient, note or source"
             className="h-12 w-full rounded-control border-2 border-foreground bg-card pr-12 pl-12 text-base sm:text-body outline-none placeholder:text-muted-foreground focus-visible:ring-[3px] focus-visible:ring-ring/25 [&::-webkit-search-cancel-button]:hidden"
           />
           {text && (
@@ -259,6 +259,31 @@ export function RecipeLibraryToolbar({
           </Select>
         )}
 
+        {facets.sources.length > 0 && (
+          <Select
+            value={filters.source ?? ANY}
+            onValueChange={(value) =>
+              update({ source: value === ANY ? null : value })
+            }
+          >
+            <SelectTrigger
+              size="sm"
+              aria-label="Source"
+              className={pillTrigger}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ANY}>Any source</SelectItem>
+              {facets.sources.map((source) => (
+                <SelectItem key={source} value={source}>
+                  {source}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
         {facets.tags.length > 0 && (
           <Select
             value={filters.tags[0] ?? ANY}
@@ -315,6 +340,7 @@ export function RecipeLibraryToolbar({
                 authorId: null,
                 difficulty: null,
                 cuisine: null,
+                source: null,
                 tags: [],
                 maxTime: null,
                 visibility: LibraryVisibility.ALL,

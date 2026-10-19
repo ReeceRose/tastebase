@@ -2,6 +2,7 @@
 
 import { and, count, eq, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import type { z } from "zod";
 import { db } from "@/db";
@@ -210,6 +211,7 @@ export async function createRecipe(rawData: CreateRecipeInput) {
       { recipeId: recipe.id, userId: session.user.id },
       "Recipe created successfully",
     );
+    revalidatePath("/", "layout");
     return { success: true, data: recipe };
   } catch (error) {
     console.error("💥 Database error:", error);
@@ -254,6 +256,7 @@ export async function createRecipe(rawData: CreateRecipeInput) {
               { recipeId: recipe.id, userId: session.user.id },
               "Recipe created successfully (recovered from transaction error)",
             );
+            revalidatePath("/", "layout");
             return { success: true, data: recipe };
           }
         } catch (checkError) {
@@ -644,6 +647,7 @@ export async function deleteRecipe(recipeId: string) {
       { recipeId, userId: session.user.id, imageCount: imagesToDelete.length },
       "Recipe deleted successfully",
     );
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
     console.error("💥 Recipe deletion error:", error);
@@ -667,6 +671,7 @@ export async function deleteRecipe(recipeId: string) {
             { recipeId, userId: session?.user?.id },
             "Recipe deleted successfully (recovered from transaction error)",
           );
+          revalidatePath("/", "layout");
           return { success: true };
         } else {
           console.error("❌ Recipe still exists in database - deletion failed");

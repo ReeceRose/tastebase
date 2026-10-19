@@ -116,7 +116,9 @@ export async function searchRecipes(
           sql`(
             ${recipes.title} LIKE ${likePattern} OR
             ${recipes.description} LIKE ${likePattern} OR
-            ${recipes.cuisine} LIKE ${likePattern}
+            ${recipes.cuisine} LIKE ${likePattern} OR
+            ${recipes.sourceName} LIKE ${likePattern} OR
+            ${recipes.sourceUrl} LIKE ${likePattern}
           )`,
         );
       } else {
@@ -164,9 +166,17 @@ export async function searchRecipes(
           } catch (_error) {}
         }
 
+        const sourcePattern = `%${query.trim()}%`;
+        const matchesSource = sql`(
+          ${recipes.sourceName} LIKE ${sourcePattern} OR
+          ${recipes.sourceUrl} LIKE ${sourcePattern}
+        )`;
+
         if (ftsResults.length > 0) {
           const recipeIds = ftsResults.map((row) => row.id);
-          conditions.push(inArray(recipes.id, recipeIds));
+          conditions.push(
+            sql`(${inArray(recipes.id, recipeIds)} OR ${matchesSource})`,
+          );
         } else {
           // Enhanced fallback with ingredient and instruction search
           const likePattern = `%${query}%`;
@@ -175,6 +185,7 @@ export async function searchRecipes(
               ${recipes.title} LIKE ${likePattern} OR
               ${recipes.description} LIKE ${likePattern} OR
               ${recipes.cuisine} LIKE ${likePattern} OR
+              ${matchesSource} OR
               EXISTS (
                 SELECT 1 FROM recipe_ingredients ri 
                 WHERE ri.recipe_id = ${recipes.id} 

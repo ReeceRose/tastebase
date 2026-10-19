@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, eq, isNotNull } from "drizzle-orm";
+import { and, asc, eq, isNotNull, or } from "drizzle-orm";
 import { db } from "@/db";
 import { recipeFavorites, recipes } from "@/db/schema.recipes";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
@@ -27,6 +27,7 @@ import type {
 } from "@/lib/types/recipe-types";
 import { isNextRedirectError } from "@/lib/utils";
 import { LIBRARY_PAGE_SIZE } from "@/lib/utils/library-params";
+import { recipeSourceKey } from "@/lib/utils/recipe-source";
 
 const logger = createOperationLogger("library-actions");
 
@@ -50,7 +51,33 @@ async function favouriteIds(userId: string): Promise<string[]> {
   return rows.map((row) => row.recipeId);
 }
 
-async function scopedRecipeIds(
+function sourcedRecipes(userId: string) {
+  return db
+    .select({
+      id: recipes.id,
+      sourceUrl: recipes.sourceUrl,
+      sourceName: recipes.sourceName,
+    })
+    .from(recipes)
+    .where(
+      and(
+        visibleTo(userId),
+        or(isNotNull(recipes.sourceUrl), isNotNull(recipes.sourceName)),
+      ),
+    );
+}
+
+async function recipeIdsFromSource(
+  source: string,
+  userId: string,
+): Promise<string[]> {
+  const rows = await sourcedRecipes(userId);
+  return rows
+    .filter((row) => recipeSourceKey(row.sourceUrl, row.sourceName) === source)
+    .map((row) => row.id);
+}
+
+async function scopeIds(
   filters: LibraryFilters,
   userId: string,
 ): Promise<string[] | undefined> {
@@ -59,6 +86,18 @@ async function scopedRecipeIds(
     return getRecipeListRecipeIds(filters.listId);
   }
   return undefined;
+}
+
+async function scopedRecipeIds(
+  filters: LibraryFilters,
+  userId: string,
+): Promise<string[] | undefined> {
+  const scoped = await scopeIds(filters, userId);
+  if (!filters.source) return scoped;
+  const fromSource = await recipeIdsFromSource(filters.source, userId);
+  if (!scoped) return fromSource;
+  const inScope = new Set(scoped);
+  return fromSource.filter((id) => inScope.has(id));
 }
 
 export async function getLibraryPage(
@@ -113,7 +152,7 @@ export async function getLibraryPage(
 export async function getLibraryFacets(): Promise<LibraryFacets> {
   try {
     const user = await getAuthenticatedUser();
-    const [members, cuisineRows, tagResult] = await Promise.all([
+    const [members, cuisineRows, sourceRows, tagResult] = await Promise.all([
       getHouseholdMembers().catch(() => undefined),
       db
         .selectDistinct({ cuisine: recipes.cuisine })
@@ -121,6 +160,7 @@ export async function getLibraryFacets(): Promise<LibraryFacets> {
         .where(and(visibleTo(user.id), isNotNull(recipes.cuisine)))
         .orderBy(asc(recipes.cuisine))
         .catch(() => undefined),
+      sourcedRecipes(user.id).catch(() => undefined),
       getAllUserTags().catch(() => undefined),
     ]);
 
@@ -129,6 +169,14 @@ export async function getLibraryFacets(): Promise<LibraryFacets> {
       cuisines: (cuisineRows ?? [])
         .map((row) => row.cuisine?.trim())
         .filter((cuisine): cuisine is string => Boolean(cuisine)),
+      sources: [
+        ...new Set(
+          (sourceRows ?? []).flatMap((row) => {
+            const source = recipeSourceKey(row.sourceUrl, row.sourceName);
+            return source ? [source] : [];
+          }),
+        ),
+      ].sort((a, b) => a.localeCompare(b)),
       tags:
         tagResult?.success && tagResult.data
           ? tagResult.data.map((tag) => tag.name)
@@ -137,6 +185,6 @@ export async function getLibraryFacets(): Promise<LibraryFacets> {
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
     logError(logger, "Failed to load library facets", error);
-    return { members: [], cuisines: [], tags: [] };
+    return { members: [], cuisines: [], sources: [], tags: [] };
   }
 }

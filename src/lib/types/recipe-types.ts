@@ -224,6 +224,7 @@ export interface LibraryFilters {
   authorId: string | null;
   difficulty: RecipeDifficulty | null;
   cuisine: string | null;
+  source: string | null;
   tags: string[];
   listId: string | null;
   maxTime: number | null;
@@ -242,6 +243,7 @@ export interface LibraryResult {
 export interface LibraryFacets {
   members: HouseholdMember[];
   cuisines: string[];
+  sources: string[];
   tags: string[];
 }
 

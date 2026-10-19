@@ -58,6 +58,7 @@ export function parseLibraryParams(
     authorId: first(params.author),
     difficulty: enumValue(RecipeDifficulty, first(params.difficulty)),
     cuisine: first(params.cuisine),
+    source: first(params.source),
     tags,
     listId: null,
     maxTime: positiveInt(first(params.maxTime)),
@@ -77,6 +78,7 @@ export function libraryParamsToQuery(filters: LibraryFilters): string {
   if (filters.authorId) query.set("author", filters.authorId);
   if (filters.difficulty) query.set("difficulty", filters.difficulty);
   if (filters.cuisine) query.set("cuisine", filters.cuisine);
+  if (filters.source) query.set("source", filters.source);
   if (filters.tags.length > 0) query.set("tags", filters.tags.join(","));
   if (filters.maxTime) query.set("maxTime", String(filters.maxTime));
   if (filters.sort) query.set("sort", filters.sort);
@@ -94,6 +96,7 @@ export function hasActiveFilters(filters: LibraryFilters): boolean {
       filters.authorId ||
       filters.difficulty ||
       filters.cuisine ||
+      filters.source ||
       filters.tags.length > 0 ||
       filters.maxTime ||
       filters.visibility !== LibraryVisibility.ALL,
