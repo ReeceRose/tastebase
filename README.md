@@ -1,3 +1,5 @@
+<img src="public/logo.svg" alt="" width="72">
+
 # Tastebase
 
 A simple, local-first recipe management application designed for shared instances. Keep your group's recipes organized and accessible on your own server with Docker deployment - no cloud dependencies, no subscriptions, just your shared recipe collection stored locally and securely.
@@ -257,7 +259,7 @@ The database uses a modular schema approach with SQLite:
 
 1. Users sign up/in via BetterAuth components
 2. The proxy protects dashboard routes (`src/proxy.ts`)
-3. **Single-user system**: Personal recipe collection with secure access
+3. **Shared instance**: everyone signs in to the same Tastebase; each recipe is shared with the house or kept private
 4. **Session management**: Persistent login sessions with secure cookies
 
 ### BetterAuth Integration
@@ -416,7 +418,7 @@ This recipe app is designed to be your group's shared recipe collection: import 
 ### Why Choose This Recipe App?
 
 - ✅ **Import from anywhere** - Links, pasted text or photos, with optional AI
-- ✅ **Beautiful UI** - Modern, responsive design that's a joy to use
+- ✅ **Made for a household** - Shared recipes, notes and activity, with private recipes when you want them
 - ✅ **Self-Hosted** - Your data stays on your server
 - ✅ **Complete Workflow** - From import to cooking with notes and tips
 - ✅ **Docker Ready** - One-command deployment

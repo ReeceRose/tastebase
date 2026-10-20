@@ -20,17 +20,20 @@ export const viewport: Viewport = {
   themeColor: "#234a2f",
 };
 
+const TITLE = "Tastebase - The recipes your house actually cooks";
+const DESCRIPTION =
+  "A shared recipe collection for your household. Import recipes from a link, a photo or plain text, and keep notes together.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(env.BETTER_AUTH_URL),
-  title: "Tastebase - The recipes your house actually cooks",
-  description:
-    "A shared recipe collection for your household. Import recipes from a link, a photo or plain text, and keep notes together.",
+  title: TITLE,
+  description: DESCRIPTION,
   keywords: [
     "Tastebase",
     "recipe management",
     "cooking",
     "recipes",
-    "AI recipe import",
+    "recipe import",
     "recipe collection",
     "cooking app",
     "recipe organizer",
@@ -41,27 +44,23 @@ export const metadata: Metadata = {
   publisher: "Tastebase",
   openGraph: {
     type: "website",
-    locale: "en_US",
-    url: "https://tastebase.app",
-    title: "Tastebase - Your Personal Recipe Collection",
-    description:
-      "Organize your recipes with AI-powered import, beautiful UI, and seamless organization.",
+    locale: "en_CA",
+    title: TITLE,
+    description: DESCRIPTION,
     siteName: "Tastebase",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Tastebase - AI-Powered Recipe Management",
+        alt: "Tastebase: your household's recipes",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tastebase - Your Personal Recipe Collection",
-    description:
-      "Organize your recipes with AI-powered import, beautiful UI, and seamless organization.",
-    creator: "@tastebase",
+    title: TITLE,
+    description: DESCRIPTION,
     images: ["/og-image.png"],
   },
   robots: {
@@ -74,9 +73,6 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
     },
-  },
-  verification: {
-    google: "your-google-verification-code",
   },
 };
 

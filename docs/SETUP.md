@@ -222,18 +222,6 @@ Use the published image, `ghcr.io/reecerose/tastebase`, as in the [Quick Start](
 
 See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for common issues and solutions.
 
-## Development Phases
-
-This application follows a phased development approach:
-
-- **Phase 0**: ✅ Foundation & SaaS cleanup (completed)
-- **Phase 1**: Recipe CRUD operations
-- **Phase 2**: Enhanced recipe features (collections, tags)
-- **Phase 3**: AI-powered features (ingredient suggestions, recipe generation)
-- **Phase 4**: Advanced features (meal planning, shopping lists)
-- **Phase 5**: Import/export and sharing features
-- **Phase 6**: Mobile optimization and PWA features
-
 ## Contributing
 
 1. Create a feature branch
