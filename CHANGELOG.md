@@ -4,6 +4,30 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.6 — 2026-11-07
+
+Recipes can now have a video link, and pages show loading placeholders that match their final layout.
+
+### What's Changed
+
+#### Features
+- **Recipe videos**: add an optional video link when you create or edit a recipe. YouTube and Vimeo links play right on the recipe page, and a YouTube link that includes a start time opens at that point. Links to other sites show up as a "Watch on …" link.
+
+#### Fixes
+- Loading placeholders now match the pages they stand in for: home, recipe library, recipe details, cook mode, the recipe form, settings and sign-in.
+- The sidebar's recipe counts and quick picks no longer pop in after the page has loaded.
+
+#### Improvements
+- **Add a recipe** shows a loading screen that matches the start page. When you open it from a shared link or the browser extension, it says which site it's reading the recipe from.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.6
+```
+
+The update adds a database migration (the new video link column), which runs on start-up.
+
 ## v0.1.5 — 2026-11-07
 
 This release swaps AI-assisted import for a faster, more reliable built-in parser, and makes setup simpler.
