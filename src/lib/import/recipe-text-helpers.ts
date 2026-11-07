@@ -80,6 +80,27 @@ const UNIT_PATTERN = new RegExp(
   `^(${UNIT_NAMES.map((unit) => unit.replace(" ", "\\s+")).join("|")})\\.?(?=\\s|$|,)\\s*(?:of\\s+)?`,
 );
 
+const MEASURE = `${SINGLE_QUANTITY}\\s*(?:${UNIT_NAMES.map((unit) => unit.replace(" ", "\\s+")).join("|")})\\.?`;
+
+// A second measure after the unit: "1 cup (160 ml) milk", "1 cup (8 oz; 225 g) sugar".
+const MEASURE_NOTE_PATTERN = new RegExp(
+  `^\\(\\s*(?:about\\s+|approx\\.?\\s+|~\\s*)?${MEASURE}(?:\\s*[;,/]\\s*${MEASURE})*\\s*\\)\\s*`,
+  "i",
+);
+// Any other note after the unit: "1 cup (packed) brown sugar".
+const LEADING_NOTE_PATTERN = /^\(([^()]+)\)\s+(?=\S)/;
+
+// The main amount is already converted and scaled, so a repeated measure is
+// dropped rather than left to disagree with it.
+function tidyAfterUnit(rest: string): string {
+  const withoutMeasure = rest.replace(MEASURE_NOTE_PATTERN, "");
+  if (!withoutMeasure) return rest;
+  const note = withoutMeasure.match(LEADING_NOTE_PATTERN);
+  return note
+    ? `${withoutMeasure.slice(note[0].length).trim()} (${note[1].trim()})`
+    : withoutMeasure;
+}
+
 // "2 cups minus 2 tablespoons flour" or "1 cup plus 1 tbsp sugar".
 const ADJUSTMENT_PATTERN = /^(minus|plus|less|\+)\s+/i;
 
@@ -116,7 +137,7 @@ export function startsWithQuantity(line: string): boolean {
   return QUANTITY_PATTERN.test(stripListMarker(line));
 }
 
-const NOTE_REFERENCE = "(?:see\\s+)?notes?\\s*\\d+";
+const NOTE_REFERENCE = "(?:see\\s+)?notes?(?:\\s*\\d+)?";
 const NOTE_REFERENCE_PATTERN = new RegExp(
   `\\s*(?:\\(\\(\\s*${NOTE_REFERENCE}\\s*\\)\\)|\\(\\s*,?\\s*${NOTE_REFERENCE}\\s*\\))`,
   "gi",
@@ -166,7 +187,7 @@ export function parseIngredientLine(rawLine: string): ParsedIngredient | null {
   const unitMatch = rest.match(UNIT_PATTERN);
   if (unitMatch && rest.length > unitMatch[0].length) {
     unit = unitMatch[1].replace(/\s+/g, " ");
-    rest = rest.slice(unitMatch[0].length);
+    rest = tidyAfterUnit(rest.slice(unitMatch[0].length));
   }
 
   // The adjustment can't be scaled with the main amount, so it's kept with
@@ -186,6 +207,43 @@ export function parseIngredientLine(rawLine: string): ParsedIngredient | null {
   }
 
   return { name, quantity, unit };
+}
+
+const SECOND_INGREDIENT_JOIN = /\s+plus\s+/gi;
+// "2 cups flour plus 2 tbsp for dusting" is still one ingredient.
+const SAME_INGREDIENT_PATTERN =
+  /^(?:more|extra|additional|for|to|as|if|optional)\b/i;
+
+function isInsideBrackets(text: string): boolean {
+  const opened = text.split("(").length;
+  const closed = text.split(")").length;
+  return opened !== closed;
+}
+
+// Some recipes put two ingredients on one line: "1 tbsp lemon zest plus 3/4 cup
+// lemon juice". Both sides need their own amount, unit and name to be split.
+export function parseIngredientLines(rawLine: string): ParsedIngredient[] {
+  const line = stripListMarker(normalizeText(rawLine));
+  for (const join of line.matchAll(SECOND_INGREDIENT_JOIN)) {
+    const index = join.index ?? 0;
+    const before = line.slice(0, index);
+    const after = line.slice(index + join[0].length);
+    if (isInsideBrackets(before)) continue;
+    const first = parseIngredientLine(before);
+    const second = parseIngredientLine(after);
+    if (
+      first?.quantity &&
+      first.unit &&
+      !first.name.startsWith("(") &&
+      second?.quantity &&
+      second.unit &&
+      !SAME_INGREDIENT_PATTERN.test(second.name)
+    ) {
+      return [first, ...parseIngredientLines(after)];
+    }
+  }
+  const parsed = parseIngredientLine(line);
+  return parsed ? [parsed] : [];
 }
 
 export function parseIsoDuration(duration: string): number | null {

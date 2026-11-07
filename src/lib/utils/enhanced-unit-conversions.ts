@@ -35,15 +35,12 @@ const KITCHEN_MILLILITRES: [number, number][] = [
 ];
 
 const KITCHEN_GRAMS: [number, number][] = [
-  [28.35, 30],
-  [56.7, 60],
-  [113.4, 125],
-  [226.8, 250],
-  [340.2, 375],
   [453.6, 450],
   [907.2, 900],
-  [1360.8, 1400],
 ];
+
+// Below this an ounce fraction is too coarse: 4 g of yeast isn't ¼ oz (7 g).
+const SMALLEST_OUNCE_GRAMS = 15;
 
 const QUARTERS = [0, 1 / 4, 1 / 2, 3 / 4, 1];
 const QUARTERS_AND_THIRDS = [0, 1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4, 1];
@@ -65,7 +62,7 @@ function snap(value: number, steps: number[]): number {
 }
 
 function roundMetric(value: number): number {
-  const step = value < 5 ? 0.25 : value < 25 ? 0.5 : value < 100 ? 5 : 10;
+  const step = value < 5 ? 0.25 : value < 25 ? 0.5 : value < 1000 ? 5 : 50;
   return Math.max(Math.round(value / step) * step, step);
 }
 
@@ -129,17 +126,13 @@ function convertToMetric(
   };
 }
 
-function roundGrams(value: number): number {
-  return value < 100 ? roundMetric(value) : Math.round(value / 5) * 5;
-}
-
 /**
  * Format an ingredient amount for the reader's measurement system. Solids
  * measured by volume become grams when the ingredient's weight is known, since
  * nobody measures rice in millilitres. Amounts already in that system,
- * teaspoons and tablespoons (kitchens use them in both systems), counts and
- * anything that isn't a plain number (such as "to taste") are returned as
- * written.
+ * teaspoons and tablespoons (kitchens use them in both systems), very small
+ * weights, counts and anything that isn't a plain number (such as "to taste")
+ * are returned as written.
  */
 export function formatIngredientForDisplayEnhanced(
   amount: string,
@@ -163,11 +156,14 @@ export function formatIngredientForDisplayEnhanced(
   const quantities = range ? [range.low, range.high] : [single ?? 0];
   const bases = quantities.map((quantity) => quantity * size);
   const isVolume = normalized in MILLILITRES;
+  if (!wantsMetric && !isVolume && Math.max(...bases) < SMALLEST_OUNCE_GRAMS) {
+    return unchanged;
+  }
   const cupWeight =
     wantsMetric && isVolume && !fromMetric ? gramsPerCup(ingredientName) : null;
   const converted = cupWeight
     ? convertToMetric(
-        bases.map((base) => roundGrams((base / MILLILITRES.cup) * cupWeight)),
+        bases.map((base) => roundMetric((base / MILLILITRES.cup) * cupWeight)),
         false,
         true,
       )

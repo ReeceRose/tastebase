@@ -39,7 +39,7 @@ export function IngredientList({
           <ul className="divide-y-2 divide-background">
             {items.map((ingredient) => {
               const done = ticked.has(ingredient.id);
-              const { amount, unit } = displayIngredientAmount(
+              const { amount, unit, name } = displayIngredientAmount(
                 ingredient.amount,
                 ingredient.unit,
                 factor,
@@ -78,7 +78,7 @@ export function IngredientList({
                       {quantity || "—"}
                     </span>
                     <span className={cn(done && "line-through decoration-2")}>
-                      {ingredient.name}
+                      {name}
                       {ingredient.notes && (
                         <span className="text-muted-foreground">
                           , {ingredient.notes}

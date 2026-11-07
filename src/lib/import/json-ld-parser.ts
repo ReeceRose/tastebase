@@ -3,7 +3,7 @@ import { stripHtml } from "@/lib/import/html-to-text";
 import {
   extractTemperature,
   extractTimeMinutes,
-  parseIngredientLine,
+  parseIngredientLines,
   parseIsoDuration,
   parseServings,
 } from "@/lib/import/recipe-text-helpers";
@@ -168,10 +168,7 @@ function toIngredients(value: JsonValue | undefined): ParsedIngredient[] {
   const lines = Array.isArray(value) ? value : value ? [value] : [];
   return lines
     .map((line) => readText(line))
-    .flatMap((line) => {
-      const parsed = line ? parseIngredientLine(line) : null;
-      return parsed ? [parsed] : [];
-    });
+    .flatMap((line) => (line ? parseIngredientLines(line) : []));
 }
 
 function toTags(node: JsonObject): string[] {

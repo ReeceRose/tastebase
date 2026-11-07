@@ -131,8 +131,8 @@ export function getPreferenceExamples(preferences: UserPreferences) {
     },
     weight: {
       imperial: "8 oz",
-      metric: "250 g",
-      user: system === MeasurementUnit.IMPERIAL ? "8 oz" : "250 g",
+      metric: "225 g",
+      user: system === MeasurementUnit.IMPERIAL ? "8 oz" : "225 g",
     },
     volume: {
       imperial: "1 cup",

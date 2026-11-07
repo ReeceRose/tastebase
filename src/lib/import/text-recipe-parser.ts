@@ -3,7 +3,7 @@ import {
   extractTimeMinutes,
   normalizeText,
   parseDurationText,
-  parseIngredientLine,
+  parseIngredientLines,
   parseServings,
   startsWithQuantity,
   stripListMarker,
@@ -163,10 +163,7 @@ function toInstructions(lines: string[]): ParsedInstruction[] {
 function toIngredients(lines: string[]): ParsedIngredient[] {
   return lines
     .filter((line) => !isIngredientGroupHeading(line))
-    .flatMap((line) => {
-      const parsed = parseIngredientLine(line);
-      return parsed ? [parsed] : [];
-    });
+    .flatMap((line) => parseIngredientLines(line));
 }
 
 function scoreConfidence(

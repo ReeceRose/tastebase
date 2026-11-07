@@ -4,8 +4,48 @@ import {
   extractTimeMinutes,
   parseDurationText,
   parseIngredientLine,
+  parseIngredientLines,
   parseIsoDuration,
 } from "@/lib/import/recipe-text-helpers";
+
+describe("parseIngredientLines", () => {
+  it("splits two ingredients joined on one line", () => {
+    expect(
+      parseIngredientLines(
+        "1 tablespoon grated lemon zest plus 3/4 cup (180 ml) fresh lemon juice, plus additional zest for serving",
+      ),
+    ).toEqual([
+      { quantity: "1", unit: "tablespoon", name: "grated lemon zest" },
+      {
+        quantity: "3/4",
+        unit: "cup",
+        name: "fresh lemon juice, plus additional zest for serving",
+      },
+    ]);
+    expect(
+      parseIngredientLines(
+        "1 cup flour plus 2 tbsp cornstarch plus 1 tsp salt",
+      ).map((item) => item.name),
+    ).toEqual(["flour", "cornstarch", "salt"]);
+  });
+
+  it.each([
+    ["1 cup plus 1 tbsp sugar", "sugar, plus 1 tbsp"],
+    ["1 cup (200 g) plus 1 tbsp sugar", "sugar, plus 1 tbsp"],
+    ["1 cup sugar plus 1 tbsp more", "sugar plus 1 tbsp more"],
+    ["2 cups flour plus 2 tbsp for dusting", "flour plus 2 tbsp for dusting"],
+    ["1 tbsp oil (plus 1 tsp butter)", "oil (plus 1 tsp butter)"],
+    ["1 cup milk plus cream", "milk plus cream"],
+    ["salt plus 1 tsp pepper", "salt plus 1 tsp pepper"],
+  ])("keeps %s as one ingredient", (line, name) => {
+    const parsed = parseIngredientLines(line);
+    expect(parsed.map((item) => item.name)).toEqual([name]);
+  });
+
+  it("returns nothing for blank lines", () => {
+    expect(parseIngredientLines("   ")).toEqual([]);
+  });
+});
 
 describe("parseIngredientLine", () => {
   it.each([
@@ -74,6 +114,59 @@ describe("parseIngredientLine", () => {
     ["1 cup rice (see note 3)", "1", "cup", "rice"],
   ])("tidies WP Recipe Maker notes in %s", (line, quantity, unit, name) => {
     expect(parseIngredientLine(line)).toEqual({ quantity, unit, name });
+  });
+
+  it.each([
+    [
+      "2/3 cup (160 ml) sweetened condensed milk",
+      "2/3",
+      "cup",
+      "sweetened condensed milk",
+    ],
+    ["1/2 teaspoon (4g) baking soda", "1/2", "teaspoon", "baking soda"],
+    [
+      "5 tablespoons (75ml) olive oil, or duck fat",
+      "5",
+      "tablespoons",
+      "olive oil, or duck fat",
+    ],
+    [
+      "4 pounds (about 2kg) potatoes, peeled",
+      "4",
+      "pounds",
+      "potatoes, peeled",
+    ],
+    ["1 cup (8 oz; 225 g) butter", "1", "cup", "butter"],
+    ["1 cup (160 mL) milk", "1", "cup", "milk"],
+    [
+      "1 cup (200 g) sugar plus 1 tbsp more",
+      "1",
+      "cup",
+      "sugar plus 1 tbsp more",
+    ],
+    ["1 cup (200 g) plus 1 tbsp sugar", "1", "cup", "sugar, plus 1 tbsp"],
+  ])("drops the repeated measure in %s", (line, quantity, unit, name) => {
+    expect(parseIngredientLine(line)).toEqual({ quantity, unit, name });
+  });
+
+  it("moves other notes after the unit to the end of the name", () => {
+    expect(parseIngredientLine("1 cup (packed) brown sugar")?.name).toBe(
+      "brown sugar (packed)",
+    );
+    expect(parseIngredientLine("2 tbsp (optional) capers, drained")?.name).toBe(
+      "capers, drained (optional)",
+    );
+  });
+
+  it("keeps a bracket that is all there is to the name", () => {
+    expect(parseIngredientLine("1 cup (milk)")?.name).toBe("(milk)");
+    expect(parseIngredientLine("1 cup (160 ml)")?.name).toBe("(160 ml)");
+  });
+
+  it("removes references to footnotes with or without a number", () => {
+    expect(parseIngredientLine("1 cup rice (see note)")?.name).toBe("rice");
+    expect(parseIngredientLine("1 cup rice (notes)")?.name).toBe("rice");
+    expect(parseIngredientLine("1 cup rice (note)")?.name).toBe("rice");
   });
 
   it("leaves ordinary and unbalanced brackets alone", () => {

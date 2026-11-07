@@ -36,9 +36,13 @@ describe("converting to metric", () => {
     expect(toMetric("1", "cup")).toBe("250 ml");
     expect(toMetric("4", "cups")).toBe("1 L");
     expect(toMetric("5", "cups")).toBe("1.25 L");
-    expect(toMetric("8", "oz")).toBe("250 g");
+    expect(toMetric("8", "oz")).toBe("225 g");
+    expect(toMetric("16", "oz")).toBe("450 g");
+    expect(toMetric("1/2", "cup")).toBe("125 ml");
+    expect(toMetric("1 1/2", "cups")).toBe("375 ml");
     expect(toMetric("1", "lb")).toBe("450 g");
-    expect(toMetric("3", "lb")).toBe("1.4 kg");
+    expect(toMetric("3", "lb")).toBe("1.35 kg");
+    expect(toMetric("4", "lb")).toBe("1.8 kg");
   });
 
   it("treats fractions the same however they are written", () => {
@@ -104,7 +108,7 @@ describe("converting cups of solid ingredients to metric", () => {
   });
 
   it("keeps liquids and unknown ingredients as volume", () => {
-    expect(grams("1 1/4", "cups", "chicken broth")).toBe("310 ml");
+    expect(grams("1 1/4", "cups", "chicken broth")).toBe("315 ml");
     expect(grams("1", "cup", "water")).toBe("250 ml");
     expect(grams("1", "cup", "rice vinegar")).toBe("250 ml");
     expect(grams("1", "cup", "buttermilk")).toBe("250 ml");
@@ -145,8 +149,14 @@ describe("converting to imperial", () => {
 
   it("converts weight", () => {
     expect(toImperial("30", "g")).toBe("1 oz");
+    expect(toImperial("15", "g")).toBe("½ oz");
     expect(toImperial("800", "g")).toBe("1 ¾ lb");
     expect(toImperial("1.2", "kg")).toBe("2 ¾ lb");
+  });
+
+  it("leaves weights too small for ounces in grams", () => {
+    expect(toImperial("4", "g")).toBe("4 g");
+    expect(toImperial("10", "g")).toBe("10 g");
   });
 
   it("leaves amounts already in imperial alone", () => {
@@ -186,6 +196,13 @@ describe("displayIngredientAmount", () => {
     expect(display("3", "cloves", 0.25, METRIC)).toBe("¾ clove");
   });
 
+  it("shows fractions the same way however they were typed", () => {
+    expect(display("1 1/2", "tbsp", 1, METRIC)).toBe("1 ½ tbsp");
+    expect(display("1/2", "", 1, METRIC)).toBe("½");
+    expect(display("1/16", "tsp", 1, METRIC)).toBe("1/16 tsp");
+    expect(display("to taste", "", 1, METRIC)).toBe("to taste");
+  });
+
   it("goes by the top of a range", () => {
     expect(display("1-2", "cloves", 1, IMPERIAL)).toBe("1-2 cloves");
   });
@@ -204,6 +221,6 @@ describe("displayIngredientAmount", () => {
     expect(display("3", "tbsp", 0.5, METRIC)).toBe("1 ½ tbsp");
     expect(
       displayIngredientAmount("1 1/2", "cups", 2, METRIC, "white rice"),
-    ).toEqual({ amount: "555", unit: "g" });
+    ).toEqual({ amount: "555", unit: "g", name: "white rice" });
   });
 });

@@ -1,5 +1,13 @@
-import type { MeasurementUnit, TemperatureUnit } from "@/lib/types";
+import { MeasurementUnit, type TemperatureUnit } from "@/lib/types";
 import { formatIngredientForDisplayEnhanced } from "@/lib/utils/enhanced-unit-conversions";
+import {
+  findAdjustment,
+  findMeasureNote,
+  isMeasuringUnit,
+  isMetricUnit,
+  type MeasureNote,
+  type NoteMeasure,
+} from "@/lib/utils/ingredient-notes";
 import {
   parseQuantity,
   parseRange,
@@ -104,6 +112,70 @@ export function servingsFactor(
 export interface DisplayAmount {
   amount: string;
   unit: string;
+  name: string;
+}
+
+function formatMeasure(measure: NoteMeasure, factor: number): string {
+  const amount = formatAmount(measure.quantity * factor);
+  return `${amount} ${matchUnitToAmount(amount, measure.unit)}`;
+}
+
+function withoutNote(name: string, note: MeasureNote): string {
+  return `${name.slice(0, note.start).trimEnd()}${name.slice(note.end)}`;
+}
+
+function scaleAdjustmentInName(name: string, factor: number): string {
+  const adjustment = findAdjustment(name);
+  if (!adjustment) return name;
+  const amount = formatAmount(adjustment.quantity * factor);
+  const unit = matchUnitToAmount(amount, adjustment.unit);
+  return `${name.slice(0, adjustment.start)}, ${adjustment.word} ${amount} ${unit}`;
+}
+
+// The author's measure in the reader's system beats a conversion. It's the
+// total amount, so an adjustment to the cups or spoons no longer applies.
+function authorMeasureFor(
+  note: MeasureNote,
+  unit: string,
+  system: MeasurementUnit | null,
+): NoteMeasure | null {
+  if (system === MeasurementUnit.METRIC) {
+    if (isMetricUnit(unit)) return null;
+    return (
+      note.measures.find((measure) => measure.isMetric) ??
+      note.measures.find((measure) => measure.isImperialWeight) ??
+      null
+    );
+  }
+  if (system === MeasurementUnit.IMPERIAL && isMetricUnit(unit)) {
+    return note.measures.find((measure) => !measure.isMetric) ?? null;
+  }
+  return null;
+}
+
+function noteInName(
+  name: string,
+  note: MeasureNote,
+  factor: number,
+  system: MeasurementUnit | null,
+): string {
+  const wanted = system
+    ? note.measures.filter(
+        (measure) => measure.isMetric === (system === MeasurementUnit.METRIC),
+      )
+    : [];
+  const shown = wanted.length > 0 ? wanted : note.measures;
+  const text = shown.map((measure) => formatMeasure(measure, factor));
+  return `${name.slice(0, note.start)} (${text.join("; ")})${name.slice(note.end)}`;
+}
+
+// Shows every amount the same way: "1 1/2" as "1 ½". Fractions without a
+// symbol, such as 1/16, stay as written.
+function tidyFraction(amount: string): string {
+  const quantity = parseQuantity(amount);
+  if (quantity === null) return amount;
+  const tidied = formatAmount(quantity);
+  return tidied.includes(".") && amount.includes("/") ? amount : tidied;
 }
 
 export function displayIngredientAmount(
@@ -113,17 +185,47 @@ export function displayIngredientAmount(
   system: MeasurementUnit | null,
   name: string | null = null,
 ): DisplayAmount {
-  const scaled = scaleAmount(amount, factor);
+  const scaled = tidyFraction(scaleAmount(amount, factor));
   const baseUnit = unit?.trim() ?? "";
+  const baseName = name ?? "";
   if (!scaled || !baseUnit) {
-    return { amount: scaled, unit: baseUnit };
+    return { amount: scaled, unit: baseUnit, name: baseName };
   }
+
+  const isPlainAmount =
+    parseQuantity(scaled) !== null || parseRange(scaled) !== null;
+  const note =
+    isPlainAmount && isMeasuringUnit(baseUnit)
+      ? findMeasureNote(baseName)
+      : null;
+  const authorMeasure = note ? authorMeasureFor(note, baseUnit, system) : null;
+
+  if (note && authorMeasure && system) {
+    const adjustment = findAdjustment(baseName);
+    const trimmed = adjustment ? baseName.slice(0, adjustment.start) : baseName;
+    const converted = formatIngredientForDisplayEnhanced(
+      formatAmount(authorMeasure.quantity * factor),
+      authorMeasure.unit,
+      system,
+    );
+    return {
+      amount: converted.amount,
+      unit: matchUnitToAmount(converted.amount, converted.unit),
+      name: withoutNote(trimmed, note),
+    };
+  }
+
+  const shownName = scaleAdjustmentInName(
+    note ? noteInName(baseName, note, factor, system) : baseName,
+    factor,
+  );
   const converted = system
-    ? formatIngredientForDisplayEnhanced(scaled, baseUnit, system, name)
+    ? formatIngredientForDisplayEnhanced(scaled, baseUnit, system, shownName)
     : { amount: scaled, unit: baseUnit };
   return {
     amount: converted.amount,
     unit: matchUnitToAmount(converted.amount, converted.unit),
+    name: shownName,
   };
 }
 
