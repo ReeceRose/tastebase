@@ -4,6 +4,25 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.8 — 2026-11-07
+
+A small release that lets you choose the order of a recipe's photos.
+
+### What's Changed
+
+#### Features
+- **Reorder recipe photos**: In the recipe editor, you can now drag photos into the order you want. This sets which photo leads the recipe and the order the rest appear in.
+
+#### Improvements
+- Photo tiles in the editor have been rebuilt, making photos easier to manage while you edit a recipe.
+- Photo order is now saved with the rest of the recipe when you save.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.8
+```
+
 ## v0.1.7 — 2026-11-07
 
 Recipes, people and tags now get more produce colours, and the recipe editor and sidebar keep up as you work.
