@@ -4,12 +4,11 @@
  */
 
 import { MeasurementUnit } from "@/lib/types";
+import { gramsPerCup } from "@/lib/utils/ingredient-densities";
 import { parseQuantity, parseRange } from "@/lib/utils/quantity-parsing";
 import { formatAmount, normalizeUnit } from "@/lib/utils/unit-conversions";
 
 const MILLILITRES: Record<string, number> = {
-  tsp: 5,
-  tbsp: 15,
   "fl oz": 30,
   cup: 250,
   pt: 500,
@@ -130,15 +129,23 @@ function convertToMetric(
   };
 }
 
+function roundGrams(value: number): number {
+  return value < 100 ? roundMetric(value) : Math.round(value / 5) * 5;
+}
+
 /**
- * Format an ingredient amount for the reader's measurement system. Amounts
- * already in that system, counts and anything that isn't a plain number
- * (such as "to taste") are returned as written.
+ * Format an ingredient amount for the reader's measurement system. Solids
+ * measured by volume become grams when the ingredient's weight is known, since
+ * nobody measures rice in millilitres. Amounts already in that system,
+ * teaspoons and tablespoons (kitchens use them in both systems), counts and
+ * anything that isn't a plain number (such as "to taste") are returned as
+ * written.
  */
 export function formatIngredientForDisplayEnhanced(
   amount: string,
   unit: string,
   userSystem: MeasurementUnit,
+  ingredientName: string | null = null,
 ): { amount: string; unit: string } {
   const unchanged = { amount, unit };
   const normalized = normalizeUnit(unit);
@@ -156,9 +163,17 @@ export function formatIngredientForDisplayEnhanced(
   const quantities = range ? [range.low, range.high] : [single ?? 0];
   const bases = quantities.map((quantity) => quantity * size);
   const isVolume = normalized in MILLILITRES;
-  const converted = wantsMetric
-    ? convertToMetric(bases, isVolume, fromMetric)
-    : convertToImperial(bases, isVolume);
+  const cupWeight =
+    wantsMetric && isVolume && !fromMetric ? gramsPerCup(ingredientName) : null;
+  const converted = cupWeight
+    ? convertToMetric(
+        bases.map((base) => roundGrams((base / MILLILITRES.cup) * cupWeight)),
+        false,
+        true,
+      )
+    : wantsMetric
+      ? convertToMetric(bases, isVolume, fromMetric)
+      : convertToImperial(bases, isVolume);
 
   return {
     amount: converted.amounts.join("–"),

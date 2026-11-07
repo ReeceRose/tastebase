@@ -44,6 +44,7 @@ export function IngredientList({
                 ingredient.unit,
                 factor,
                 system,
+                ingredient.name,
               );
               const quantity = [amount, unit].filter(Boolean).join(" ");
 

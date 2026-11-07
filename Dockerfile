@@ -3,40 +3,26 @@ FROM node:24-alpine AS base
 COPY package.json /tmp/package.json
 RUN npm install -g "$(node -p 'require("/tmp/package.json").packageManager')" && rm /tmp/package.json
 
-# Install dependencies only when needed
-# Note: Alpine uses musl libc, not glibc. better-sqlite3 must be compiled from source.
+# Install dependencies without scripts (avoids husky).
+# better-sqlite3 needs no compile: its npm package ships linuxmusl-x64 and
+# linuxmusl-arm64 binaries in prebuilds/, and it loads those first at runtime.
 FROM base AS deps
-RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
-
-# Install dependencies without scripts first (avoids husky)
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm i --frozen-lockfile --prod=false --ignore-scripts
 
-# Compile better-sqlite3 from source (required for Alpine/musl)
-RUN cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
-    npm run build-release
-
 # Production dependencies only
 FROM base AS prod-deps
-RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm i --frozen-lockfile --prod --ignore-scripts
 
-# Compile better-sqlite3 from source (required for Alpine/musl)
-RUN cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
-    npm run build-release
-
 # Rebuild the source code only when needed
 FROM base AS builder
-RUN apk add --no-cache libc6-compat python3 make g++
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Verify better-sqlite3 was built in deps stage and check if it exists
-RUN ls -la /app/node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3/build/ || echo "No build directory found"
 
 # Build the application
 # Provide dummy env vars for build (real values set at runtime)

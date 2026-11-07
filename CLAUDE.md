@@ -150,9 +150,13 @@ One workflow, `.github/workflows/ci.yml`, modelled on the Reclaim repo. It runs 
 ### Jobs
 
 1. **App**: `pnpm install --frozen-lockfile`, `pnpm run lint:check`, `pnpm run type-check`, `pnpm run test`
-2. **Docker** (needs App):
-   - PRs and `main`: builds the image for `linux/amd64` to prove it builds. Nothing is pushed.
-   - Tags: builds `linux/amd64` + `linux/arm64` and pushes `ghcr.io/reecerose/tastebase:<version>` and `:latest` using `GITHUB_TOKEN`
+2. **Docker** (runs alongside App, one native runner per architecture, no layer cache):
+   - PRs: builds `linux/amd64` to prove it builds. Nothing is pushed.
+   - `main`: builds `linux/amd64` + `linux/arm64`. Nothing is pushed.
+   - Tags: builds both and pushes untagged digests to GHCR using `GITHUB_TOKEN`
+3. **Publish** (tags only, needs App and Docker): combines the digests and applies `ghcr.io/reecerose/tastebase:<version>` and `:latest`
+
+Changes that only touch `site/`, `docs/`, Markdown files or `LICENSE` skip CI (tags always run). The `Release vX.Y.Z` commit on `main` skips its jobs because the tag's run tests the same code.
 
 pnpm's version comes from the `packageManager` field in `package.json` (CI and the Dockerfile both read it), so bump it there. Dependabot (`.github/dependabot.yml`) opens weekly grouped PRs for npm packages and GitHub Actions.
 

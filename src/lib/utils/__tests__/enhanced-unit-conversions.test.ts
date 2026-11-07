@@ -33,9 +33,6 @@ function display(
 
 describe("converting to metric", () => {
   it("uses round kitchen amounts", () => {
-    expect(toMetric("1", "tsp")).toBe("5 ml");
-    expect(toMetric("1/2", "tsp")).toBe("2.5 ml");
-    expect(toMetric("3", "tbsp")).toBe("45 ml");
     expect(toMetric("1", "cup")).toBe("250 ml");
     expect(toMetric("4", "cups")).toBe("1 L");
     expect(toMetric("5", "cups")).toBe("1.25 L");
@@ -49,12 +46,18 @@ describe("converting to metric", () => {
     expect(toMetric("¼", "cup")).toBe("60 ml");
     expect(toMetric("1/3", "cup")).toBe("80 ml");
     expect(toMetric("⅔", "cup")).toBe("160 ml");
-    expect(toMetric("1 ½", "tbsp")).toBe("22.5 ml");
   });
 
-  it("keeps T as a tablespoon and C as a cup", () => {
-    expect(toMetric("1", "T")).toBe("15 ml");
-    expect(toMetric("1", "t")).toBe("5 ml");
+  it("keeps teaspoons and tablespoons as written", () => {
+    expect(toMetric("1", "tsp")).toBe("1 tsp");
+    expect(toMetric("1/2", "tsp")).toBe("1/2 tsp");
+    expect(toMetric("3", "tbsp")).toBe("3 tbsp");
+    expect(toMetric("1 ½", "tablespoons")).toBe("1 ½ tablespoons");
+    expect(toMetric("1", "T")).toBe("1 T");
+    expect(toMetric("1", "t")).toBe("1 t");
+  });
+
+  it("reads C as a cup", () => {
     expect(toMetric("1", "C")).toBe("250 ml");
     expect(toMetric("1", "c")).toBe("250 ml");
   });
@@ -65,6 +68,69 @@ describe("converting to metric", () => {
     expect(toMetric("1000", "ml")).toBe("1 L");
     expect(toMetric("1", "L")).toBe("1 L");
     expect(toMetric("½", "L")).toBe("500 ml");
+  });
+});
+
+describe("converting cups of solid ingredients to metric", () => {
+  const grams = (amount: string, unit: string, name: string) => {
+    const result = formatIngredientForDisplayEnhanced(
+      amount,
+      unit,
+      MeasurementUnit.METRIC,
+      name,
+    );
+    return `${result.amount} ${result.unit}`;
+  };
+
+  it("uses the ingredient's weight", () => {
+    expect(grams("1 1/2", "cups", "long grain white rice, uncooked")).toBe(
+      "280 g",
+    );
+    expect(grams("1", "cup", "all-purpose flour")).toBe("125 g");
+    expect(grams("1", "cup", "granulated sugar (4 2/3 ounces; 132 g)")).toBe(
+      "200 g",
+    );
+    expect(grams("1/4", "cup", "chopped fresh parsley")).toBe("15 g");
+    expect(grams("1", "cup", "finely chopped onion")).toBe("160 g");
+    expect(grams("1-2", "cups", "flour")).toBe("125–250 g");
+    expect(grams("10", "cups", "flour")).toBe("1.25 kg");
+  });
+
+  it("picks the specific ingredient over the general one", () => {
+    expect(grams("1", "cup", "icing sugar")).toBe("120 g");
+    expect(grams("1", "cup", "almond flour")).toBe("95 g");
+    expect(grams("1", "cup", "peanut butter")).toBe("260 g");
+    expect(grams("1", "cup", "arborio rice")).toBe("200 g");
+  });
+
+  it("keeps liquids and unknown ingredients as volume", () => {
+    expect(grams("1 1/4", "cups", "chicken broth")).toBe("310 ml");
+    expect(grams("1", "cup", "water")).toBe("250 ml");
+    expect(grams("1", "cup", "rice vinegar")).toBe("250 ml");
+    expect(grams("1", "cup", "buttermilk")).toBe("250 ml");
+    expect(grams("1", "cup", "almond milk")).toBe("250 ml");
+    expect(grams("1", "cup", "flour tortillas")).toBe("250 ml");
+    expect(grams("1", "cup", "pickled things")).toBe("250 ml");
+  });
+
+  it("doesn't weigh cooked food as if it were raw", () => {
+    expect(grams("2", "cups", "cooked rice")).toBe("500 ml");
+    expect(grams("2", "cups", "rice, cooked")).toBe("500 ml");
+  });
+
+  it("leaves spoons and amounts already in metric as written", () => {
+    expect(grams("3", "tbsp", "finely chopped parsley")).toBe("3 tbsp");
+    expect(grams("500", "ml", "long grain rice")).toBe("500 ml");
+  });
+
+  it("uses cups in imperial whatever the ingredient", () => {
+    const result = formatIngredientForDisplayEnhanced(
+      "1 1/2",
+      "cups",
+      MeasurementUnit.IMPERIAL,
+      "long grain white rice",
+    );
+    expect(`${result.amount} ${result.unit}`).toBe("1 1/2 cups");
   });
 });
 
@@ -91,7 +157,6 @@ describe("converting to imperial", () => {
 
 describe("amounts that can't be converted directly", () => {
   it("converts both ends of a range", () => {
-    expect(toMetric("2-3", "tbsp")).toBe("30–45 ml");
     expect(toMetric("1 to 2", "cups")).toBe("250–500 ml");
     expect(toImperial("500-750", "g")).toBe("1–1 ¾ lb");
   });
@@ -135,6 +200,10 @@ describe("displayIngredientAmount", () => {
     expect(display("1", "L", 1.5, IMPERIAL)).toBe("6 cups");
     expect(display("800", "g", 1.5, IMPERIAL)).toBe("2 ¾ lbs");
     expect(display("4", "cups", 1.25, METRIC)).toBe("1.25 L");
-    expect(display("3", "tbsp", 1, METRIC)).toBe("45 ml");
+    expect(display("3", "tbsp", 1, METRIC)).toBe("3 tbsp");
+    expect(display("3", "tbsp", 0.5, METRIC)).toBe("1 ½ tbsp");
+    expect(
+      displayIngredientAmount("1 1/2", "cups", 2, METRIC, "white rice"),
+    ).toEqual({ amount: "555", unit: "g" });
   });
 });

@@ -45,14 +45,23 @@ The **CI** workflow (`.github/workflows/ci.yml`) runs on pull requests, pushes t
 `main`, and version tags:
 
 1. **App**: lint (`biome check`), type check, and unit tests
-2. **Docker**: runs only after App passes
-   - Pull requests and `main`: builds the image for `linux/amd64` to prove it builds. Nothing is pushed.
-   - Tags: builds for `linux/amd64` and `linux/arm64` and pushes to GHCR
+2. **Docker**: runs alongside App, once per architecture on a native runner
+   - Pull requests: builds `linux/amd64` to prove it builds. Nothing is pushed.
+   - `main`: builds `linux/amd64` and `linux/arm64`. Nothing is pushed.
+   - Tags: builds both and pushes each one to GHCR by digest, with no version tag
+3. **Publish** (tags only): runs once App and Docker pass, then combines the digests
+   into one image and applies the version tags
+
+Changes that only touch `site/`, `docs/`, Markdown files or `LICENSE` skip CI, except on
+tags. So does the `Release vX.Y.Z` commit on `main`, because its tag's run tests the
+same code.
 
 Each release publishes two tags to `ghcr.io/reecerose/tastebase`: the exact version
-(tag `v0.1.0` → image `0.1.0`) and `latest`. The image is ready about 10–15 minutes
-after the tag is pushed. The arm64 build runs under emulation and compiles
-better-sqlite3, so it takes most of that time.
+(tag `v0.1.0` → image `0.1.0`) and `latest`. If App fails, nothing gets a version tag,
+though untagged digests can remain in the package.
+
+Docker builds don't use a layer cache. better-sqlite3 ships prebuilt binaries, so
+nothing is compiled, and exporting a cache took longer than the build it would save.
 
 ### First release
 

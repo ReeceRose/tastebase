@@ -131,13 +131,13 @@ export function getPreferenceExamples(preferences: UserPreferences) {
     },
     weight: {
       imperial: "8 oz",
-      metric: "225 g",
-      user: system === MeasurementUnit.IMPERIAL ? "8 oz" : "225 g",
+      metric: "250 g",
+      user: system === MeasurementUnit.IMPERIAL ? "8 oz" : "250 g",
     },
     volume: {
       imperial: "1 cup",
-      metric: "240 ml",
-      user: system === MeasurementUnit.IMPERIAL ? "1 cup" : "240 ml",
+      metric: "250 ml",
+      user: system === MeasurementUnit.IMPERIAL ? "1 cup" : "250 ml",
     },
   };
 }

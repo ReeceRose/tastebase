@@ -111,6 +111,7 @@ export function displayIngredientAmount(
   unit: string | null,
   factor: number,
   system: MeasurementUnit | null,
+  name: string | null = null,
 ): DisplayAmount {
   const scaled = scaleAmount(amount, factor);
   const baseUnit = unit?.trim() ?? "";
@@ -118,7 +119,7 @@ export function displayIngredientAmount(
     return { amount: scaled, unit: baseUnit };
   }
   const converted = system
-    ? formatIngredientForDisplayEnhanced(scaled, baseUnit, system)
+    ? formatIngredientForDisplayEnhanced(scaled, baseUnit, system, name)
     : { amount: scaled, unit: baseUnit };
   return {
     amount: converted.amount,
