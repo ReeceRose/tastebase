@@ -171,11 +171,35 @@ function toIngredients(value: JsonValue | undefined): ParsedIngredient[] {
     .flatMap((line) => (line ? parseIngredientLines(line) : []));
 }
 
-function toTags(node: JsonObject): string[] {
-  const tags = [
-    ...readTextList(node.recipeCategory),
-    ...readTextList(node.keywords),
-  ]
+function singularWord(word: string): string {
+  if (word.endsWith("ies") && word.length > 4) {
+    return `${word.slice(0, -3)}y`;
+  }
+  if (/(oes|ches|shes|xes|sses)$/.test(word)) return word.slice(0, -2);
+  if (word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1);
+  return word;
+}
+
+function comparableWords(text: string): string {
+  const words = text
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean)
+    .map(singularWord);
+  return ` ${words.join(" ")} `;
+}
+
+// Sites often list a recipe's ingredients as keywords. Search already finds
+// those, so as tags they only bury the useful ones. Categories always stay.
+function toTags(node: JsonObject, ingredients: ParsedIngredient[]): string[] {
+  const ingredientWords = ingredients.map((ingredient) =>
+    comparableWords(ingredient.name),
+  );
+  const keywords = readTextList(node.keywords).filter((keyword) => {
+    const words = comparableWords(keyword);
+    return !ingredientWords.some((ingredient) => ingredient.includes(words));
+  });
+  const tags = [...readTextList(node.recipeCategory), ...keywords]
     .map((tag) => tag.toLowerCase())
     .filter((tag) => tag.length <= MAX_TAG_LENGTH);
   return [...new Set(tags)].slice(0, MAX_TAGS);
@@ -196,6 +220,7 @@ function normalizeRecipe(node: JsonObject): RecipeParsingResult {
   const cookTime = readDuration(node.cookTime);
   const totalTime = readDuration(node.totalTime);
   const servingsText = readText(node.recipeYield ?? node.yield);
+  const ingredients = toIngredients(node.recipeIngredient ?? node.ingredients);
 
   return {
     title: readText(node.name ?? node.headline),
@@ -209,9 +234,9 @@ function normalizeRecipe(node: JsonObject): RecipeParsingResult {
         : totalTime !== null && prepTime !== null && totalTime > prepTime
           ? totalTime - prepTime
           : null),
-    ingredients: toIngredients(node.recipeIngredient ?? node.ingredients),
+    ingredients,
     instructions: toInstructions(node.recipeInstructions),
-    tags: toTags(node),
+    tags: toTags(node, ingredients),
     difficulty: toDifficulty(node),
     cuisine: readText(node.recipeCuisine),
   };

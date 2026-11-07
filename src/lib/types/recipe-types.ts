@@ -245,6 +245,12 @@ export interface LibraryFacets {
   cuisines: string[];
   sources: string[];
   tags: string[];
+  lists: LibraryListFacet[];
+}
+
+export interface LibraryListFacet {
+  id: string;
+  name: string;
 }
 
 export type LibraryFilterUpdate = Partial<LibraryFilters>;
@@ -304,6 +310,7 @@ export interface RecipeListTileData {
   swatch: RecipeSwatch;
   recipeCount: number;
   previewTitles: string[];
+  photoFilename: string | null;
 }
 
 export interface RecipeListDetail {

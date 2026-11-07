@@ -60,7 +60,7 @@ export function parseLibraryParams(
     cuisine: first(params.cuisine),
     source: first(params.source),
     tags,
-    listId: null,
+    listId: first(params.list),
     maxTime: positiveInt(first(params.maxTime)),
     sort:
       enumValue(LibrarySort, rawSort) ??
@@ -72,8 +72,15 @@ export function parseLibraryParams(
   };
 }
 
+// A list's own page takes its list from the route, so there it isn't a filter.
+function chosenList(filters: LibraryFilters): string | null {
+  return filters.scope === LibraryScope.LIST ? null : filters.listId;
+}
+
 export function libraryParamsToQuery(filters: LibraryFilters): string {
   const query = new URLSearchParams();
+  const list = chosenList(filters);
+  if (list) query.set("list", list);
   if (filters.query) query.set("q", filters.query);
   if (filters.authorId) query.set("author", filters.authorId);
   if (filters.difficulty) query.set("difficulty", filters.difficulty);
@@ -93,6 +100,7 @@ export function libraryParamsToQuery(filters: LibraryFilters): string {
 export function hasActiveFilters(filters: LibraryFilters): boolean {
   return Boolean(
     filters.query ||
+      chosenList(filters) ||
       filters.authorId ||
       filters.difficulty ||
       filters.cuisine ||

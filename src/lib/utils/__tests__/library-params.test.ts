@@ -90,4 +90,20 @@ describe("parseLibraryParams", () => {
     expect(again).toEqual(filters);
     expect(hasActiveFilters(filters)).toBe(true);
   });
+
+  it("treats a chosen list as a filter that survives the query string", () => {
+    const filters = parseLibraryParams({ list: "list-1" });
+    expect(filters.listId).toBe("list-1");
+    expect(hasActiveFilters(filters)).toBe(true);
+    expect(libraryParamsToQuery(filters)).toBe("list=list-1");
+  });
+
+  it("doesn't count a list page's own list as a filter", () => {
+    const filters = {
+      ...parseLibraryParams({}, LibraryScope.LIST),
+      listId: "list-1",
+    };
+    expect(hasActiveFilters(filters)).toBe(false);
+    expect(libraryParamsToQuery(filters)).toBe("");
+  });
 });

@@ -227,7 +227,7 @@ Tastebase provides comprehensive recipe management capabilities for shared insta
 ### Core Recipe Features
 - **Recipe Storage**: Create, edit, and organize recipes with instance-wide sharing
 - **Ingredient Management**: Track ingredients with quantities and units
-- **Recipe Categories**: Organize recipes by cuisine, meal type, or custom tags
+- **Recipe Organization**: Private per-user lists and favourites, instance-wide tags, and cuisine and difficulty fields, all usable as filters in the recipe library
 - **Recipe Images**: Upload and store recipe photos locally
 - **Recipe Notes**: Add personal notes and modifications to recipes
 - **Recipe Search**: Find recipes by name, ingredients, or tags across all accessible recipes
@@ -269,7 +269,7 @@ Tastebase provides comprehensive recipe management capabilities for shared insta
 ### Recipe Management Features
 - **Recipe Storage**: Create, edit, and organize recipes with public/private sharing
 - **Ingredient Management**: Track ingredients with quantities and units
-- **Recipe Categories**: Organize recipes by cuisine, meal type, or custom tags
+- **Recipe Organization**: Private per-user lists and favourites, instance-wide tags, and cuisine and difficulty fields, all usable as filters in the recipe library
 - **Recipe Images**: Upload and store recipe photos locally
 - **Recipe Notes**: Add personal notes and modifications to recipes
 - **Recipe Search**: Find recipes by name, ingredients, or tags across shared instance collection

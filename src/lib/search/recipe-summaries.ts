@@ -54,6 +54,33 @@ function totalMinutes(row: SummaryRow): number | null {
   return total > 0 ? total : null;
 }
 
+export async function findHeroImages(
+  recipeIds: string[],
+): Promise<Map<string, RecipeHeroImage>> {
+  const heroByRecipe = new Map<string, RecipeHeroImage>();
+  if (recipeIds.length === 0) return heroByRecipe;
+
+  const images = await db
+    .select({
+      recipeId: recipeImages.recipeId,
+      filename: recipeImages.filename,
+      altText: recipeImages.altText,
+    })
+    .from(recipeImages)
+    .where(inArray(recipeImages.recipeId, recipeIds))
+    .orderBy(desc(recipeImages.isHero), asc(recipeImages.sortOrder));
+
+  for (const image of images) {
+    if (!heroByRecipe.has(image.recipeId)) {
+      heroByRecipe.set(image.recipeId, {
+        filename: image.filename,
+        altText: image.altText,
+      });
+    }
+  }
+  return heroByRecipe;
+}
+
 async function hydrate(
   rows: SummaryRow[],
   userId: string,
@@ -62,16 +89,8 @@ async function hydrate(
   if (rows.length === 0) return [];
   const ids = rows.map((row) => row.id);
 
-  const [images, favourites] = await Promise.all([
-    db
-      .select({
-        recipeId: recipeImages.recipeId,
-        filename: recipeImages.filename,
-        altText: recipeImages.altText,
-      })
-      .from(recipeImages)
-      .where(inArray(recipeImages.recipeId, ids))
-      .orderBy(desc(recipeImages.isHero), asc(recipeImages.sortOrder)),
+  const [heroByRecipe, favourites] = await Promise.all([
+    findHeroImages(ids),
     db
       .select({ recipeId: recipeFavorites.recipeId })
       .from(recipeFavorites)
@@ -83,15 +102,6 @@ async function hydrate(
       ),
   ]);
 
-  const heroByRecipe = new Map<string, RecipeHeroImage>();
-  for (const image of images) {
-    if (!heroByRecipe.has(image.recipeId)) {
-      heroByRecipe.set(image.recipeId, {
-        filename: image.filename,
-        altText: image.altText,
-      });
-    }
-  }
   const favouriteIds = new Set(favourites.map((row) => row.recipeId));
 
   return rows.map((row) => ({

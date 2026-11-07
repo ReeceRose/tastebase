@@ -16,6 +16,7 @@ import {
 import { useDebouncedValue } from "@/hooks/use-debounced-search";
 import {
   AvatarSize,
+  LibraryScope,
   LibrarySort,
   LibraryVisibility,
   RecipeDifficulty,
@@ -206,6 +207,27 @@ export function RecipeLibraryToolbar({
           );
         })}
 
+        {filters.scope !== LibraryScope.LIST && facets.lists.length > 0 && (
+          <Select
+            value={filters.listId ?? ANY}
+            onValueChange={(value) =>
+              update({ listId: value === ANY ? null : value })
+            }
+          >
+            <SelectTrigger size="sm" aria-label="List" className={pillTrigger}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ANY}>Any list</SelectItem>
+              {facets.lists.map((list) => (
+                <SelectItem key={list.id} value={list.id}>
+                  {list.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
         {TIME_OPTIONS.map((option) => {
           const active = filters.maxTime === option.value;
           return (
@@ -219,20 +241,30 @@ export function RecipeLibraryToolbar({
           );
         })}
 
-        {DIFFICULTY_OPTIONS.map((option) => {
-          const active = filters.difficulty === option.value;
-          return (
-            <Chip
-              key={option.value}
-              aria-pressed={active}
-              onClick={() =>
-                update({ difficulty: active ? null : option.value })
-              }
-            >
-              {option.label}
-            </Chip>
-          );
-        })}
+        <Select
+          value={filters.difficulty ?? ANY}
+          onValueChange={(value) =>
+            update({
+              difficulty: value === ANY ? null : (value as RecipeDifficulty),
+            })
+          }
+        >
+          <SelectTrigger
+            size="sm"
+            aria-label="Difficulty"
+            className={pillTrigger}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ANY}>Any difficulty</SelectItem>
+            {DIFFICULTY_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         {facets.cuisines.length > 0 && (
           <Select
@@ -342,6 +374,7 @@ export function RecipeLibraryToolbar({
                 cuisine: null,
                 source: null,
                 tags: [],
+                listId: null,
                 maxTime: null,
                 visibility: LibraryVisibility.ALL,
               });

@@ -76,6 +76,7 @@ const INSTRUCTIONS = `You extract recipes into structured data for a recipe mana
 - Keep quantities and units as written; do not convert units.
 - Ignore anything that isn't part of the recipe (ads, stories, comments, navigation).
 - Use null when the source doesn't state a value. Only add tags or difficulty when they're clear from the source.
+- Tags describe the kind of recipe (course, diet, occasion). Don't add a tag that only repeats an ingredient.
 - If there is no recipe in the input, return a null title and empty ingredient and instruction lists.`;
 
 export interface RecipeCleanupResult {

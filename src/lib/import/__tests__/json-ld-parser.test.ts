@@ -67,12 +67,7 @@ describe("extractJsonLdRecipe", () => {
     expect(recipe?.prepTime).toBe(15);
     expect(recipe?.cookTime).toBe(60);
     expect(recipe?.cuisine).toBe("American");
-    expect(recipe?.tags).toEqual([
-      "main course",
-      "chili",
-      "beans",
-      "comfort food",
-    ]);
+    expect(recipe?.tags).toEqual(["main course", "chili", "comfort food"]);
     expect(recipe?.ingredients[1]).toEqual({
       quantity: "1",
       unit: "can",
@@ -85,6 +80,34 @@ describe("extractJsonLdRecipe", () => {
       temperature: "400°F",
     });
     expect(result?.siteName).toBe("Example Kitchen");
+  });
+
+  it("drops keywords that repeat an ingredient but keeps categories", () => {
+    const result = extractJsonLdRecipe(
+      page({
+        "@context": "https://schema.org",
+        "@type": "Recipe",
+        name: "Salad",
+        recipeCategory: ["Salad", "Cucumber"],
+        keywords: "tomato, red onion, cilantro, berry, onion soup, lunch",
+        recipeIngredient: [
+          "3 Roma tomatoes",
+          "1 red onion, diced",
+          "1/4 cup fresh cilantro",
+          "1 cup blueberries",
+          "1 cup strawberries",
+          "1 cucumber",
+        ],
+        recipeInstructions: "Toss everything together.",
+      }),
+    );
+    expect(result?.recipe.tags).toEqual([
+      "salad",
+      "cucumber",
+      "berry",
+      "onion soup",
+      "lunch",
+    ]);
   });
 
   it("handles an array @type and plain string instructions", () => {

@@ -52,9 +52,9 @@ export function AppSidebar({ counts, household }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[236px] shrink-0 flex-col bg-sidebar px-[18px] pt-[26px] pb-5 text-sidebar-foreground lg:flex">
+    <aside className="sticky top-0 hidden h-dvh w-[236px] shrink-0 flex-col bg-sidebar px-[18px] pt-[35px] pb-5 text-sidebar-foreground lg:flex">
       <BrandMark
-        className="mb-6 px-2.5 text-white"
+        className="mb-6 px-3 text-white"
         wordmarkClassName="text-white"
       />
 

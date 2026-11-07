@@ -11,7 +11,7 @@ import {
   recipes,
 } from "@/db/schema.recipes";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
-import { visibleTo } from "@/lib/search/recipe-summaries";
+import { findHeroImages, visibleTo } from "@/lib/search/recipe-summaries";
 import { getAuthenticatedUser } from "@/lib/server-actions/base";
 import type { ServerActionResult } from "@/lib/server-actions/utils";
 import { RecipeSwatch } from "@/lib/types";
@@ -77,6 +77,7 @@ export async function getRecipeLists(): Promise<RecipeListTileData[]> {
     const items = await db
       .select({
         listId: recipeCollectionItems.collectionId,
+        recipeId: recipes.id,
         title: recipes.title,
       })
       .from(recipeCollectionItems)
@@ -92,13 +93,21 @@ export async function getRecipeLists(): Promise<RecipeListTileData[]> {
       )
       .orderBy(desc(recipeCollectionItems.addedAt));
 
+    const heroes = await findHeroImages([
+      ...new Set(items.map((item) => item.recipeId)),
+    ]);
     const counts = new Map<string, number>();
     const titles = new Map<string, string[]>();
+    const photos = new Map<string, string>();
     for (const item of items) {
       counts.set(item.listId, (counts.get(item.listId) ?? 0) + 1);
       const listTitles = titles.get(item.listId) ?? [];
       if (listTitles.length < PREVIEW_TITLES) listTitles.push(item.title);
       titles.set(item.listId, listTitles);
+      const hero = heroes.get(item.recipeId);
+      if (hero && !photos.has(item.listId)) {
+        photos.set(item.listId, hero.filename);
+      }
     }
 
     return lists.map((list) => ({
@@ -108,6 +117,7 @@ export async function getRecipeLists(): Promise<RecipeListTileData[]> {
       swatch: resolveSwatch(list.id, list.color),
       recipeCount: counts.get(list.id) ?? 0,
       previewTitles: titles.get(list.id) ?? [],
+      photoFilename: photos.get(list.id) ?? null,
     }));
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
@@ -124,19 +134,24 @@ export async function getFavouritesTile(): Promise<RecipeListTileData> {
     swatch: RecipeSwatch.TOMATO,
     recipeCount: 0,
     previewTitles: [],
+    photoFilename: null,
   };
   try {
     const user = await getAuthenticatedUser();
     const rows = await db
-      .select({ title: recipes.title })
+      .select({ recipeId: recipes.id, title: recipes.title })
       .from(recipeFavorites)
       .innerJoin(recipes, eq(recipeFavorites.recipeId, recipes.id))
       .where(and(eq(recipeFavorites.userId, user.id), visibleTo(user.id)))
       .orderBy(desc(recipeFavorites.favoritedAt));
+    const heroes = await findHeroImages(rows.map((row) => row.recipeId));
     return {
       ...tile,
       recipeCount: rows.length,
       previewTitles: rows.slice(0, PREVIEW_TITLES).map((row) => row.title),
+      photoFilename:
+        rows.flatMap((row) => heroes.get(row.recipeId)?.filename ?? [])[0] ??
+        null,
     };
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
