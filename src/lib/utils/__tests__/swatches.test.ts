@@ -36,12 +36,13 @@ describe("swatches", () => {
     expect(swatchFor(id)).toBe(swatchFor(id));
   });
 
-  it("spreads ids across all swatches", () => {
+  it("spreads ids across the original eight swatches", () => {
     const seen = new Set<RecipeSwatch>();
     for (let i = 0; i < 200; i++) {
       seen.add(swatchFor(`recipe-${i}`));
     }
-    expect(seen.size).toBe(SWATCH_ORDER.length);
+    expect(seen.size).toBe(8);
+    expect(seen.has(RecipeSwatch.CARROT)).toBe(false);
   });
 
   it("prefers a stored swatch and falls back to the hash", () => {
@@ -64,7 +65,10 @@ describe("swatches", () => {
 
   it("cycles step swatches from the recipe swatch", () => {
     expect(stepSwatch(RecipeSwatch.TOMATO, 0)).toBe(RecipeSwatch.TOMATO);
-    expect(stepSwatch(RecipeSwatch.HERB, 1)).toBe(SWATCH_ORDER[0]);
+    expect(stepSwatch(SWATCH_ORDER[SWATCH_ORDER.length - 1], 1)).toBe(
+      SWATCH_ORDER[0],
+    );
+    expect(stepSwatch(RecipeSwatch.COCOA, 2)).toBe(SWATCH_ORDER[1]);
   });
 
   it("marks swatches that use white text as dark", () => {

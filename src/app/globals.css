@@ -115,6 +115,24 @@
   --color-swatch-herb: #8cc152;
   --color-swatch-herb-fg: #172015;
   --color-swatch-herb-deep: #3c6b45;
+  --color-swatch-carrot: #f07f2a;
+  --color-swatch-carrot-fg: #172015;
+  --color-swatch-carrot-deep: #c2531a;
+  --color-swatch-kale: #1f5c5a;
+  --color-swatch-kale-fg: #ffffff;
+  --color-swatch-kale-deep: #7fc8b8;
+  --color-swatch-blueberry: #2e4a9e;
+  --color-swatch-blueberry-fg: #ffffff;
+  --color-swatch-blueberry-deep: #7cc4e6;
+  --color-swatch-lavender: #b9a3e3;
+  --color-swatch-lavender-fg: #172015;
+  --color-swatch-lavender-deep: #6e4fb0;
+  --color-swatch-mushroom: #c9a27a;
+  --color-swatch-mushroom-fg: #172015;
+  --color-swatch-mushroom-deep: #8a6440;
+  --color-swatch-cocoa: #5a3524;
+  --color-swatch-cocoa-fg: #ffffff;
+  --color-swatch-cocoa-deep: #c9a27a;
 }
 
 :root {

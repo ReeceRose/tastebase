@@ -10,8 +10,12 @@ interface NavCountProps {
 }
 
 export function NavCount({ counts, countKey }: NavCountProps) {
-  const { adjustments } = useNavCounts();
-  const value = Math.max(0, use(counts)[countKey] + adjustments[countKey]);
+  const { latest, adjustments } = useNavCounts();
+  const loaded = use(counts);
+  const value = Math.max(
+    0,
+    (latest ?? loaded)[countKey] + adjustments[countKey],
+  );
   return (
     <span className="text-meta font-normal tabular opacity-65">{value}</span>
   );

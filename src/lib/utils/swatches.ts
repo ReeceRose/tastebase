@@ -1,6 +1,6 @@
 import { RecipeSwatch, type SwatchClasses } from "@/lib/types";
 
-export const SWATCH_ORDER: RecipeSwatch[] = [
+const AUTO_SWATCHES: RecipeSwatch[] = [
   RecipeSwatch.TOMATO,
   RecipeSwatch.LEEK,
   RecipeSwatch.TURMERIC,
@@ -9,6 +9,23 @@ export const SWATCH_ORDER: RecipeSwatch[] = [
   RecipeSwatch.SKY,
   RecipeSwatch.BEET,
   RecipeSwatch.HERB,
+];
+
+export const SWATCH_ORDER: RecipeSwatch[] = [
+  RecipeSwatch.TOMATO,
+  RecipeSwatch.CARROT,
+  RecipeSwatch.TURMERIC,
+  RecipeSwatch.HERB,
+  RecipeSwatch.LEEK,
+  RecipeSwatch.KALE,
+  RecipeSwatch.SKY,
+  RecipeSwatch.BLUEBERRY,
+  RecipeSwatch.LAVENDER,
+  RecipeSwatch.AUBERGINE,
+  RecipeSwatch.BEET,
+  RecipeSwatch.RADISH,
+  RecipeSwatch.MUSHROOM,
+  RecipeSwatch.COCOA,
 ];
 
 export const SWATCH_CLASSES: Record<RecipeSwatch, SwatchClasses> = {
@@ -52,6 +69,36 @@ export const SWATCH_CLASSES: Record<RecipeSwatch, SwatchClasses> = {
     fg: "text-swatch-herb-fg",
     deep: "bg-swatch-herb-deep",
   },
+  [RecipeSwatch.CARROT]: {
+    bg: "bg-swatch-carrot",
+    fg: "text-swatch-carrot-fg",
+    deep: "bg-swatch-carrot-deep",
+  },
+  [RecipeSwatch.KALE]: {
+    bg: "bg-swatch-kale",
+    fg: "text-swatch-kale-fg",
+    deep: "bg-swatch-kale-deep",
+  },
+  [RecipeSwatch.BLUEBERRY]: {
+    bg: "bg-swatch-blueberry",
+    fg: "text-swatch-blueberry-fg",
+    deep: "bg-swatch-blueberry-deep",
+  },
+  [RecipeSwatch.LAVENDER]: {
+    bg: "bg-swatch-lavender",
+    fg: "text-swatch-lavender-fg",
+    deep: "bg-swatch-lavender-deep",
+  },
+  [RecipeSwatch.MUSHROOM]: {
+    bg: "bg-swatch-mushroom",
+    fg: "text-swatch-mushroom-fg",
+    deep: "bg-swatch-mushroom-deep",
+  },
+  [RecipeSwatch.COCOA]: {
+    bg: "bg-swatch-cocoa",
+    fg: "text-swatch-cocoa-fg",
+    deep: "bg-swatch-cocoa-deep",
+  },
 };
 
 export const SWATCH_LABELS: Record<RecipeSwatch, string> = {
@@ -63,6 +110,12 @@ export const SWATCH_LABELS: Record<RecipeSwatch, string> = {
   [RecipeSwatch.RADISH]: "Radish",
   [RecipeSwatch.SKY]: "Sky",
   [RecipeSwatch.HERB]: "Herb",
+  [RecipeSwatch.CARROT]: "Carrot",
+  [RecipeSwatch.KALE]: "Kale",
+  [RecipeSwatch.BLUEBERRY]: "Blueberry",
+  [RecipeSwatch.LAVENDER]: "Lavender",
+  [RecipeSwatch.MUSHROOM]: "Mushroom",
+  [RecipeSwatch.COCOA]: "Cocoa",
 };
 
 const DARK_SWATCHES = new Set<RecipeSwatch>([
@@ -70,6 +123,9 @@ const DARK_SWATCHES = new Set<RecipeSwatch>([
   RecipeSwatch.LEEK,
   RecipeSwatch.AUBERGINE,
   RecipeSwatch.BEET,
+  RecipeSwatch.KALE,
+  RecipeSwatch.BLUEBERRY,
+  RecipeSwatch.COCOA,
 ]);
 
 const SWATCH_VALUES = new Set<string>(Object.values(RecipeSwatch));
@@ -88,7 +144,7 @@ export function hashString(value: string): number {
 }
 
 export function swatchFor(id: string): RecipeSwatch {
-  return SWATCH_ORDER[hashString(id) % SWATCH_ORDER.length];
+  return AUTO_SWATCHES[hashString(id) % AUTO_SWATCHES.length];
 }
 
 export function resolveSwatch(id: string, stored: string | null): RecipeSwatch {

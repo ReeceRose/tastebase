@@ -51,7 +51,7 @@ Light-mode body text (ink on paper) is 15:1 and dark-mode is 15.6:1. The sidebar
 
 ### 2.2 Swatches (recipe colours)
 
-Every recipe has a **swatch**, one of eight produce colours. A swatch is a background plus a fixed text colour that passes WCAG AA for body text (≥ 4.5:1). Swatches look the same in light and dark mode, because they are self-contained colour fields.
+Every recipe has a **swatch**, one of fourteen produce colours. A swatch is a background plus a fixed text colour that passes WCAG AA for body text (≥ 4.5:1). Swatches look the same in light and dark mode, because they are self-contained colour fields.
 
 | Swatch | Background | Text | Contrast | Deep tone (circle motif) |
 | --- | --- | --- | --- | --- |
@@ -63,11 +63,17 @@ Every recipe has a **swatch**, one of eight produce colours. A swatch is a backg
 | `radish` | `#EF7FA0` | ink | 6.55 | `#D63A25` |
 | `sky` | `#7CC4E6` | ink | 8.69 | `#FFE36E` |
 | `herb` | `#8CC152` | ink | 7.87 | `#3C6B45` |
+| `carrot` | `#F07F2A` | ink | 6.20 | `#C2531A` |
+| `kale` | `#1F5C5A` | white | 7.67 | `#7FC8B8` |
+| `blueberry` | `#2E4A9E` | white | 8.11 | `#7CC4E6` |
+| `lavender` | `#B9A3E3` | ink | 7.51 | `#6E4FB0` |
+| `mushroom` | `#C9A27A` | ink | 7.12 | `#8A6440` |
+| `cocoa` | `#5A3524` | white | 10.66 | `#C9A27A` |
 
 **How a recipe gets its swatch**
 
 1. `recipes.swatch` (a new, nullable column) if the cook picked one in the editor.
-2. Otherwise `swatchFor(recipe.id)`, a stable hash of the id modulo 8. A recipe never changes colour between visits.
+2. Otherwise `swatchFor(recipe.id)`, a stable hash of the id over the original eight (tomato to herb). A recipe never changes colour between visits, and adding swatches doesn't reshuffle existing recipes or avatars. The other six are picker-only.
 
 **Where swatches appear:** recipe tiles, the recipe hero, the list-view colour dot, command-palette results, tag tiles, and step-number discs on the recipe page.
 

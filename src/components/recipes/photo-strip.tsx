@@ -55,7 +55,7 @@ export function PhotoStrip({ images, title }: PhotoStripProps) {
         onOpenChange={(open) => !open && setOpenIndex(null)}
       >
         <DialogContent
-          className="max-w-4xl gap-3 p-3 sm:p-4"
+          className="gap-3 p-3 sm:max-w-[min(calc(100vw-4rem),72rem)] sm:p-4"
           onKeyDown={(event) => {
             if (event.key === "ArrowLeft") move(-1);
             if (event.key === "ArrowRight") move(1);
@@ -66,12 +66,12 @@ export function PhotoStrip({ images, title }: PhotoStripProps) {
             Photo {(openIndex ?? 0) + 1} of {images.length}
           </DialogDescription>
           {current && (
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-control bg-muted">
+            <div className="relative aspect-[4/3] max-h-[calc(100dvh-9rem)] w-full overflow-hidden rounded-control bg-muted">
               <Image
                 src={`/api/recipes/images/${current.filename}`}
                 alt={current.altText || title}
                 fill
-                sizes="(max-width: 1024px) 100vw, 900px"
+                sizes="(max-width: 1200px) 100vw, 1152px"
                 className="object-contain"
                 unoptimized
               />

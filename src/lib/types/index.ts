@@ -121,6 +121,12 @@ export enum RecipeSwatch {
   RADISH = "radish",
   SKY = "sky",
   HERB = "herb",
+  CARROT = "carrot",
+  KALE = "kale",
+  BLUEBERRY = "blueberry",
+  LAVENDER = "lavender",
+  MUSHROOM = "mushroom",
+  COCOA = "cocoa",
 }
 
 export interface SwatchClasses {
