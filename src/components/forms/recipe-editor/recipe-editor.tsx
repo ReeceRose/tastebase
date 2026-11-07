@@ -44,7 +44,6 @@ interface RecipeEditorProps {
   notice: string | null;
   initialPhotos?: PendingImage[];
   photoSuggestions?: PhotoSuggestion[];
-  onPhotosChange?: (photos: PendingImage[]) => void;
   onStartOver?: () => void;
 }
 
@@ -73,7 +72,6 @@ export function RecipeEditor({
   notice,
   initialPhotos = [],
   photoSuggestions = [],
-  onPhotosChange,
   onStartOver,
 }: RecipeEditorProps) {
   const router = useRouter();
@@ -92,10 +90,6 @@ export function RecipeEditor({
   const draftKey = `tastebase:draft:${userId}:${recipe?.id ?? "new"}`;
   const draft = useRecipeDraft(draftKey, values, isDirty && !isSaving);
   const automaticSwatch = swatchFor(recipe?.id ?? draftKey);
-
-  useEffect(() => {
-    onPhotosChange?.(pending);
-  }, [pending, onPhotosChange]);
 
   useEffect(() => {
     if (!isDirty) return;

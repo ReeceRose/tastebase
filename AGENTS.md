@@ -13,7 +13,7 @@ Biome enforces two-space indentation, double quotes, semicolons, and bans unused
 Async server components should stream data behind Suspense boundaries with matching skeletons as described in `CLAUDE.md`. Keep business logic out of route files—compose UI components instead. Use Pino helpers (`createOperationLogger`, `createUserLogger`, `logError`) for server-side logging with object-first arguments; reserve `console.log` for client-only debugging. See `docs/server-logging-guide.md` for full patterns.
 
 ## Testing Guidelines
-Vitest with Testing Library handles unit and integration coverage. Place specs in local `__tests__/` directories using the `*.test.ts` suffix, reuse `src/__tests__/setup.ts`, and cover critical flows (auth, AI recipe ingestion, uploads) when touched. `pnpm test:watch` supports TDD, while `pnpm test:coverage` tracks regressions.
+Vitest with Testing Library handles unit and integration coverage. Place specs in local `__tests__/` directories using the `*.test.ts` suffix, reuse `src/__tests__/setup.ts`, and cover critical flows (auth, recipe import, uploads) when touched. `pnpm test:watch` supports TDD, while `pnpm test:coverage` tracks regressions.
 
 ## Commit & Pull Request Guidelines
 Write imperative, present-tense commits (`Add nutrition parser`) and squash noise before pushing. Each PR needs a crisp problem statement, screenshots or recordings for UI changes, linked issues, and call-outs for migrations or env updates. Before requesting review run `pnpm lint:check`, `pnpm type-check`, `pnpm test`, plus relevant diagnostics (`pnpm architecture`, `pnpm import-issues:ci`). Never commit secrets, `.env.local`, or SQLite artifacts.

@@ -23,7 +23,7 @@ This guide walks you through setting up Tastebase, a local-first recipe manager 
    curl -o .env https://raw.githubusercontent.com/ReeceRose/tastebase/main/.env.docker.example
    ```
 
-2. **Fill in `.env`:** run `openssl rand -base64 48` twice and paste one value into `BETTER_AUTH_SECRET` and the other into `ENCRYPTION_SECRET`. Set `BETTER_AUTH_URL` to the address you'll open Tastebase at.
+2. **Fill in `.env`:** run `openssl rand -base64 48` and paste the value into `BETTER_AUTH_SECRET`. Set `BETTER_AUTH_URL` to the address you'll open Tastebase at.
 
 3. **Start it:**
    ```bash

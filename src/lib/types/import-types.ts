@@ -1,13 +1,10 @@
 import type { RecipeDifficulty } from "@/lib/types";
-import type { ImageProcessingMethod } from "@/lib/types/ai-types";
 import type { PendingImage } from "@/lib/types/recipe-types";
 
 export enum RecipeImportSource {
   JSON_LD = "json_ld",
   TEXT_PARSER = "text_parser",
   OCR_TEXT_PARSER = "ocr_text_parser",
-  AI_TEXT = "ai_text",
-  AI_VISION = "ai_vision",
 }
 
 export enum RecipeImportInput {
@@ -20,8 +17,6 @@ export const RECIPE_IMPORT_SOURCE_LABELS: Record<RecipeImportSource, string> = {
   [RecipeImportSource.JSON_LD]: "Read from the page's recipe data",
   [RecipeImportSource.TEXT_PARSER]: "Parsed from text",
   [RecipeImportSource.OCR_TEXT_PARSER]: "Read from the photo (OCR)",
-  [RecipeImportSource.AI_TEXT]: "Cleaned up with AI",
-  [RecipeImportSource.AI_VISION]: "Read from the photo with AI",
 };
 
 export interface ParsedIngredient {
@@ -56,18 +51,10 @@ export interface RecipeImportResult {
   confidence: number;
   sourceUrl: string | null;
   sourceName: string | null;
-  rawText: string | null;
   imageUrl: string | null;
   image: PendingImage | null;
   photoUrls: string[];
   warnings: string[];
-}
-
-export interface RecipeImportCapabilities {
-  aiConfigured: boolean;
-  visionAvailable: boolean;
-  providerName: string | null;
-  imageProcessingMethod: ImageProcessingMethod;
 }
 
 export interface FetchedPage {

@@ -28,11 +28,6 @@ export const SETTINGS_SECTIONS: SettingsItem[] = [
     description: "Who can see a recipe when you first add it.",
   },
   {
-    id: SettingsSection.IMPORT,
-    label: "Import and AI",
-    description: "Add a provider if you want help with messy text and photos.",
-  },
-  {
     id: SettingsSection.SAVING,
     label: "Saving recipes",
     description:
@@ -57,7 +52,6 @@ export const SETTINGS_SECTIONS: SettingsItem[] = [
 
 const LEGACY_TABS: Record<string, SettingsSection> = {
   profile: SettingsSection.PROFILE,
-  ai: SettingsSection.IMPORT,
   data: SettingsSection.STORAGE,
   preferences: SettingsSection.UNITS,
   security: SettingsSection.SECURITY,

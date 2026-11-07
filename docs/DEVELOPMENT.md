@@ -112,9 +112,9 @@ src/db/
    pnpm run db:migrate
    ```
 
-## Recipe import and AI
+## Recipe import
 
-Import works without AI: links use the page's recipe data (JSON-LD) and fall back to the page text; pasted text goes through `src/lib/import/text-recipe-parser.ts`; photos use OCR (Tesseract) on the server. AI is optional. Each person can add a provider (OpenAI, Anthropic, Google or Ollama) in **Settings → Import and AI** to tidy up messy imports or read photos with a vision model. The AI code lives in `src/lib/ai/`.
+Links use the page's recipe data (JSON-LD) and fall back to the page text; pasted text goes through `src/lib/import/text-recipe-parser.ts`, which also understands Markdown; photos use OCR (Tesseract) on the server. For handwriting or hard-to-read photos, transcribe the recipe with an AI assistant and paste the result.
 
 ## Code quality
 
@@ -440,7 +440,7 @@ pnpm run performance:blocking
 docker build -t tastebase:test .
 
 # Or run it through Compose: replace `image:` with `build: .` in docker-compose.yml, then
-cp .env.docker.example .env   # fill in the secrets
+cp .env.docker.example .env   # fill in the secret
 docker compose up -d --build
 docker compose logs -f tastebase
 ```

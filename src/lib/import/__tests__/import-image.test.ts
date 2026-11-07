@@ -36,7 +36,6 @@ const RESULT: RecipeImportResult = {
   confidence: 0.95,
   sourceUrl: "https://example.com/soup",
   sourceName: "Example",
-  rawText: null,
   imageUrl: "https://img.example.com/soup.webp",
   image: null,
   photoUrls: [],

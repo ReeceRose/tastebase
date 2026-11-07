@@ -96,6 +96,96 @@ describe("parseRecipeText", () => {
     expect(recipe.title).toBe("Pancakes from the site");
   });
 
+  it("reads a recipe formatted with Markdown", () => {
+    const { recipe } = parseRecipeText(
+      `Here's the recipe from your photo:
+
+# Grandma's Apple Crumble
+
+A simple family dessert.
+
+**Serves:** 6
+**Prep time:** 20 minutes
+
+---
+
+## Ingredients
+
+### For the filling
+- 6 **large** apples, peeled
+- 1/2 cup sugar
+
+### Topping
+- 1 cup flour
+
+## Instructions
+
+1. **Prepare the apples:** Slice them thinly.
+2. Bake at 350°F for *45 minutes*.
+
+## Notes
+
+- Great with ice cream.`,
+      null,
+    );
+
+    expect(recipe.title).toBe("Grandma's Apple Crumble");
+    expect(recipe.description).toBe("A simple family dessert.");
+    expect(recipe.servings).toBe(6);
+    expect(recipe.prepTime).toBe(20);
+    expect(recipe.ingredients.map((item) => item.name)).toEqual([
+      "large apples, peeled",
+      "sugar",
+      "flour",
+    ]);
+    expect(recipe.instructions.map((step) => step.instruction)).toEqual([
+      "Prepare the apples: Slice them thinly.",
+      "Bake at 350°F for 45 minutes.",
+    ]);
+  });
+
+  it("recognises a bold heading with the colon outside the bold", () => {
+    const { recipe } = parseRecipeText(
+      `**Banana Bread**
+
+**Ingredients:**
+* 3 bananas
+* 2 cups flour
+
+**Instructions**:
+1. Mash the bananas.
+2. Mix in the flour and bake for 1 hour.`,
+      null,
+    );
+
+    expect(recipe.title).toBe("Banana Bread");
+    expect(recipe.ingredients).toHaveLength(2);
+    expect(recipe.instructions).toHaveLength(2);
+  });
+
+  it("ignores code fences around a recipe", () => {
+    const { recipe } = parseRecipeText(
+      "```\nPancakes\n\nIngredients\n1 cup flour\n1 egg\n\nMethod\n1. Mix.\n2. Fry.\n```",
+      null,
+    );
+
+    expect(recipe.title).toBe("Pancakes");
+    expect(recipe.instructions.map((step) => step.instruction)).toEqual([
+      "Mix.",
+      "Fry.",
+    ]);
+  });
+
+  it("skips a lead-in line when choosing the title", () => {
+    const { recipe } = parseRecipeText(
+      "Here's the recipe:\nBanana Bread\nIngredients\n3 bananas\nMethod\n1. Mash.",
+      null,
+    );
+
+    expect(recipe.title).toBe("Banana Bread");
+    expect(recipe.description).toBeNull();
+  });
+
   it("gives low confidence to text that isn't a recipe", () => {
     const { recipe, confidence } = parseRecipeText(
       "We went to the farmers market on Saturday and it was lovely.",

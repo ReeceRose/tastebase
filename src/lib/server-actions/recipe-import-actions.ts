@@ -1,9 +1,6 @@
 "use server";
 
 import { headers } from "next/headers";
-import { getActiveAIConfig } from "@/lib/ai/config";
-import { modelSupportsVision } from "@/lib/ai/models";
-import { getProviderDisplayName } from "@/lib/ai/providers";
 import { auth } from "@/lib/auth/auth";
 import { PageFetchError, parseImportUrl } from "@/lib/import/fetch-page";
 import {
@@ -19,11 +16,9 @@ import {
 import { createOperationLogger, logError } from "@/lib/logging/logger";
 import { findSavedRecipe } from "@/lib/search/saved-recipe-lookup";
 import type { ServerActionResult } from "@/lib/server-actions/utils";
-import { ImageProcessingMethod } from "@/lib/types/ai-types";
 import type {
   CapturedPage,
   PhotoSuggestion,
-  RecipeImportCapabilities,
   RecipeImportResult,
   SavedRecipeMatch,
 } from "@/lib/types/import-types";
@@ -41,31 +36,6 @@ async function requireUserId(): Promise<string | null> {
   return session?.user?.id ?? null;
 }
 
-export async function getRecipeImportCapabilitiesAction(): Promise<
-  ServerActionResult<RecipeImportCapabilities>
-> {
-  const userId = await requireUserId();
-  if (!userId) {
-    return { success: false, error: "Authentication required" };
-  }
-
-  const config = await getActiveAIConfig(userId);
-  return {
-    success: true,
-    data: {
-      aiConfigured: config !== null,
-      visionAvailable:
-        config !== null &&
-        config.modelName !== null &&
-        config.imageProcessingMethod !== ImageProcessingMethod.OCR &&
-        modelSupportsVision(config.provider, config.modelName),
-      providerName: config ? getProviderDisplayName(config.provider) : null,
-      imageProcessingMethod:
-        config?.imageProcessingMethod ?? ImageProcessingMethod.AUTO,
-    },
-  };
-}
-
 export async function importRecipeFromUrlAction(
   url: string,
 ): Promise<ServerActionResult<RecipeImportResult>> {
@@ -75,10 +45,7 @@ export async function importRecipeFromUrlAction(
   }
 
   try {
-    const result = await importRecipeFromUrl(
-      url,
-      await getActiveAIConfig(userId),
-    );
+    const result = await importRecipeFromUrl(url);
     return { success: true, data: await attachImportedPhoto(result, null) };
   } catch (error) {
     if (error instanceof PageFetchError) {
@@ -106,10 +73,10 @@ export async function importRecipeFromPageAction(
 
   try {
     const pageUrl = parseImportUrl(page.url).toString();
-    const result = await importRecipeFromPage(
-      { url: pageUrl, html: page.html },
-      await getActiveAIConfig(userId),
-    );
+    const result = importRecipeFromPage({
+      url: pageUrl,
+      html: page.html,
+    });
     return {
       success: true,
       data: await attachImportedPhoto(result, page.image),
@@ -128,7 +95,6 @@ export async function importRecipeFromPageAction(
 
 export async function importRecipeFromTextAction(
   text: string,
-  forceAI: boolean,
 ): Promise<ServerActionResult<RecipeImportResult>> {
   const userId = await requireUserId();
   if (!userId) {
@@ -143,17 +109,8 @@ export async function importRecipeFromTextAction(
     return { success: false, error: "That text is too long to import" };
   }
 
-  const aiConfig = await getActiveAIConfig(userId);
-  if (forceAI && !aiConfig) {
-    return {
-      success: false,
-      error: "Set up an AI provider in Settings to use AI cleanup",
-    };
-  }
-
   try {
-    const result = await importRecipeFromText(trimmed, aiConfig, forceAI);
-    return { success: true, data: result };
+    return { success: true, data: importRecipeFromText(trimmed) };
   } catch (error) {
     logError(logger, "Text import failed", error, { userId });
     return { success: false, error: "Couldn't parse that text" };
@@ -181,12 +138,7 @@ export async function importRecipeFromImageAction(
 
   try {
     const image = Buffer.from(await file.arrayBuffer());
-    const result = await importRecipeFromImage(
-      image,
-      file.type,
-      await getActiveAIConfig(userId),
-    );
-    return { success: true, data: result };
+    return { success: true, data: await importRecipeFromImage(image) };
   } catch (error) {
     logError(logger, "Image import failed", error, { userId });
     return { success: false, error: "Couldn't read a recipe from that image" };

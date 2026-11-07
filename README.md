@@ -26,7 +26,6 @@ A simple, local-first recipe management application designed for shared instance
 ## 🏗️ Tech Stack
 
 - **Framework**: Next.js 16 with App Router and Server Actions
-- **AI (optional)**: Vercel AI SDK 7 for recipe import cleanup
 - **Authentication**: BetterAuth (simple email/password)
 - **Database**: SQLite + Drizzle ORM (local file storage)
 - **File Storage**: Local filesystem for recipe images
@@ -46,7 +45,7 @@ Tastebase is published as a Docker image for `linux/amd64` and `linux/arm64` (Ap
    ```
 
 2. **Fill in `.env`:**
-   - `BETTER_AUTH_SECRET` and `ENCRYPTION_SECRET`: run `openssl rand -base64 48` once for each. They must be different.
+   - `BETTER_AUTH_SECRET`: run `openssl rand -base64 48` and paste in the result.
    - `BETTER_AUTH_URL`: the address people will type, e.g. `http://192.168.1.100:3000`
 
 3. **Start it:**
@@ -157,12 +156,9 @@ tastebase/
 | `BETTER_AUTH_SECRET` | Yes | Signs sessions |
 | `BETTER_AUTH_URL` | Yes | The address people use to reach Tastebase |
 | `BETTER_AUTH_TRUSTED_ORIGINS` | No | Other addresses people use, such as a Tailscale IP. Comma-separated, no spaces |
-| `ENCRYPTION_SECRET` | Yes | Encrypts the AI keys people add in Settings. Must differ from `BETTER_AUTH_SECRET` |
 | `ALLOW_SIGN_UPS` | No | Set to `false` once everyone has an account (default `true`). The first account always works |
-| `CURRENT_ENCRYPTION_VERSION` | No | Bump when rotating `ENCRYPTION_SECRET` (default `1`) |
-| `OLLAMA_BASE_URL` | No | Default Ollama address (default `http://localhost:11434`) |
 
-Generate each secret with `openssl rand -base64 48`. AI provider keys are not environment variables: each person adds their own in **Settings**, stored encrypted. Details and troubleshooting: [docs/environment-variables.md](docs/environment-variables.md).
+Generate the secret with `openssl rand -base64 48`. Details and troubleshooting: [docs/environment-variables.md](docs/environment-variables.md).
 
 ## 🎯 Available Scripts
 
@@ -391,13 +387,12 @@ Update relevant documentation files:
 Documentation lives in the `docs/` directory:
 
 - **[Setup Guide](docs/SETUP.md)** - Installation and local development
-- **[Environment Variables](docs/environment-variables.md)** - Every setting and how to generate secrets
+- **[Environment Variables](docs/environment-variables.md)** - Every setting and how to generate the secret
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Docker deployment, plus [Unraid](docs/DEPLOYMENT_UNRAID.md)
 - **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Common issues and fixes
 - **[Design System](docs/design-system.md)** - Colours, type, components and patterns for the UI
 - **[Architecture Guide](docs/architecture.md)** - How the code is organized
 - **[Development Guide](docs/DEVELOPMENT.md)** - Workflows, code quality and debugging
-- **[Security](docs/security/README.md)** - Encryption of stored AI keys and key rotation
 - **[Releasing](docs/RELEASES.md)** - Cutting a release and how CI publishes the image
 
 ## 🎯 Quick Links

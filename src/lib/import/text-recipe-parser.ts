@@ -41,10 +41,19 @@ const TOTAL_LINE = /^total(?:\s+time\s*:?|\s*:)\s*(.+)$/i;
 const STEP_ONLY_LINE = /^(step\s*)?\d+[.):]?$/i;
 const NUMBERED_LINE = /^(?:step\s*)?\d+\s*[.):]\s+/i;
 const BULLET_LINE = /^[-*•·▪▢☐□◦‣⁃]/;
+const MARKDOWN_HEADING = /^#{1,6}\s/;
+const MARKDOWN_RULE_OR_FENCE = /^(`{3,}.*|~{3,}.*|([-*_])\2{2,})$/;
+const MARKDOWN_BOLD = /(\*\*|__)(.+?)\1/g;
+const MARKDOWN_ITALIC = /(?<![\w*])\*(?=\S)([^*]+?)(?<=\S)\*(?![\w*])/g;
+const LEAD_IN_LINE = /[:：]$/;
 
 const MAX_TITLE_LENGTH = 120;
 const MAX_INGREDIENT_LINE_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 400;
+
+function stripInlineMarkdown(line: string): string {
+  return line.replace(MARKDOWN_BOLD, "$2").replace(MARKDOWN_ITALIC, "$1");
+}
 
 function headingText(line: string): string {
   return line
@@ -107,6 +116,9 @@ function readMetadataLine(line: string, metadata: RecipeMetadata): boolean {
 }
 
 function isIngredientGroupHeading(line: string): boolean {
+  if (MARKDOWN_HEADING.test(line)) {
+    return true;
+  }
   return (
     !startsWithQuantity(line) &&
     (/[:：]$/.test(line) || /^for (the )?[\w\s]+$/i.test(line)) &&
@@ -151,7 +163,9 @@ function mergeWrappedSteps(lines: string[]): string[] {
 
 function toInstructions(lines: string[]): ParsedInstruction[] {
   return mergeWrappedSteps(
-    lines.filter((line) => !STEP_ONLY_LINE.test(line)),
+    lines.filter(
+      (line) => !STEP_ONLY_LINE.test(line) && !MARKDOWN_HEADING.test(line),
+    ),
   ).map((instruction, index) => ({
     step: index + 1,
     instruction,
@@ -193,7 +207,8 @@ export function parseRecipeText(
   const lines = normalizeText(input)
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.length > 0);
+    .filter((line) => line.length > 0 && !MARKDOWN_RULE_OR_FENCE.test(line))
+    .map(stripInlineMarkdown);
 
   const metadata: RecipeMetadata = {
     servings: null,
@@ -246,12 +261,22 @@ export function parseRecipeText(
     }
   }
 
+  const titleCandidates = descriptionLines.filter(
+    (line) => line.length <= MAX_TITLE_LENGTH,
+  );
   const titleLine =
     titleHint?.trim() ||
-    descriptionLines.find((line) => line.length <= MAX_TITLE_LENGTH) ||
+    titleCandidates.find((line) => MARKDOWN_HEADING.test(line)) ||
+    titleCandidates.find((line) => !LEAD_IN_LINE.test(line)) ||
+    titleCandidates[0] ||
     null;
   const description = descriptionLines
-    .filter((line) => line !== titleLine)
+    .filter(
+      (line) =>
+        line !== titleLine &&
+        !MARKDOWN_HEADING.test(line) &&
+        !LEAD_IN_LINE.test(line),
+    )
     .slice(0, 2)
     .join(" ");
 

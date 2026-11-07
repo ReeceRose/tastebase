@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { SaveAnywherePanel } from "@/components/cards/save-anywhere-panel";
-import { AISettingsForm } from "@/components/forms/ai-settings-form";
 import { DeleteAccount } from "@/components/forms/delete-account";
 import { PasswordForm } from "@/components/forms/password-form";
 import { ProfileForm } from "@/components/forms/profile-form";
@@ -106,8 +105,6 @@ export default async function SettingsPage({
               <SharingSection />
             </Suspense>
           )}
-
-          {section === SettingsSection.IMPORT && <AISettingsForm />}
 
           {section === SettingsSection.SAVING && <SaveAnywherePanel />}
 

@@ -30,7 +30,6 @@ function result(
     confidence: 1,
     sourceUrl: null,
     sourceName: null,
-    rawText: null,
     imageUrl,
     image: null,
     photoUrls,

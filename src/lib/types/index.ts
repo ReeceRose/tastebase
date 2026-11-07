@@ -1,4 +1,3 @@
-export * from "@/lib/types/ai-types";
 export * from "@/lib/types/import-types";
 export * from "@/lib/types/recipe-types";
 export * from "@/lib/types/storage-types";
@@ -158,7 +157,6 @@ export enum SettingsSection {
   HOUSEHOLD = "household",
   UNITS = "units",
   SHARING = "sharing",
-  IMPORT = "import",
   SAVING = "saving",
   TEMPLATES = "templates",
   STORAGE = "storage",

@@ -11,7 +11,6 @@ Copy `.env.example` to `.env.local` for development. In Docker, set them in `doc
 | `DATABASE_URL` | Path to the SQLite file. A `file:` prefix is optional. | `tastebase.db` (dev), `file:/app/data/tastebase.db` (Docker) |
 | `BETTER_AUTH_SECRET` | Signs sessions. Use a long random value and never reuse it. | 64 random hex characters |
 | `BETTER_AUTH_URL` | The address people use to reach Tastebase. Sign-in redirects and cookies depend on it. | `http://localhost:3000`, `http://192.168.1.100:3000`, `https://recipes.example.com` |
-| `ENCRYPTION_SECRET` | Encrypts the AI provider keys people add in Settings. At least 32 characters with good variety (upper and lower case, numbers, symbols). Must differ from `BETTER_AUTH_SECRET`. | see below |
 
 ## Optional
 
@@ -19,23 +18,17 @@ Copy `.env.example` to `.env.local` for development. In Docker, set them in `doc
 | --- | --- | --- |
 | `BETTER_AUTH_TRUSTED_ORIGINS` | unset | Other addresses people use to reach Tastebase, such as a LAN IP or Tailscale name. Comma-separated with no spaces, each with its scheme and port. If `BETTER_AUTH_URL` is `https://`, these must be `https://` too, because sign-in cookies won't save over plain `http://`. |
 | `ALLOW_SIGN_UPS` | `true` | Set to `false` once everyone has an account, so nobody else can create one. The first account always works. |
-| `CURRENT_ENCRYPTION_VERSION` | `1` | Bump when rotating `ENCRYPTION_SECRET`; see [security/key-rotation.md](./security/key-rotation.md). |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Default Ollama address when someone adds Ollama in Settings without a host. |
 | `BETTER_AUTH_TELEMETRY` | `0` | BetterAuth telemetry. Leave at `0`. |
 | `NODE_ENV` | `development` | Set to `production` by the Docker image. |
 | `SKIP_ENV_VALIDATION` | unset | Skips validation. Only used during the Docker build. |
 
-AI provider keys (OpenAI, Anthropic, Google) are **not** environment variables: each person adds their own in **Settings → Import and AI**, and they're stored encrypted with `ENCRYPTION_SECRET`.
+## Generating the secret
 
-## Generating secrets
-
-Run this once for each secret, so `BETTER_AUTH_SECRET` and `ENCRYPTION_SECRET` get different values:
+Run this to generate `BETTER_AUTH_SECRET`:
 
 ```bash
 openssl rand -base64 48
 ```
-
-That gives 64 characters with the mix of upper case, lower case, numbers and symbols `ENCRYPTION_SECRET` requires. Hex output (`openssl rand -hex 32`, `randomBytes(32).toString('hex')`) is **rejected** for `ENCRYPTION_SECRET` because it only has lower case and numbers.
 
 Without `openssl`:
 
@@ -57,14 +50,12 @@ These aren't configurable through environment variables:
 DATABASE_URL="tastebase.db"
 BETTER_AUTH_SECRET="<from the command above>"
 BETTER_AUTH_URL="http://localhost:3000"
-ENCRYPTION_SECRET="<from the command above>"
 ```
 
 ## Troubleshooting
 
-- **"Invalid environment variables" on start:** the message names the variable. `ENCRYPTION_SECRET` is the usual one; regenerate it with the command above.
+- **"Invalid environment variables" on start:** the message names the variable. Check it's set; generate `BETTER_AUTH_SECRET` with the command above.
 - **Sign-in redirects to the wrong address:** `BETTER_AUTH_URL` doesn't match the address in your browser.
 - **"Invalid origin" on sign-in:** the address in your browser isn't trusted. Set it as `BETTER_AUTH_URL` or add it to `BETTER_AUTH_TRUSTED_ORIGINS`.
-- **AI keys stop working after changing `ENCRYPTION_SECRET`:** stored keys can't be decrypted with the new secret. Follow the rotation guide, or have people re-enter their keys in Settings.
 
 More help: [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).

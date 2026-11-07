@@ -30,8 +30,7 @@ ENV NEXT_TELEMETRY_DISABLED=1 \
     SKIP_ENV_VALIDATION=1 \
     DATABASE_URL="file:/tmp/build.db" \
     BETTER_AUTH_SECRET="build-time-secret-min-32-chars-long" \
-    BETTER_AUTH_URL="http://localhost:3000" \
-    ENCRYPTION_SECRET="build-time-encryption-secret-must-be-64-chars-long-placeholder"
+    BETTER_AUTH_URL="http://localhost:3000"
 RUN pnpm build
 
 # Production image - minimal runtime

@@ -13,7 +13,6 @@ The architecture is component-based with all components organized in `/src/compo
 ## Tech Stack
 
 - **Framework**: Next.js 16 with App Router and Server Actions
-- **AI (optional)**: Vercel AI SDK 7, used only as a fallback for recipe import (`src/lib/ai/`). Import works without it (`src/lib/import/`)
 - **Authentication**: BetterAuth (email/password authentication)
 - **Database**: Local SQLite + Drizzle ORM with better-sqlite3
 - **UI**: Tailwind CSS + ShadCN/UI components
@@ -334,25 +333,17 @@ DATABASE_URL=
 BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=
 
-# API Key Encryption (Required)
-ENCRYPTION_SECRET=           # 64-character secret for encrypting AI API keys
-CURRENT_ENCRYPTION_VERSION=  # Version for key rotation (default: 1)
-
 # Sign-ups (optional)
 ALLOW_SIGN_UPS=              # false stops new accounts; the first account always works (default: true)
 ```
 
-### Generating Secure Encryption Keys
+### Generating the Auth Secret
 
 ```bash
-openssl rand -base64 48   # run once per secret
+openssl rand -base64 48
 ```
 
-**Security Requirements** (enforced by `src/lib/config/env.ts`):
-- `ENCRYPTION_SECRET` must be different from `BETTER_AUTH_SECRET`
-- At least 32 characters, entropy above 4 bits per character, and at least three of: uppercase, lowercase, numbers, symbols
-- Hex secrets (`randomBytes(32).toString('hex')`) fail the check, so don't suggest them
-- Store securely and never commit to version control
+Store it securely and never commit it to version control.
 
 ## Adding New Features
 

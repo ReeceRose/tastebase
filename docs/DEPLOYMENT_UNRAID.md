@@ -18,11 +18,10 @@ chown -R 1001:1001 /mnt/user/appdata/tastebase/data /mnt/user/appdata/tastebase/
 
 If you skip this, the container exits on start with "unable to open database file".
 
-### Generate two secrets
+### Generate a secret
 
 ```bash
 openssl rand -base64 48   # BETTER_AUTH_SECRET
-openssl rand -base64 48   # ENCRYPTION_SECRET (must be different)
 ```
 
 ## Method 1: Docker tab (no plugins)
@@ -50,9 +49,8 @@ openssl rand -base64 48   # ENCRYPTION_SECRET (must be different)
    | Key | Value |
    | --- | --- |
    | `DATABASE_URL` | `file:/app/data/tastebase.db` |
-   | `BETTER_AUTH_SECRET` | your first secret |
+   | `BETTER_AUTH_SECRET` | your secret |
    | `BETTER_AUTH_URL` | `http://YOUR_UNRAID_IP:3000` |
-   | `ENCRYPTION_SECRET` | your second secret |
 
    To also reach Tastebase another way, such as over Tailscale, add `BETTER_AUTH_TRUSTED_ORIGINS` with those addresses, separated by commas with no spaces.
 
@@ -70,7 +68,7 @@ Install the **Compose Manager** plugin from Community Applications, then:
 cd /mnt/user/appdata/tastebase
 curl -O https://raw.githubusercontent.com/ReeceRose/tastebase/main/docker-compose.yml
 curl -o .env https://raw.githubusercontent.com/ReeceRose/tastebase/main/.env.docker.example
-nano .env   # paste both secrets; set BETTER_AUTH_URL=http://YOUR_UNRAID_IP:3000
+nano .env   # paste the secret; set BETTER_AUTH_URL=http://YOUR_UNRAID_IP:3000
 ```
 
 In `docker-compose.yml`, swap the named volumes for the appdata folders:
@@ -164,7 +162,7 @@ SWAG and Tastebase must be on the same custom Docker network. Then run `docker r
 **Container stops right after starting.** Open its log:
 
 - **"unable to open database file"**: the appdata folders aren't owned by `1001`. Run the `chown` command from [Create the appdata folders](#create-the-appdata-folders).
-- **"Invalid environment variables"**: the log names the variable. Regenerate secrets with `openssl rand -base64 48`.
+- **"Invalid environment variables"**: the log names the variable. Generate `BETTER_AUTH_SECRET` with `openssl rand -base64 48`.
 
 **Photo uploads fail.** The uploads folder isn't writable. Run the same `chown` command.
 

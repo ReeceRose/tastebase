@@ -80,7 +80,7 @@ curl -o .env https://raw.githubusercontent.com/ReeceRose/tastebase/main/.env.doc
                 </div>
               </li>
               <li>
-                <p>Make two secrets. Run this twice and paste one result into <code>BETTER_AUTH_SECRET</code> and the other into <code>ENCRYPTION_SECRET</code> in <code>.env</code>. They must be different.</p>
+                <p>Make a secret. Run this and paste the result into <code>BETTER_AUTH_SECRET</code> in <code>.env</code>.</p>
                 <div class="code">
                   <pre><code>openssl rand -base64 48</code></pre>
                 </div>
@@ -213,7 +213,7 @@ docker compose start</code></pre>
               </div>
               <div class="fix">
                 <h3 class="fix-title">The log says "Invalid environment variables"</h3>
-                <p>It names the variable, and it's usually <code>ENCRYPTION_SECRET</code>. Generate it again with <code>openssl rand -base64 48</code>, which has the mix of characters it requires.</p>
+                <p>It names the variable. Check it's set in <code>.env</code>. Generate <code>BETTER_AUTH_SECRET</code> with <code>openssl rand -base64 48</code>.</p>
               </div>
               <div class="fix">
                 <h3 class="fix-title">The log says "unable to open database file"</h3>

@@ -1,29 +1,25 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { ImportSummaryCard } from "@/components/cards/import-summary-card";
 import { SavedRecipeNotice } from "@/components/cards/saved-recipe-notice";
 import { AddRecipeStart } from "@/components/forms/add-recipe-start";
 import { RecipeEditor } from "@/components/forms/recipe-editor/recipe-editor";
 import { RecipeImportProgress } from "@/components/skeletons/recipe-import-progress";
-import { Button } from "@/components/ui/button";
 import { useExtensionPageImport } from "@/hooks/use-extension-page-import";
 import {
   findSavedRecipeAction,
-  getRecipeImportCapabilitiesAction,
   importRecipeFromImageAction,
   importRecipeFromPageAction,
   importRecipeFromTextAction,
   importRecipeFromUrlAction,
 } from "@/lib/server-actions/recipe-import-actions";
 import type { ServerActionResult } from "@/lib/server-actions/utils";
-import { AddRecipeStep, ButtonVariant, RecipeEditorMode } from "@/lib/types";
-import {
-  type PhotoSuggestion,
-  type RecipeImportResult,
-  RecipeImportSource,
-  type SavedRecipeMatch,
+import { AddRecipeStep, RecipeEditorMode } from "@/lib/types";
+import type {
+  PhotoSuggestion,
+  RecipeImportResult,
+  SavedRecipeMatch,
 } from "@/lib/types/import-types";
 import type {
   PendingImage,
@@ -68,7 +64,6 @@ export function RecipeCreationWorkflow({
   const [values, setValues] = useState<RecipeEditorValues>(() =>
     emptyEditorValues(defaultIsPublic),
   );
-  const [canTidy, setCanTidy] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
   const [awaitingImport, setAwaitingImport] = useState(
     fromExtension || sharedUrl !== null,
@@ -77,7 +72,6 @@ export function RecipeCreationWorkflow({
     [],
   );
   const [initialPhotos, setInitialPhotos] = useState<PendingImage[]>([]);
-  const keptPhotos = useRef<PendingImage[]>([]);
   const [savedMatch, setSavedMatch] = useState<SavedRecipeMatch | null>(null);
 
   const checkAlreadySaved = (sourceUrl: string | null) => {
@@ -94,15 +88,11 @@ export function RecipeCreationWorkflow({
     label: string,
     request: () => Promise<ServerActionResult<RecipeImportResult>>,
     capturedPhotos: PhotoSuggestion[] = [],
-    photosToKeep: PendingImage[] | null = null,
   ) => {
     setError(null);
     setImportingLabel(label);
     startImport(async () => {
-      const [response, capabilities] = await Promise.all([
-        request(),
-        getRecipeImportCapabilitiesAction().catch(() => undefined),
-      ]);
+      const response = await request();
       setImportingLabel(null);
       setAwaitingImport(false);
       if (!response.success) {
@@ -110,23 +100,10 @@ export function RecipeCreationWorkflow({
         return;
       }
       const imported = response.data;
-      const aiResult =
-        imported.source === RecipeImportSource.AI_TEXT ||
-        imported.source === RecipeImportSource.AI_VISION;
-      setCanTidy(
-        Boolean(
-          capabilities?.success &&
-            capabilities.data.aiConfigured &&
-            !aiResult &&
-            (imported.rawText ?? "").trim(),
-        ),
-      );
       setResult(imported);
       checkAlreadySaved(imported.sourceUrl);
       setPhotoSuggestions(mergePhotoSuggestions(capturedPhotos, imported));
-      setInitialPhotos(
-        photosToKeep ?? (imported.image ? [imported.image] : []),
-      );
+      setInitialPhotos(imported.image ? [imported.image] : []);
       setValues(
         editorValuesFromImport(
           mapImportResultToFormData(imported),
@@ -171,31 +148,6 @@ export function RecipeCreationWorkflow({
     importUrl(sharedUrl);
   });
 
-  const tidyWithAI = () => {
-    if (!result?.rawText) return;
-    const rawText = result.rawText;
-    runImport(
-      "Tidying up with AI…",
-      async () => {
-        const response = await importRecipeFromTextAction(rawText, true);
-        return response.success
-          ? {
-              ...response,
-              data: {
-                ...response.data,
-                sourceUrl: result.sourceUrl,
-                sourceName: result.sourceName,
-                imageUrl: result.imageUrl,
-                image: result.image,
-              },
-            }
-          : response;
-      },
-      photoSuggestions,
-      keptPhotos.current,
-    );
-  };
-
   const startOver = () => {
     setStep(AddRecipeStep.START);
     setResult(null);
@@ -228,7 +180,7 @@ export function RecipeCreationWorkflow({
         onImportUrl={importUrl}
         onImportText={(text) =>
           runImport("Reading your recipe…", () =>
-            importRecipeFromTextAction(text, false),
+            importRecipeFromTextAction(text),
           )
         }
         onImportImage={(image) => {
@@ -269,28 +221,6 @@ export function RecipeCreationWorkflow({
           ))}
         </ul>
       )}
-      {canTidy && (
-        <div className="flex flex-wrap items-center gap-3 rounded-control bg-card px-4 py-3">
-          <p className="flex-1">
-            Something look off? AI can tidy up the ingredients and steps.
-          </p>
-          <Button
-            type="button"
-            variant={ButtonVariant.OUTLINE}
-            size="sm"
-            onClick={tidyWithAI}
-            disabled={isImporting}
-          >
-            <Sparkles />
-            {isImporting ? "Tidying…" : "Tidy up with AI"}
-          </Button>
-          {error && (
-            <p role="alert" className="w-full text-meta text-destructive">
-              {error}
-            </p>
-          )}
-        </div>
-      )}
       <RecipeEditor
         key={editorKey}
         mode={RecipeEditorMode.CREATE}
@@ -299,9 +229,6 @@ export function RecipeCreationWorkflow({
         initialValues={values}
         notice={null}
         initialPhotos={initialPhotos}
-        onPhotosChange={(photos) => {
-          keptPhotos.current = photos;
-        }}
         photoSuggestions={photoSuggestions}
         onStartOver={startOver}
       />

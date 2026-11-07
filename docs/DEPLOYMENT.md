@@ -29,10 +29,8 @@ Mount both. Without them, every recipe and photo is lost when the container is r
 | `DATABASE_URL` | Yes | `file:/app/data/tastebase.db` |
 | `BETTER_AUTH_SECRET` | Yes | output of `openssl rand -base64 48` |
 | `BETTER_AUTH_URL` | Yes | `http://192.168.1.100:3000` or `https://recipes.example.com` |
-| `ENCRYPTION_SECRET` | Yes | a second, different `openssl rand -base64 48` |
 | `BETTER_AUTH_TRUSTED_ORIGINS` | No | `http://100.64.0.1:3000`, for any other address people use |
 | `ALLOW_SIGN_UPS` | No | `false`, once everyone has an account |
-| `CURRENT_ENCRYPTION_VERSION` | No | `1` |
 
 `BETTER_AUTH_URL` must match the address in people's browsers, including the port, or sign-in won't work. If people also reach Tastebase another way, such as over Tailscale, list those addresses in `BETTER_AUTH_TRUSTED_ORIGINS`, separated by commas with no spaces. Full reference: [environment-variables.md](./environment-variables.md).
 
@@ -44,7 +42,7 @@ curl -O https://raw.githubusercontent.com/ReeceRose/tastebase/main/docker-compos
 curl -o .env https://raw.githubusercontent.com/ReeceRose/tastebase/main/.env.docker.example
 ```
 
-Edit `.env`: generate `BETTER_AUTH_SECRET` and `ENCRYPTION_SECRET` with `openssl rand -base64 48` (one each), and set `BETTER_AUTH_URL`. Then:
+Edit `.env`: generate `BETTER_AUTH_SECRET` with `openssl rand -base64 48`, and set `BETTER_AUTH_URL`. Then:
 
 ```bash
 docker compose up -d
@@ -66,7 +64,6 @@ docker run -d \
   -e DATABASE_URL=file:/app/data/tastebase.db \
   -e BETTER_AUTH_SECRET="<openssl rand -base64 48>" \
   -e BETTER_AUTH_URL="http://YOUR_IP:3000" \
-  -e ENCRYPTION_SECRET="<a different openssl rand -base64 48>" \
   -v tastebase-data:/app/data \
   -v tastebase-uploads:/app/uploads \
   ghcr.io/reecerose/tastebase:latest
@@ -223,7 +220,7 @@ It returns `503` if the database can't be reached. The Compose file already uses
 
 **The container keeps restarting.** Run `docker compose logs tastebase`. The usual causes:
 
-- **"Invalid environment variables"**: the log names the variable. It's usually `ENCRYPTION_SECRET`. Regenerate it with `openssl rand -base64 48`, which has the mix of characters it requires.
+- **"Invalid environment variables"**: the log names the variable. Check it's set in `.env`. Generate `BETTER_AUTH_SECRET` with `openssl rand -base64 48`.
 - **"unable to open database file"**: the data folder isn't writable by uid `1001`. See [Using host folders](#using-host-folders-instead-of-named-volumes).
 - **Port already in use**: change the host side of `ports:`.
 
@@ -244,7 +241,7 @@ More: [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).
 
 ## Security checklist
 
-1. Generate unique secrets; never reuse the examples.
+1. Generate a unique secret; never reuse the examples.
 2. Use HTTPS for anything reachable from outside your home network.
 3. If you're not using a reverse proxy, don't expose port 3000 to the internet.
 4. Set `ALLOW_SIGN_UPS=false` once everyone has an account. While it's on, anyone who can reach Tastebase can create an account and see shared recipes.

@@ -15,8 +15,6 @@ services:
       - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
       - BETTER_AUTH_TRUSTED_ORIGINS=${BETTER_AUTH_TRUSTED_ORIGINS:-}
       - ALLOW_SIGN_UPS=${ALLOW_SIGN_UPS:-true}
-      - ENCRYPTION_SECRET=${ENCRYPTION_SECRET}
-      - CURRENT_ENCRYPTION_VERSION=${CURRENT_ENCRYPTION_VERSION:-1}
     volumes:
       # On a NAS, prefer host paths, e.g. /mnt/user/appdata/tastebase/data:/app/data
       - tastebase-data:/app/data

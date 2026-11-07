@@ -148,6 +148,13 @@
       "when": 1794073806759,
       "tag": "0020_add_default_recipe_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1794085022222,
+      "tag": "0021_remove_ai_provider_configurations",
+      "breakpoints": true
     }
   ]
 }

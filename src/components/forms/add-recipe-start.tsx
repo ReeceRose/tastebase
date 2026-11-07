@@ -1,19 +1,18 @@
 "use client";
 
 import { Camera, Link2, Loader2, PenLine, Type } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { ExtensionSuggestionCard } from "@/components/cards/extension-suggestion-card";
 import { RecipeImageUpload } from "@/components/forms/recipe-image-upload";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useExtensionPresence } from "@/hooks/use-extension-presence";
-import { getRecipeImportCapabilitiesAction } from "@/lib/server-actions/recipe-import-actions";
 import { ButtonVariant, ExtensionPresence } from "@/lib/types";
-import {
-  type RecipeImportCapabilities,
-  RecipeImportInput,
-} from "@/lib/types/import-types";
+import { RecipeImportInput } from "@/lib/types/import-types";
 import { cn } from "@/lib/utils";
+
+const PHOTO_DESCRIPTION =
+  "The photo is read on this server. Clear, well-lit photos of printed recipes work best.";
 
 interface AddRecipeStartProps {
   isImporting: boolean;
@@ -24,13 +23,6 @@ interface AddRecipeStartProps {
   onImportText: (text: string) => void;
   onImportImage: (image: File) => void;
   onWriteManually: () => void;
-}
-
-function photoDescription(capabilities: RecipeImportCapabilities | null) {
-  if (capabilities?.visionAvailable) {
-    return `The photo is sent to ${capabilities.providerName} to read the recipe.`;
-  }
-  return "The photo is read on this server. Clear, well-lit photos of printed recipes work best.";
 }
 
 export function AddRecipeStart({
@@ -48,18 +40,10 @@ export function AddRecipeStart({
   const [url, setUrl] = useState(initialUrl);
   const [text, setText] = useState("");
   const [other, setOther] = useState<RecipeImportInput | null>(null);
-  const [capabilities, setCapabilities] =
-    useState<RecipeImportCapabilities | null>(null);
   const extension = useExtensionPresence();
   const suggestExtension =
     extension === ExtensionPresence.INSTALLED ||
     extension === ExtensionPresence.MISSING;
-
-  useEffect(() => {
-    getRecipeImportCapabilitiesAction().then((response) => {
-      if (response.success) setCapabilities(response.data);
-    });
-  }, []);
 
   const optionClass = (active: boolean) =>
     cn(
@@ -217,7 +201,7 @@ export function AddRecipeStart({
             <RecipeImageUpload
               onSubmit={onImportImage}
               isProcessing={isImporting}
-              description={photoDescription(capabilities)}
+              description={PHOTO_DESCRIPTION}
             />
           </div>
         )}
