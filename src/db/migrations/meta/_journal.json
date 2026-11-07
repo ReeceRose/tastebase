@@ -141,6 +141,13 @@
       "when": 1794069604675,
       "tag": "0019_repair_invalid_recipe_slugs",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1794073806759,
+      "tag": "0020_add_default_recipe_visibility",
+      "breakpoints": true
     }
   ]
 }

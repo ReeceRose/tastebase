@@ -10,35 +10,50 @@ import {
 } from "@/lib/utils/recipe-editor-values";
 
 describe("emptyEditorValues", () => {
-  it("starts shared with the house and with blank rows to type into", () => {
-    const values = emptyEditorValues();
-    expect(values.isPublic).toBe(true);
+  it("starts with blank rows to type into", () => {
+    const values = emptyEditorValues(true);
     expect(values.ingredients.length).toBeGreaterThan(0);
     expect(values.instructions.length).toBeGreaterThan(0);
     expect(values.swatch).toBeNull();
   });
+
+  it.each([true, false])("starts with isPublic set to %s", (isPublic) => {
+    expect(emptyEditorValues(isPublic).isPublic).toBe(isPublic);
+  });
 });
 
 describe("editorValuesFromImport", () => {
-  it("shares imports with the house and drops zero times", () => {
-    const values = editorValuesFromImport({
-      title: "Pasta e ceci",
-      isPublic: false,
-      prepTimeMinutes: 0,
-      cookTimeMinutes: 30,
-      ingredients: [],
-    });
-    expect(values.isPublic).toBe(true);
+  it("drops zero times and keeps blank rows", () => {
+    const values = editorValuesFromImport(
+      {
+        title: "Pasta e ceci",
+        prepTimeMinutes: 0,
+        cookTimeMinutes: 30,
+        ingredients: [],
+      },
+      true,
+    );
     expect(values.prepTimeMinutes).toBeUndefined();
     expect(values.cookTimeMinutes).toBe(30);
     expect(values.ingredients.length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    [true, false],
+    [false, true],
+  ])("uses the default of %s over an imported %s", (isPublic, imported) => {
+    const values = editorValuesFromImport(
+      { title: "Pasta e ceci", isPublic: imported },
+      isPublic,
+    );
+    expect(values.isPublic).toBe(isPublic);
   });
 });
 
 describe("cleanEditorValues", () => {
   it("drops blank rows and keeps a map back to the form rows", () => {
     const values = {
-      ...emptyEditorValues(),
+      ...emptyEditorValues(true),
       title: "  Soup  ",
       ingredients: [
         emptyIngredient(),
@@ -69,7 +84,7 @@ describe("cleanEditorValues", () => {
 
   it("turns NaN numbers from empty inputs into undefined", () => {
     const cleaned = cleanEditorValues({
-      ...emptyEditorValues(),
+      ...emptyEditorValues(true),
       servings: Number.NaN,
       prepTimeMinutes: Number.NaN,
     });

@@ -1,11 +1,11 @@
 "use client";
 
 import { UnitPreferencesForm } from "@/components/forms/unit-preferences-form";
-import type { User } from "@/db/schema.base";
 import { updateUserPreferences } from "@/lib/auth/auth-actions";
+import type { UserPreferencesSubset } from "@/lib/types";
 
 interface UnitPreferencesSectionProps {
-  user: User;
+  user: UserPreferencesSubset;
 }
 
 export function UnitPreferencesSection({ user }: UnitPreferencesSectionProps) {

@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `default_recipe_is_public` integer DEFAULT true NOT NULL;

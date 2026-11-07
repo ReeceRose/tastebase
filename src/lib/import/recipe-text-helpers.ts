@@ -116,8 +116,33 @@ export function startsWithQuantity(line: string): boolean {
   return QUANTITY_PATTERN.test(stripListMarker(line));
 }
 
+const NOTE_REFERENCE = "(?:see\\s+)?notes?\\s*\\d+";
+const NOTE_REFERENCE_PATTERN = new RegExp(
+  `\\s*(?:\\(\\(\\s*${NOTE_REFERENCE}\\s*\\)\\)|\\(\\s*,?\\s*${NOTE_REFERENCE}\\s*\\))`,
+  "gi",
+);
+// Allows one level of nested brackets, so unbalanced text is left alone.
+const BRACKETED_TEXT = "((?:[^()]|\\([^()]*\\))+)";
+const WRAPPED_COMMA_NOTE_PATTERN = new RegExp(
+  `\\s*\\(\\s*,\\s*${BRACKETED_TEXT}\\)$`,
+);
+const DOUBLE_BRACKET_NOTE_PATTERN = new RegExp(
+  `\\(\\(${BRACKETED_TEXT}\\)\\)$`,
+);
+
+// WP Recipe Maker joins "name (notes)" in its JSON-LD, even when the notes
+// already start with a comma or a bracket: "garlic (, minced)", "oil ((or butter))".
+// References to footnotes go too, because footnotes aren't imported.
+function tidyIngredientNotes(line: string): string {
+  return line
+    .replace(NOTE_REFERENCE_PATTERN, "")
+    .replace(WRAPPED_COMMA_NOTE_PATTERN, ", $1")
+    .replace(DOUBLE_BRACKET_NOTE_PATTERN, "($1)")
+    .trim();
+}
+
 export function parseIngredientLine(rawLine: string): ParsedIngredient | null {
-  const line = stripListMarker(normalizeText(rawLine)).trim();
+  const line = tidyIngredientNotes(stripListMarker(normalizeText(rawLine)));
   if (line.length === 0) {
     return null;
   }

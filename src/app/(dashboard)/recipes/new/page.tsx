@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { RecipeCreationWorkflow } from "@/components/forms/recipe-creation-workflow";
+import { Suspense } from "react";
+import { RecipeCreationSection } from "@/components/layout/recipe-creation-section";
+import { RecipeFormSkeleton } from "@/components/skeletons/recipe-form-skeleton";
 import { auth } from "@/lib/auth/auth";
 import { RETURN_PATH_PARAM } from "@/lib/utils/return-path";
 import { findSharedLink } from "@/lib/utils/shared-link";
@@ -40,14 +42,16 @@ export default async function NewRecipePage({
   }
 
   return (
-    <RecipeCreationWorkflow
-      userId={session.user.id}
-      fromExtension={from === "extension"}
-      sharedUrl={findSharedLink({
-        url: params.url ?? null,
-        text: params.text ?? null,
-        title: params.title ?? null,
-      })}
-    />
+    <Suspense fallback={<RecipeFormSkeleton />}>
+      <RecipeCreationSection
+        userId={session.user.id}
+        fromExtension={from === "extension"}
+        sharedUrl={findSharedLink({
+          url: params.url ?? null,
+          text: params.text ?? null,
+          title: params.title ?? null,
+        })}
+      />
+    </Suspense>
   );
 }

@@ -11,6 +11,7 @@ import { SecuritySessions } from "@/components/forms/security-sessions";
 import { UnitPreferencesSection } from "@/components/forms/unit-preferences-section";
 import {
   HouseholdSection,
+  SharingSection,
   StorageSection,
 } from "@/components/layout/settings-sections";
 import { TemplateList } from "@/components/lists/template-list";
@@ -98,6 +99,12 @@ export default async function SettingsPage({
 
           {section === SettingsSection.UNITS && (
             <UnitPreferencesSection user={user} />
+          )}
+
+          {section === SettingsSection.SHARING && (
+            <Suspense fallback={<SettingsSectionSkeleton />}>
+              <SharingSection />
+            </Suspense>
           )}
 
           {section === SettingsSection.IMPORT && <AISettingsForm />}

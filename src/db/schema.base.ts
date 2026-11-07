@@ -17,6 +17,11 @@ export const users = sqliteTable("users", {
   preferredVolumeUnit: text("preferred_volume_unit")
     .default("imperial")
     .notNull(),
+  defaultRecipeIsPublic: integer("default_recipe_is_public", {
+    mode: "boolean",
+  })
+    .default(true)
+    .notNull(),
   createdAt: integer("created_at", { mode: "timestamp" })
     .defaultNow()
     .notNull(),

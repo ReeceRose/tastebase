@@ -48,7 +48,6 @@ describe("mapImportResultToFormData", () => {
     expect(form.difficulty).toBe(RecipeDifficulty.MEDIUM);
     expect(form.sourceUrl).toBe("https://example.com/chili");
     expect(form.sourceName).toBe("Example");
-    expect(form.isPublic).toBe(false);
     expect(form.ingredients?.[0]).toMatchObject({
       name: "beans",
       amount: "1 1/2",

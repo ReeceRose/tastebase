@@ -44,6 +44,50 @@ describe("parseIngredientLine", () => {
     expect(parseIngredientLine(line)).toEqual({ quantity, unit, name });
   });
 
+  it.each([
+    [
+      "1 1/2 tbsp extra virgin oil ((or butter))",
+      "1 1/2",
+      "tbsp",
+      "extra virgin oil (or butter)",
+    ],
+    ["1  garlic clove (, minced)", "1", null, "garlic clove, minced"],
+    [
+      "1/2  onion (, finely chopped (white, brown, yellow))",
+      "1/2",
+      null,
+      "onion, finely chopped (white, brown, yellow)",
+    ],
+    [
+      "1 1/2 cups long grain white rice (, uncooked (Note 1))",
+      "1 1/2",
+      "cups",
+      "long grain white rice, uncooked",
+    ],
+    [
+      "1  large lemon ((1 tsp zest + 3 - 4 tbsp lemon juice))",
+      "1",
+      null,
+      "large lemon (1 tsp zest + 3 - 4 tbsp lemon juice)",
+    ],
+    ["2 cups stock ((Note 2))", "2", "cups", "stock"],
+    ["1 cup rice (see note 3)", "1", "cup", "rice"],
+  ])("tidies WP Recipe Maker notes in %s", (line, quantity, unit, name) => {
+    expect(parseIngredientLine(line)).toEqual({ quantity, unit, name });
+  });
+
+  it("leaves ordinary and unbalanced brackets alone", () => {
+    expect(parseIngredientLine("1 cup milk (whole)")?.name).toBe(
+      "milk (whole)",
+    );
+    expect(parseIngredientLine("1 cup milk (, warm) plus (cold)")?.name).toBe(
+      "milk (, warm) plus (cold)",
+    );
+    expect(parseIngredientLine("1 cup Notes 5 blend")?.name).toBe(
+      "Notes 5 blend",
+    );
+  });
+
   it("returns lines without a quantity as the name", () => {
     expect(parseIngredientLine("Salt and pepper to taste")).toEqual({
       quantity: null,

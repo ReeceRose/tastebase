@@ -57,7 +57,10 @@
       }
     },
     {
-      "includes": ["src/app/page.tsx"],
+      "includes": [
+        "src/app/page.tsx",
+        "src/components/layout/recipe-json-ld.tsx"
+      ],
       "linter": {
         "rules": {
           "security": {

@@ -23,6 +23,11 @@ export const SETTINGS_SECTIONS: SettingsItem[] = [
     description: "How amounts and temperatures show on recipes.",
   },
   {
+    id: SettingsSection.SHARING,
+    label: "Sharing",
+    description: "Who can see a recipe when you first add it.",
+  },
+  {
     id: SettingsSection.IMPORT,
     label: "Import and AI",
     description: "Add a provider if you want help with messy text and photos.",

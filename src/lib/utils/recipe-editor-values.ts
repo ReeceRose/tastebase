@@ -36,7 +36,7 @@ export function emptyInstruction(): EditorInstruction {
   };
 }
 
-export function emptyEditorValues(): RecipeEditorValues {
+export function emptyEditorValues(isPublic: boolean): RecipeEditorValues {
   return {
     title: "",
     description: "",
@@ -47,7 +47,7 @@ export function emptyEditorValues(): RecipeEditorValues {
     cuisine: "",
     sourceUrl: "",
     sourceName: "",
-    isPublic: true,
+    isPublic,
     ingredients: [emptyIngredient(), emptyIngredient(), emptyIngredient()],
     instructions: [emptyInstruction(), emptyInstruction()],
     tags: [],
@@ -63,14 +63,15 @@ function positiveOrUndefined(
 
 export function editorValuesFromImport(
   data: Partial<RecipeFormData>,
+  isPublic: boolean,
 ): RecipeEditorValues {
-  const base = emptyEditorValues();
+  const base = emptyEditorValues(isPublic);
   return {
     ...base,
     ...data,
     prepTimeMinutes: positiveOrUndefined(data.prepTimeMinutes),
     cookTimeMinutes: positiveOrUndefined(data.cookTimeMinutes),
-    isPublic: true,
+    isPublic,
     ingredients:
       data.ingredients && data.ingredients.length > 0
         ? data.ingredients

@@ -65,9 +65,10 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days - convenient for recipe browsing
     updateAge: 60 * 60 * 24, // 24 hours - update session daily for fresh recipe access
+    // Off so revoked sessions and changed preferences apply straight away. The
+    // lookup is a local SQLite read, so the cache would save almost nothing.
     cookieCache: {
-      enabled: true,
-      maxAge: 60 * 60 * 24 * 30, // 30 days - persistent recipe browsing
+      enabled: false,
     },
   },
   user: {

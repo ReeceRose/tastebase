@@ -27,7 +27,6 @@ export function mapImportResultToFormData(
     cuisine: recipe.cuisine ?? "",
     sourceUrl: result.sourceUrl ?? "",
     sourceName: result.sourceName ?? "",
-    isPublic: false,
     ingredients: recipe.ingredients.map((ingredient) => ({
       name: ingredient.name,
       amount: ingredient.quantity ?? "",

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
+import { RecipeJsonLd } from "@/components/layout/recipe-json-ld";
 import { RecipePage } from "@/components/layout/recipe-page";
 import { RecipeDetailSkeleton } from "@/components/skeletons/recipe-detail-skeleton";
 import { auth } from "@/lib/auth/auth";
@@ -10,6 +11,7 @@ import { getRecipeFavoriteStatus } from "@/lib/server-actions/recipe-favorites-a
 import { getRecipeListOptions } from "@/lib/server-actions/recipe-list-actions";
 import { trackRecipeView } from "@/lib/server-actions/recipe-tracking-actions";
 import { MeasurementUnit, TemperatureUnit } from "@/lib/types";
+import { requestOrigin } from "@/lib/utils/recipe-json-ld";
 
 interface RecipeDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -20,6 +22,7 @@ interface RecipeDetailContentProps {
   currentUserId: string;
   measurementSystem: MeasurementUnit;
   temperatureUnit: TemperatureUnit;
+  origin: string;
 }
 
 async function RecipeDetailContent({
@@ -27,6 +30,7 @@ async function RecipeDetailContent({
   currentUserId,
   measurementSystem,
   temperatureUnit,
+  origin,
 }: RecipeDetailContentProps) {
   const result = await getRecipeBySlug(recipeSlug);
 
@@ -45,23 +49,27 @@ async function RecipeDetailContent({
   ]);
 
   return (
-    <RecipePage
-      recipe={result.data}
-      currentUserId={currentUserId}
-      isFavourite={favoriteStatus?.data?.isFavorited ?? false}
-      lists={lists ?? []}
-      cooks={cooks ?? { count: 0, lastCookedAt: null, lastCookedBy: null }}
-      measurementSystem={measurementSystem}
-      temperatureUnit={temperatureUnit}
-    />
+    <>
+      <RecipeJsonLd recipe={result.data} origin={origin} />
+      <RecipePage
+        recipe={result.data}
+        currentUserId={currentUserId}
+        isFavourite={favoriteStatus?.data?.isFavorited ?? false}
+        lists={lists ?? []}
+        cooks={cooks ?? { count: 0, lastCookedAt: null, lastCookedBy: null }}
+        measurementSystem={measurementSystem}
+        temperatureUnit={temperatureUnit}
+      />
+    </>
   );
 }
 
 export default async function RecipeDetailPage({
   params,
 }: RecipeDetailPageProps) {
+  const requestHeaders = await headers();
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: requestHeaders,
   });
 
   if (!session?.user) {
@@ -85,6 +93,7 @@ export default async function RecipeDetailPage({
         currentUserId={session.user.id}
         measurementSystem={measurementSystem}
         temperatureUnit={temperatureUnit}
+        origin={requestOrigin(requestHeaders)}
       />
     </Suspense>
   );

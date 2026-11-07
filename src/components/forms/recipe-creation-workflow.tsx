@@ -40,6 +40,7 @@ interface RecipeCreationWorkflowProps {
   userId: string;
   fromExtension: boolean;
   sharedUrl: string | null;
+  defaultIsPublic: boolean;
 }
 
 const EXTENSION_TIMEOUT_ERROR =
@@ -57,13 +58,16 @@ export function RecipeCreationWorkflow({
   userId,
   fromExtension,
   sharedUrl,
+  defaultIsPublic,
 }: RecipeCreationWorkflowProps) {
   const [step, setStep] = useState<AddRecipeStep>(AddRecipeStep.START);
   const [isImporting, startImport] = useTransition();
   const [importingLabel, setImportingLabel] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<RecipeImportResult | null>(null);
-  const [values, setValues] = useState<RecipeEditorValues>(emptyEditorValues);
+  const [values, setValues] = useState<RecipeEditorValues>(() =>
+    emptyEditorValues(defaultIsPublic),
+  );
   const [canTidy, setCanTidy] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
   const [awaitingImport, setAwaitingImport] = useState(
@@ -123,7 +127,12 @@ export function RecipeCreationWorkflow({
       setInitialPhotos(
         photosToKeep ?? (imported.image ? [imported.image] : []),
       );
-      setValues(editorValuesFromImport(mapImportResultToFormData(imported)));
+      setValues(
+        editorValuesFromImport(
+          mapImportResultToFormData(imported),
+          defaultIsPublic,
+        ),
+      );
       setEditorKey((key) => key + 1);
       setStep(AddRecipeStep.REVIEW);
     });
@@ -193,7 +202,7 @@ export function RecipeCreationWorkflow({
     setError(null);
     setPhotoSuggestions([]);
     setSavedMatch(null);
-    setValues(emptyEditorValues());
+    setValues(emptyEditorValues(defaultIsPublic));
   };
 
   if (step === AddRecipeStep.START && awaitingImport) {
@@ -233,7 +242,7 @@ export function RecipeCreationWorkflow({
           setResult(null);
           setSavedMatch(null);
           setInitialPhotos([]);
-          setValues(emptyEditorValues());
+          setValues(emptyEditorValues(defaultIsPublic));
           setEditorKey((key) => key + 1);
           setStep(AddRecipeStep.REVIEW);
         }}

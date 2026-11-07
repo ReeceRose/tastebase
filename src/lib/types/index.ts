@@ -157,6 +157,7 @@ export enum SettingsSection {
   PROFILE = "profile",
   HOUSEHOLD = "household",
   UNITS = "units",
+  SHARING = "sharing",
   IMPORT = "import",
   SAVING = "saving",
   TEMPLATES = "templates",

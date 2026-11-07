@@ -1,6 +1,8 @@
 import { StoragePanel } from "@/components/cards/storage-panel";
+import { SharingPreferenceForm } from "@/components/forms/sharing-preference-form";
 import { MemberAvatar } from "@/components/ui/member-avatar";
 import { getHouseholdOverview } from "@/lib/server-actions/household-actions";
+import { getDefaultRecipeIsPublic } from "@/lib/server-actions/sharing-preference-actions";
 import { getStorageStats } from "@/lib/server-actions/storage-actions";
 import { AvatarSize } from "@/lib/types";
 import { formatRelativeDay } from "@/lib/utils/time-formatting";
@@ -51,6 +53,20 @@ export async function HouseholdSection({
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+export async function SharingSection() {
+  const isPublic = await getDefaultRecipeIsPublic();
+
+  return (
+    <div className="space-y-4">
+      <p className="max-w-[60ch] text-muted-foreground">
+        This is where each new recipe starts. You can still change it on any
+        recipe, and recipes you've already added stay as they are.
+      </p>
+      <SharingPreferenceForm initialIsPublic={isPublic} />
     </div>
   );
 }
