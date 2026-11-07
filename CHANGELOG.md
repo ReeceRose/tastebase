@@ -4,6 +4,34 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.2 — 2026-11-07
+
+This release lets you close sign-ups, adds support for reaching Tastebase from more than one address, and makes recipe saves and unit conversions more reliable.
+
+### What's Changed
+
+#### Features
+- Set `ALLOW_SIGN_UPS=false` to stop new accounts once everyone has joined. The first account always works.
+- The Chrome extension can store a backup address, such as a LAN IP at home and Tailscale when you're away. The popup uses whichever one answers.
+- New Tastebase website with a Docker setup guide: https://tastebase.reecerose.com
+
+#### Fixes
+- Recipe saves are more dependable, so a failure partway through is less likely to leave a recipe half-updated.
+- Unit conversions and ingredient scaling are more accurate.
+- Fixed "Invalid origin" sign-in errors on additional addresses. List them in `BETTER_AUTH_TRUSTED_ORIGINS`.
+- Editing a recipe's title can no longer create a broken recipe link, and existing invalid links are repaired automatically when you update.
+
+#### Improvements
+- New bite logo, app icons and social preview image, plus refreshed copy.
+- Added `.env.docker.example`, with every Docker setting explained.
+- Expanded the deployment and troubleshooting docs, including Unraid and multi-address setups.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.2
+```
+
 ## v0.1.1 — 2026-10-19
 
 This release lets you find recipes by where they came from and makes the browser extension feel quicker.
