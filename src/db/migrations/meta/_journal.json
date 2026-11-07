@@ -155,6 +155,13 @@
       "when": 1794085022222,
       "tag": "0021_remove_ai_provider_configurations",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1794088826616,
+      "tag": "0022_add_recipe_video_url",
+      "breakpoints": true
     }
   ]
 }

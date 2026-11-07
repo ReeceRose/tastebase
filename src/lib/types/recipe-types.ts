@@ -80,6 +80,7 @@ export interface RecipeFormData {
   cuisine?: string;
   sourceUrl?: string;
   sourceName?: string;
+  videoUrl?: string;
   isPublic: boolean;
   ingredients: RecipeFormIngredient[];
   instructions: RecipeFormInstruction[];
@@ -96,6 +97,7 @@ export interface CreateRecipeData {
   cuisine?: string;
   sourceUrl?: string;
   sourceName?: string;
+  videoUrl?: string;
   isPublic?: boolean;
   ingredients: RecipeIngredient[];
   instructions: RecipeInstruction[];
@@ -363,6 +365,7 @@ export interface ComparableRecipeFields {
   cuisine?: string | null;
   sourceUrl?: string | null;
   sourceName?: string | null;
+  videoUrl?: string | null;
   swatch?: string | null;
   isPublic?: boolean;
 }

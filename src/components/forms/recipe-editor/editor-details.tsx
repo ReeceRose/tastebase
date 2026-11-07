@@ -20,7 +20,12 @@ interface EditorDetailsProps {
 }
 
 export function EditorDetails({ automaticSwatch }: EditorDetailsProps) {
-  const ids = { tags: useId(), url: useId(), name: useId() };
+  const ids = {
+    tags: useId(),
+    url: useId(),
+    name: useId(),
+    video: useId(),
+  };
   const [tagText, setTagText] = useState("");
   const {
     control,
@@ -131,6 +136,20 @@ export function EditorDetails({ automaticSwatch }: EditorDetailsProps) {
               />
             </EditorField>
           </div>
+
+          <EditorField
+            id={ids.video}
+            label="Video (link)"
+            hint="A video of someone making it. YouTube and Vimeo links play on the recipe page."
+            error={errors.videoUrl?.message}
+          >
+            <Input
+              id={ids.video}
+              type="url"
+              {...register("videoUrl")}
+              placeholder="https://www.youtube.com/watch?v=…"
+            />
+          </EditorField>
 
           <div className="space-y-2">
             <p className="text-meta">Colour</p>

@@ -46,6 +46,7 @@ export const recipes = sqliteTable(
     }),
     sourceUrl: text("source_url"),
     sourceName: text("source_name"),
+    videoUrl: text("video_url"),
     isPublic: integer("is_public", { mode: "boolean" })
       .default(false)
       .notNull(),

@@ -4,6 +4,7 @@ import { IngredientPanel } from "@/components/cards/ingredient-panel";
 import { RecipeDetailsPanel } from "@/components/cards/recipe-details-panel";
 import { RecipeHero } from "@/components/cards/recipe-hero";
 import { RecipeHouseNotes } from "@/components/cards/recipe-house-notes";
+import { RecipeVideoPanel } from "@/components/cards/recipe-video-panel";
 import { InstructionSteps } from "@/components/recipes/instruction-steps";
 import { PhotoStrip } from "@/components/recipes/photo-strip";
 import type { MeasurementUnit, TemperatureUnit } from "@/lib/types";
@@ -102,6 +103,7 @@ export function RecipePage({
             swatch={swatch}
             temperatureUnit={temperatureUnit}
           />
+          <RecipeVideoPanel title={recipe.title} videoUrl={recipe.videoUrl} />
         </section>
 
         <aside className="space-y-4 lg:col-span-2 xl:col-span-1">

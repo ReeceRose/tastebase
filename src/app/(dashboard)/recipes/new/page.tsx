@@ -2,8 +2,10 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { RecipeCreationSection } from "@/components/layout/recipe-creation-section";
-import { RecipeFormSkeleton } from "@/components/skeletons/recipe-form-skeleton";
+import { AddRecipeStartSkeleton } from "@/components/skeletons/add-recipe-start-skeleton";
+import { RecipeImportProgress } from "@/components/skeletons/recipe-import-progress";
 import { auth } from "@/lib/auth/auth";
+import { hostnameOf } from "@/lib/utils/hostname";
 import { RETURN_PATH_PARAM } from "@/lib/utils/return-path";
 import { findSharedLink } from "@/lib/utils/shared-link";
 
@@ -41,16 +43,31 @@ export default async function NewRecipePage({
     );
   }
 
+  const fromExtension = from === "extension";
+  const sharedUrl = findSharedLink({
+    url: params.url ?? null,
+    text: params.text ?? null,
+    title: params.title ?? null,
+  });
+  const fallback =
+    fromExtension || sharedUrl ? (
+      <RecipeImportProgress
+        label={
+          sharedUrl
+            ? `Reading the recipe from ${hostnameOf(sharedUrl)}…`
+            : "Finding the recipe…"
+        }
+      />
+    ) : (
+      <AddRecipeStartSkeleton />
+    );
+
   return (
-    <Suspense fallback={<RecipeFormSkeleton />}>
+    <Suspense fallback={fallback}>
       <RecipeCreationSection
         userId={session.user.id}
-        fromExtension={from === "extension"}
-        sharedUrl={findSharedLink({
-          url: params.url ?? null,
-          text: params.text ?? null,
-          title: params.title ?? null,
-        })}
+        fromExtension={fromExtension}
+        sharedUrl={sharedUrl}
       />
     </Suspense>
   );

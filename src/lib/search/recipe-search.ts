@@ -68,6 +68,7 @@ export async function searchRecipes(
         swatch: recipes.swatch,
         sourceUrl: recipes.sourceUrl,
         sourceName: recipes.sourceName,
+        videoUrl: recipes.videoUrl,
         isPublic: recipes.isPublic,
         isArchived: recipes.isArchived,
         createdAt: recipes.createdAt,

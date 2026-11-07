@@ -195,6 +195,9 @@ export const RECIPE_CONSTANTS = {
     SOURCE_NAME: {
       MAX_LENGTH: 100,
     },
+    VIDEO_URL: {
+      MAX_LENGTH: 500,
+    },
   },
 } as const;
 

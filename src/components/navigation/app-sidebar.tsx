@@ -12,6 +12,7 @@ import {
   QUICK_PICKS,
 } from "@/components/navigation/nav-items";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ButtonVariant, type NavCounts } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -23,11 +24,11 @@ interface AppSidebarProps {
 const itemClass =
   "flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 font-semibold transition-colors duration-150 outline-none focus-visible:ring-[3px] focus-visible:ring-sidebar-ring";
 
-function QuickPickLinks() {
-  const pathname = usePathname();
-  const search = useSearchParams().toString();
-  const current = search ? `${pathname}?${search}` : pathname;
+interface QuickPickListProps {
+  current: string | null;
+}
 
+function QuickPickList({ current }: QuickPickListProps) {
   return QUICK_PICKS.map((pick) => {
     const active = current === pick.href;
     return (
@@ -46,6 +47,14 @@ function QuickPickLinks() {
       </Link>
     );
   });
+}
+
+function QuickPickLinks() {
+  const pathname = usePathname();
+  const search = useSearchParams().toString();
+  return (
+    <QuickPickList current={search ? `${pathname}?${search}` : pathname} />
+  );
 }
 
 export function AppSidebar({ counts, household }: AppSidebarProps) {
@@ -75,7 +84,11 @@ export function AppSidebar({ counts, household }: AppSidebarProps) {
             >
               {item.title}
               {item.countKey && (
-                <Suspense fallback={null}>
+                <Suspense
+                  fallback={
+                    <Skeleton className="h-4 w-5 rounded-full bg-sidebar-foreground/20" />
+                  }
+                >
                   <NavCount counts={counts} countKey={item.countKey} />
                 </Suspense>
               )}
@@ -88,7 +101,7 @@ export function AppSidebar({ counts, household }: AppSidebarProps) {
         Quick picks
       </p>
       <nav aria-label="Quick picks" className="flex flex-col gap-1">
-        <Suspense fallback={null}>
+        <Suspense fallback={<QuickPickList current={null} />}>
           <QuickPickLinks />
         </Suspense>
       </nav>

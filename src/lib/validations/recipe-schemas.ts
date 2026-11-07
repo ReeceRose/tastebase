@@ -132,6 +132,21 @@ export const createRecipeSchema = z.object({
       "Source name must be 100 characters or less",
     )
     .optional(),
+  videoUrl: z
+    .string()
+    .max(
+      RECIPE_CONSTANTS.VALIDATION_LIMITS.VIDEO_URL.MAX_LENGTH,
+      "Video link must be 500 characters or less",
+    )
+    .refine(
+      (value) => !value || /^https?:\/\//i.test(value),
+      "Video link must start with http:// or https://",
+    )
+    .refine(
+      (value) => !value || z.string().url().safeParse(value).success,
+      "Video link must be a valid URL when provided",
+    )
+    .optional(),
   isPublic: z.boolean(),
   ingredients: z
     .array(recipeIngredientSchema)

@@ -19,7 +19,11 @@ import {
   SETTINGS_SECTIONS,
 } from "@/components/navigation/settings-items";
 import { SettingsNav } from "@/components/navigation/settings-nav";
-import { SettingsSectionSkeleton } from "@/components/skeletons/settings-section-skeleton";
+import {
+  HouseholdSectionSkeleton,
+  SharingSectionSkeleton,
+  StorageSectionSkeleton,
+} from "@/components/skeletons/settings-section-skeleton";
 import { MemberAvatar } from "@/components/ui/member-avatar";
 import { auth } from "@/lib/auth/auth";
 import { AvatarSize, SettingsSection } from "@/lib/types";
@@ -91,7 +95,7 @@ export default async function SettingsPage({
           )}
 
           {section === SettingsSection.HOUSEHOLD && (
-            <Suspense fallback={<SettingsSectionSkeleton />}>
+            <Suspense fallback={<HouseholdSectionSkeleton />}>
               <HouseholdSection currentUserId={user.id} />
             </Suspense>
           )}
@@ -101,7 +105,7 @@ export default async function SettingsPage({
           )}
 
           {section === SettingsSection.SHARING && (
-            <Suspense fallback={<SettingsSectionSkeleton />}>
+            <Suspense fallback={<SharingSectionSkeleton />}>
               <SharingSection />
             </Suspense>
           )}
@@ -111,7 +115,7 @@ export default async function SettingsPage({
           {section === SettingsSection.TEMPLATES && <TemplateList />}
 
           {section === SettingsSection.STORAGE && (
-            <Suspense fallback={<SettingsSectionSkeleton />}>
+            <Suspense fallback={<StorageSectionSkeleton />}>
               <StorageSection />
             </Suspense>
           )}

@@ -27,7 +27,12 @@ export default async function RecentPage() {
         Recent
       </h1>
       <Suspense
-        fallback={<RecipeLibraryResultsSkeleton view={ViewMode.LIST} />}
+        fallback={
+          <RecipeLibraryResultsSkeleton
+            view={ViewMode.LIST}
+            showCount={false}
+          />
+        }
       >
         <RecentlyOpenedList currentUserId={session.user.id} />
       </Suspense>

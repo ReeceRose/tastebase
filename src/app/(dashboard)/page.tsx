@@ -11,8 +11,10 @@ import {
   RecentlyOpenedSection,
 } from "@/components/layout/home-sections";
 import {
+  HomeActivitySkeleton,
   HomeFeatureSkeleton,
-  HomePanelSkeleton,
+  HomeForgottenSkeleton,
+  HomeRecentSkeleton,
   RecipeTileGridSkeleton,
 } from "@/components/skeletons/home-skeletons";
 import { auth } from "@/lib/auth/auth";
@@ -47,13 +49,13 @@ export default async function HomePage() {
       </Suspense>
 
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 xl:grid-cols-3">
-        <Suspense fallback={<HomePanelSkeleton />}>
+        <Suspense fallback={<HomeRecentSkeleton />}>
           <RecentlyOpenedSection currentUserId={userId} />
         </Suspense>
-        <Suspense fallback={<HomePanelSkeleton />}>
+        <Suspense fallback={<HomeActivitySkeleton />}>
           <HouseActivitySection />
         </Suspense>
-        <Suspense fallback={null}>
+        <Suspense fallback={<HomeForgottenSkeleton />}>
           <ForgottenRecipesSection currentUserId={userId} />
         </Suspense>
       </div>

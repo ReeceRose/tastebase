@@ -91,6 +91,7 @@ function recipe(overrides: Partial<RecipeWithRelations>): RecipeWithRelations {
     swatch: null,
     sourceUrl: null,
     sourceName: null,
+    videoUrl: null,
     isPublic: true,
     isArchived: false,
     createdAt: DATE,

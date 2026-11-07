@@ -25,6 +25,7 @@ import type {
   PendingImage,
   RecipeEditorValues,
 } from "@/lib/types/recipe-types";
+import { hostnameOf } from "@/lib/utils/hostname";
 import { mergePhotoSuggestions } from "@/lib/utils/photo-suggestions";
 import {
   editorValuesFromImport,
@@ -41,14 +42,6 @@ interface RecipeCreationWorkflowProps {
 
 const EXTENSION_TIMEOUT_ERROR =
   "Nothing arrived from the browser extension. Open the recipe and click Save to Tastebase again.";
-
-function hostnameOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
-}
 
 export function RecipeCreationWorkflow({
   userId,

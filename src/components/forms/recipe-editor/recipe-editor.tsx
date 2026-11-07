@@ -60,6 +60,7 @@ const FIELD_SECTIONS: Record<string, EditorSection> = {
   tags: EditorSection.DETAILS,
   sourceUrl: EditorSection.DETAILS,
   sourceName: EditorSection.DETAILS,
+  videoUrl: EditorSection.DETAILS,
   swatch: EditorSection.DETAILS,
   isPublic: EditorSection.SHARING,
 };
