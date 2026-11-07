@@ -4,6 +4,32 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.5 — 2026-11-07
+
+This release swaps AI-assisted import for a faster, more reliable built-in parser, and makes setup simpler.
+
+### What's Changed
+
+#### Features
+- Recipe import now reads microdata on sites that don't publish JSON-LD. If neither is there, it falls back to the page text, but only when the page looks like a recipe.
+- Imported recipes show warnings for ingredient rows that may need a second look.
+
+#### Fixes
+- Fixed errors in recipe search queries.
+- Ingredient lines that used to import badly now parse correctly. This covers mixed amounts, second measures like `flour (125 g)`, adjustments like "plus 2 tbsp", and notes.
+
+#### Improvements
+- The ingredient parser has been rebuilt and checked against about 1,900 real lines from around 30 recipe sites. Imported amounts now scale properly.
+- Instructions are cleaned up better when they're imported.
+- AI providers and AI recipe cleanup are gone. Any saved AI provider settings are removed when the database updates.
+- Setup is simpler: the encryption key and AI environment variables are no longer needed. You can remove them from `.env` and `docker-compose.yml`.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.5
+```
+
 ## v0.1.4 — 2026-11-07
 
 Recipe library filtering by list, photos on list tiles, and tidier tags on imported recipes.
