@@ -54,7 +54,13 @@ export function PhotoStrip({ images, title }: PhotoStripProps) {
         open={current !== null}
         onOpenChange={(open) => !open && setOpenIndex(null)}
       >
-        <DialogContent className="max-w-4xl gap-3 p-3 sm:p-4">
+        <DialogContent
+          className="max-w-4xl gap-3 p-3 sm:p-4"
+          onKeyDown={(event) => {
+            if (event.key === "ArrowLeft") move(-1);
+            if (event.key === "ArrowRight") move(1);
+          }}
+        >
           <DialogTitle className="sr-only">{title}</DialogTitle>
           <DialogDescription className="sr-only">
             Photo {(openIndex ?? 0) + 1} of {images.length}
