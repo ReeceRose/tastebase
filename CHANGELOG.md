@@ -4,6 +4,30 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.4 — 2026-11-07
+
+Recipe library filtering by list, photos on list tiles, and tidier tags on imported recipes.
+
+### What's Changed
+
+#### Features
+- Filter the recipe library by one of your lists, alongside the existing filters. The choice is saved in the URL, so filtered views can be bookmarked.
+- List and favourites tiles now show a photo from one of their recipes. Tiles with no photos keep the existing look, with recipe titles and the colour motif.
+
+#### Fixes
+- Corrected the spacing around the logo in the sidebar.
+
+#### Improvements
+- Imported recipes get cleaner tags: keywords that only repeat an ingredient are dropped, while the site's own categories are kept. AI-assisted imports follow the same approach.
+- The difficulty filter is now a compact dropdown instead of a row of chips.
+- Updated dependencies, including Next.js, React, BetterAuth and the AI SDK.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.4
+```
+
 ## v0.1.3 — 2026-11-07
 
 A smoother recipe workflow, with sharing defaults, cleaner imports and more practical ingredient amounts.
