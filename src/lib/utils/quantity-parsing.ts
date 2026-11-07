@@ -9,6 +9,7 @@ const UNICODE_FRACTIONS: Record<string, number> = {
   "⅗": 3 / 5,
   "⅘": 4 / 5,
   "⅙": 1 / 6,
+  "⅐": 1 / 7,
   "⅚": 5 / 6,
   "⅛": 1 / 8,
   "⅜": 3 / 8,

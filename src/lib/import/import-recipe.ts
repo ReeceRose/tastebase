@@ -1,6 +1,15 @@
 import { fetchRecipePage } from "@/lib/import/fetch-page";
 import { htmlToText } from "@/lib/import/html-to-text";
+import {
+  adjustForRowQuality,
+  ingredientWarning,
+  MIN_CONFIDENCE_WITHOUT_WARNING,
+  notARecipeWarning,
+  pageTextIsRecipe,
+  scoreStructuredRecipe,
+} from "@/lib/import/import-quality";
 import { extractJsonLdRecipe } from "@/lib/import/json-ld-parser";
+import { extractMicrodataRecipe } from "@/lib/import/microdata-parser";
 import { extractTextFromImage } from "@/lib/import/ocr";
 import { findPagePhotos } from "@/lib/import/page-photos";
 import { parseRecipeText } from "@/lib/import/text-recipe-parser";
@@ -9,19 +18,36 @@ import {
   type FetchedPage,
   type RecipeImportResult,
   RecipeImportSource,
+  type RecipeParsingResult,
 } from "@/lib/types/import-types";
 import { photoKey } from "@/lib/utils/photo-suggestions";
 
 const logger = createOperationLogger("recipe-import");
-
-// Below this score the rule-based parse probably missed something.
-const LOW_CONFIDENCE = 0.6;
 
 const MIN_JSON_LD_INGREDIENTS = 1;
 const MIN_JSON_LD_INSTRUCTIONS = 1;
 
 const LOW_CONFIDENCE_WARNING =
   "Some details may be missing. Check them before saving.";
+
+function warningsFor(
+  confidence: number,
+  recipe: RecipeParsingResult,
+): string[] {
+  const warnings =
+    confidence < MIN_CONFIDENCE_WITHOUT_WARNING ? [LOW_CONFIDENCE_WARNING] : [];
+  const rows = ingredientWarning(recipe.ingredients);
+  return rows ? [...warnings, rows] : warnings;
+}
+
+function isComplete(recipe: RecipeParsingResult | null): boolean {
+  return (
+    recipe !== null &&
+    Boolean(recipe.title) &&
+    recipe.ingredients.length >= MIN_JSON_LD_INGREDIENTS &&
+    recipe.instructions.length >= MIN_JSON_LD_INSTRUCTIONS
+  );
+}
 
 function hostnameOf(url: string): string {
   return new URL(url).hostname.replace(/^www\./, "");
@@ -56,7 +82,10 @@ function importFromParsedText(
   options: TextImportOptions,
 ): RecipeImportResult {
   const parsed = parseRecipeText(text, options.titleHint);
-  const confidence = Math.min(parsed.confidence, options.baseConfidenceCap);
+  const confidence = Math.min(
+    adjustForRowQuality(parsed.confidence, parsed.recipe),
+    options.baseConfidenceCap,
+  );
   return {
     recipe: parsed.recipe,
     source: options.baseSource,
@@ -66,8 +95,13 @@ function importFromParsedText(
     imageUrl: options.imageUrl,
     image: null,
     photoUrls: options.photoUrls,
-    warnings: confidence < LOW_CONFIDENCE ? [LOW_CONFIDENCE_WARNING] : [],
+    warnings: warningsFor(confidence, parsed.recipe),
   };
+}
+
+interface StructuredCandidate {
+  recipe: RecipeParsingResult | null;
+  source: RecipeImportSource;
 }
 
 export async function importRecipeFromUrl(
@@ -96,46 +130,92 @@ export function importRecipeFromPage(page: FetchedPage): RecipeImportResult {
     (url) => photoKey(url) !== mainPhotoKey,
   );
 
-  if (
-    jsonLd?.recipe.title &&
-    jsonLd.recipe.ingredients.length >= MIN_JSON_LD_INGREDIENTS &&
-    jsonLd.recipe.instructions.length >= MIN_JSON_LD_INSTRUCTIONS
-  ) {
-    logger.info(
-      {
-        host: hostnameOf(page.url),
-        ingredientCount: jsonLd.recipe.ingredients.length,
-        instructionCount: jsonLd.recipe.instructions.length,
-      },
-      "Imported recipe from JSON-LD",
-    );
-    return {
-      recipe: jsonLd.recipe,
-      source: RecipeImportSource.JSON_LD,
-      confidence: 0.95,
-      sourceUrl: page.url,
-      sourceName,
-      imageUrl,
-      image: null,
-      photoUrls,
-      warnings: [],
-    };
-  }
-
-  logger.info(
-    { host: hostnameOf(page.url), hasPartialJsonLd: jsonLd !== null },
-    "No complete JSON-LD recipe; parsing page text",
-  );
-
-  return importFromParsedText(pageText.text, {
-    titleHint: jsonLd?.recipe.title ?? pageText.title,
+  const shared = {
     sourceUrl: page.url,
     sourceName,
     imageUrl,
+    image: null,
     photoUrls,
-    baseSource: RecipeImportSource.TEXT_PARSER,
-    baseConfidenceCap: 1,
-  });
+  };
+
+  const structured: StructuredCandidate[] = [
+    { recipe: jsonLd?.recipe ?? null, source: RecipeImportSource.JSON_LD },
+    {
+      recipe: extractMicrodataRecipe(page.html),
+      source: RecipeImportSource.MICRODATA,
+    },
+  ];
+  for (const { recipe, source } of structured) {
+    if (recipe && isComplete(recipe)) {
+      const confidence = scoreStructuredRecipe(recipe);
+      logger.info(
+        {
+          host: hostnameOf(page.url),
+          source,
+          confidence,
+          ingredientCount: recipe.ingredients.length,
+          instructionCount: recipe.instructions.length,
+        },
+        "Imported recipe from structured data",
+      );
+      return {
+        recipe,
+        source,
+        confidence,
+        warnings: warningsFor(confidence, recipe),
+        ...shared,
+      };
+    }
+  }
+
+  const parsed = parseRecipeText(
+    pageText.text,
+    jsonLd?.recipe.title ?? pageText.title,
+  );
+  const partial = jsonLd?.recipe ?? null;
+  const recipe: RecipeParsingResult = partial
+    ? {
+        ...parsed.recipe,
+        ...partial,
+        ingredients:
+          partial.ingredients.length > 0
+            ? partial.ingredients
+            : parsed.recipe.ingredients,
+        instructions:
+          partial.instructions.length > 0
+            ? partial.instructions
+            : parsed.recipe.instructions,
+      }
+    : parsed.recipe;
+
+  logger.info(
+    { host: hostnameOf(page.url), hasPartialJsonLd: partial !== null },
+    "No complete structured recipe; parsing page text",
+  );
+
+  if (!pageTextIsRecipe(recipe, parsed.foundHeadings || partial !== null)) {
+    return {
+      recipe: {
+        ...recipe,
+        ingredients: [],
+        instructions: [],
+        description: null,
+      },
+      source: RecipeImportSource.TEXT_PARSER,
+      confidence: 0,
+      warnings: [notARecipeWarning(recipe.title)],
+      ...shared,
+    };
+  }
+
+  const confidence = adjustForRowQuality(parsed.confidence, recipe);
+  return {
+    recipe,
+    source: RecipeImportSource.TEXT_PARSER,
+    confidence,
+    warnings: warningsFor(confidence, recipe),
+    ...shared,
+  };
 }
 
 export function importRecipeFromText(text: string): RecipeImportResult {

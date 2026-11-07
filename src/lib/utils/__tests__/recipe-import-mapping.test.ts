@@ -13,13 +13,31 @@ const RESULT: RecipeImportResult = {
     servings: 250,
     prepTime: 15,
     cookTime: null,
-    ingredients: [{ name: "beans", quantity: "1 1/2", unit: "cups" }],
+    ingredients: [
+      {
+        name: "beans",
+        quantity: "1 1/2",
+        unit: "cups",
+        notes: "drained",
+        groupName: "Chili",
+        isOptional: true,
+      },
+      {
+        name: "stock",
+        quantity: "1 cup stock and a lot more than twenty",
+        unit: null,
+        notes: "x".repeat(300),
+        groupName: "y".repeat(80),
+        isOptional: false,
+      },
+    ],
     instructions: [
       {
         step: 1,
         instruction: "Simmer.",
         timeMinutes: 45,
         temperature: "low heat",
+        groupName: null,
       },
     ],
     tags: ["dinner"],
@@ -37,6 +55,26 @@ const RESULT: RecipeImportResult = {
 };
 
 describe("mapImportResultToFormData", () => {
+  it("carries notes, sections and optional into the form", () => {
+    expect(mapImportResultToFormData(RESULT).ingredients?.[0]).toEqual({
+      name: "beans",
+      amount: "1 1/2",
+      unit: "cups",
+      notes: "drained",
+      groupName: "Chili",
+      isOptional: true,
+    });
+  });
+
+  it("keeps imported text within what the editor can save", () => {
+    const row = mapImportResultToFormData(RESULT).ingredients?.[1];
+
+    expect(row?.amount).toBe("");
+    expect(row?.name).toContain("1 cup stock and a lot more");
+    expect(row?.notes?.length).toBeLessThanOrEqual(200);
+    expect(row?.groupName?.length).toBeLessThanOrEqual(50);
+  });
+
   it("maps an import result to recipe form data", () => {
     const form = mapImportResultToFormData(RESULT);
 

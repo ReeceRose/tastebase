@@ -1,9 +1,14 @@
 import {
-  extractTemperature,
-  extractTimeMinutes,
+  parseIngredientList,
+  readIngredientHeading,
+} from "@/lib/import/ingredient-list";
+import {
+  type StepText,
+  toParsedInstructions,
+} from "@/lib/import/instruction-cleaning";
+import {
   normalizeText,
   parseDurationText,
-  parseIngredientLines,
   parseServings,
   startsWithQuantity,
   stripListMarker,
@@ -24,14 +29,15 @@ enum TextSection {
 export interface TextParseResult {
   recipe: RecipeParsingResult;
   confidence: number;
+  foundHeadings: boolean;
 }
 
 const INGREDIENT_HEADING =
-  /^(ingredients?|ingredient list|what you('|’)?ll need|you('|’)?ll need|you will need|shopping list)$/i;
+  /^(ingredients?|ingredient list|recipe ingredients|ingredients (for|to serve|\(?serves|\(?makes)\b.{0,30}|what you('|’)?ll need|you('|’)?ll need|you will need|shopping list)$/i;
 const INSTRUCTION_HEADING =
-  /^(instructions?|directions?|method|preparation|prep|steps|procedure|how to make( it| this)?)$/i;
+  /^((recipe |cooking |step[- ]by[- ]step )?(instructions?|directions?|method)|preparation( steps)?|prep|steps|procedure|step[- ]by[- ]step|how to make( it| this)?|to prepare)$/i;
 const OTHER_HEADING =
-  /^(notes?|tips?|cook('|’)?s notes?|recipe notes|nutrition( facts| information)?|storage|equipment|serving suggestions?|faqs?|video)$/i;
+  /^(notes?|tips?|cook('|’)?s notes?|recipe notes|nutrition( facts| information| per serving)?|storage|equipment|serving suggestions?|faqs?|video|comments?|\d+ comments?|reviews?|\d+ reviews?|leave a (reply|comment|review)|rate this recipe|related( recipes| posts)?|more recipes|you (may|might) also (like|enjoy)|did you make this.*|tried this recipe.*)$/i;
 
 const SERVINGS_LINE = /^(?:serves|servings|yield|yields|makes)\b\s*:?\s*(.+)$/i;
 const MAX_METADATA_LINE_LENGTH = 50;
@@ -115,18 +121,10 @@ function readMetadataLine(line: string, metadata: RecipeMetadata): boolean {
   return false;
 }
 
-function isIngredientGroupHeading(line: string): boolean {
-  if (MARKDOWN_HEADING.test(line)) {
-    return true;
-  }
-  return (
-    !startsWithQuantity(line) &&
-    (/[:：]$/.test(line) || /^for (the )?[\w\s]+$/i.test(line)) &&
-    line.length <= 60
-  );
-}
-
 function looksLikeIngredient(line: string): boolean {
+  if (readIngredientHeading(line) !== null) {
+    return false;
+  }
   if (line.length > MAX_INGREDIENT_LINE_LENGTH) {
     return false;
   }
@@ -162,22 +160,34 @@ function mergeWrappedSteps(lines: string[]): string[] {
 }
 
 function toInstructions(lines: string[]): ParsedInstruction[] {
-  return mergeWrappedSteps(
-    lines.filter(
-      (line) => !STEP_ONLY_LINE.test(line) && !MARKDOWN_HEADING.test(line),
-    ),
-  ).map((instruction, index) => ({
-    step: index + 1,
-    instruction,
-    timeMinutes: extractTimeMinutes(instruction),
-    temperature: extractTemperature(instruction),
-  }));
+  const steps: StepText[] = [];
+  let group: string | null = null;
+  let pending: string[] = [];
+  const flush = () => {
+    for (const text of mergeWrappedSteps(pending)) {
+      steps.push({ text, groupName: group });
+    }
+    pending = [];
+  };
+  for (const line of lines) {
+    if (STEP_ONLY_LINE.test(line)) continue;
+    if (MARKDOWN_HEADING.test(line)) {
+      flush();
+      group = headingText(line).slice(0, 50) || null;
+    } else {
+      pending.push(line);
+    }
+  }
+  flush();
+  return toParsedInstructions(steps);
+}
+
+function looksLikeProse(line: string): boolean {
+  return line.length > MAX_INGREDIENT_LINE_LENGTH && !startsWithQuantity(line);
 }
 
 function toIngredients(lines: string[]): ParsedIngredient[] {
-  return lines
-    .filter((line) => !isIngredientGroupHeading(line))
-    .flatMap((line) => parseIngredientLines(line));
+  return parseIngredientList(lines.filter((line) => !looksLikeProse(line)));
 }
 
 function scoreConfidence(
@@ -302,5 +312,9 @@ export function parseRecipeText(
     cuisine: null,
   };
 
-  return { recipe, confidence: scoreConfidence(recipe, foundHeadings) };
+  return {
+    recipe,
+    confidence: scoreConfidence(recipe, foundHeadings),
+    foundHeadings,
+  };
 }

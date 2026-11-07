@@ -32,7 +32,7 @@ describe("parseRecipeText", () => {
     expect(recipe.prepTime).toBe(10);
     expect(recipe.cookTime).toBe(20);
     expect(recipe.ingredients).toHaveLength(5);
-    expect(recipe.ingredients[0]).toEqual({
+    expect(recipe.ingredients[0]).toMatchObject({
       quantity: "1 1/2",
       unit: "cups",
       name: "all-purpose flour",
@@ -67,6 +67,29 @@ describe("parseRecipeText", () => {
       "Chop everything.",
       "Mix and serve.",
     ]);
+  });
+
+  it("keeps ingredient and step sections", () => {
+    const { recipe } = parseRecipeText(
+      `Tacos\n\nIngredients\nFor the salsa:\n2 tomatoes\nFor the filling:\n1 lb beef\n\nMethod\n## The salsa\n- Chop the tomatoes.\n## The filling\n- Brown the beef.`,
+      null,
+    );
+    expect(recipe.ingredients.map((row) => row.groupName)).toEqual([
+      "For the salsa",
+      "For the filling",
+    ]);
+    expect(recipe.instructions.map((step) => step.groupName)).toEqual([
+      "The salsa",
+      "The filling",
+    ]);
+  });
+
+  it("stops the ingredients at page clutter headings", () => {
+    const { recipe } = parseRecipeText(
+      `Ingredients\n1 cup flour\n2 eggs\nInstructions\n1. Mix it all together.\n2. Bake until golden brown.\n615 Comments\n3 reviews / 5 average\nGreat recipe!`,
+      "Cake",
+    );
+    expect(recipe.instructions).toHaveLength(2);
   });
 
   it("joins steps that wrap across lines", () => {
@@ -134,7 +157,7 @@ A simple family dessert.
     expect(recipe.servings).toBe(6);
     expect(recipe.prepTime).toBe(20);
     expect(recipe.ingredients.map((item) => item.name)).toEqual([
-      "large apples, peeled",
+      "large apples",
       "sugar",
       "flour",
     ]);

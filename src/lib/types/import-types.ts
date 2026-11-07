@@ -3,6 +3,7 @@ import type { PendingImage } from "@/lib/types/recipe-types";
 
 export enum RecipeImportSource {
   JSON_LD = "json_ld",
+  MICRODATA = "microdata",
   TEXT_PARSER = "text_parser",
   OCR_TEXT_PARSER = "ocr_text_parser",
 }
@@ -15,14 +16,28 @@ export enum RecipeImportInput {
 
 export const RECIPE_IMPORT_SOURCE_LABELS: Record<RecipeImportSource, string> = {
   [RecipeImportSource.JSON_LD]: "Read from the page's recipe data",
+  [RecipeImportSource.MICRODATA]: "Read from the page's recipe data",
   [RecipeImportSource.TEXT_PARSER]: "Parsed from text",
   [RecipeImportSource.OCR_TEXT_PARSER]: "Read from the photo (OCR)",
 };
+
+export enum IngredientIssue {
+  NO_NAME = "no_name",
+  STRAY_PUNCTUATION = "stray_punctuation",
+  AMOUNT_IN_NAME = "amount_in_name",
+  UNIT_IN_NAME = "unit_in_name",
+  UNBALANCED_BRACKETS = "unbalanced_brackets",
+  TOO_LONG = "too_long",
+  PAGE_NOISE = "page_noise",
+}
 
 export interface ParsedIngredient {
   name: string;
   quantity: string | null;
   unit: string | null;
+  notes: string | null;
+  groupName: string | null;
+  isOptional: boolean;
 }
 
 export interface ParsedInstruction {
@@ -30,6 +45,7 @@ export interface ParsedInstruction {
   instruction: string;
   timeMinutes: number | null;
   temperature: string | null;
+  groupName: string | null;
 }
 
 export interface RecipeParsingResult {

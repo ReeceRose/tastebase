@@ -32,6 +32,20 @@ export const NOISE_SELECTORS = [
   ".newsletter",
   ".wprm-recipe-rating",
   ".wprm-call-to-action",
+  ".wprm-recipe-adjustable-servings-container",
+  ".wprm-unit-conversion-container",
+  ".wprm-recipe-nutrition-container",
+  ".wprm-recipe-video-container",
+  ".tasty-recipes-ratings",
+  ".tasty-recipes-buttons",
+  ".tasty-recipes-scale-container",
+  ".mv-create-nutrition",
+  "button",
+  "select",
+  "#respond",
+  ".comment",
+  ".related-posts",
+  ".post-navigation",
 ].join(", ");
 
 // Recipe card containers from the common WordPress recipe plugins, then
@@ -106,5 +120,9 @@ export function stripHtml(value: string): string {
   }
   const $ = cheerio.load(`<div>${value}</div>`);
   $("br").replaceWith("\n");
-  return $("div").first().text().trim();
+  const text = $("div").first().text().trim();
+  // Some sites encode their data twice, leaving "&amp;" behind after one pass.
+  return /&(?:[a-z]+|#\d+);/i.test(text) && text !== value
+    ? stripHtml(text)
+    : text;
 }

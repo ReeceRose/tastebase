@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "import:survey": "tsx scripts/import-survey.ts",
     "lint": "biome check --write . --error-on-warnings --max-diagnostics 1000",
     "lint:check": "biome check . --error-on-warnings --max-diagnostics 1000",
     "format": "biome format --write .",

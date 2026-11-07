@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { extractJsonLdRecipe } from "@/lib/import/json-ld-parser";
+import {
+  extractJsonLdRecipe,
+  type JsonLdRecipe,
+} from "@/lib/import/json-ld-parser";
 
 function page(...jsonLd: object[]): string {
   const scripts = jsonLd
@@ -56,7 +59,77 @@ const WPRM_GRAPH = {
 };
 
 describe("extractJsonLdRecipe", () => {
-  it("finds a recipe inside @graph and flattens sections", () => {
+  it("keeps the names of instruction sections", () => {
+    const { recipe } = extractJsonLdRecipe(
+      page({
+        "@type": "Recipe",
+        name: "Cake",
+        recipeIngredient: ["1 egg"],
+        recipeInstructions: [
+          {
+            "@type": "HowToSection",
+            name: "For the sponge:",
+            itemListElement: [
+              { "@type": "HowToStep", text: "Mix the batter." },
+            ],
+          },
+          {
+            "@type": "HowToSection",
+            name: "To finish",
+            itemListElement: [
+              { "@type": "HowToStep", text: "Ice the cake." },
+              { "@type": "HowToStep", text: "Enjoy!" },
+            ],
+          },
+        ],
+      }),
+    ) as JsonLdRecipe;
+
+    expect(
+      recipe.instructions.map((step) => [step.groupName, step.instruction]),
+    ).toEqual([
+      ["For the sponge", "Mix the batter."],
+      ["To finish", "Ice the cake."],
+    ]);
+  });
+
+  it("names ingredient sections from the page's recipe card", () => {
+    const card = `<div class="wprm-recipe-container">
+      <div class="wprm-recipe-ingredient-group"><h4 class="wprm-recipe-group-name">Sauce</h4>
+        <ul><li class="wprm-recipe-ingredient">1 cup stock</li></ul></div>
+      <div class="wprm-recipe-ingredient-group"><h4 class="wprm-recipe-group-name">Topping</h4>
+        <ul><li class="wprm-recipe-ingredient">2 tbsp parsley</li></ul></div>
+    </div>`;
+    const { recipe } = extractJsonLdRecipe(
+      `${page({
+        "@type": "Recipe",
+        name: "Pie",
+        recipeIngredient: ["1 cup stock", "2 tbsp parsley"],
+        recipeInstructions: ["Bake."],
+      })}${card}`,
+    ) as JsonLdRecipe;
+
+    expect(recipe.ingredients.map((row) => row.groupName)).toEqual([
+      "Sauce",
+      "Topping",
+    ]);
+  });
+
+  it("drops search phrases from keywords", () => {
+    const { recipe } = extractJsonLdRecipe(
+      page({
+        "@type": "Recipe",
+        name: "Salsa",
+        keywords: "salsa recipe, dip",
+        recipeIngredient: ["1 onion"],
+        recipeInstructions: ["Blend."],
+      }),
+    ) as JsonLdRecipe;
+
+    expect(recipe.tags).toEqual(["dip"]);
+  });
+
+  it("finds a recipe inside @graph", () => {
     const result = extractJsonLdRecipe(page(WPRM_GRAPH));
     expect(result).not.toBeNull();
     const recipe = result?.recipe;
@@ -68,7 +141,7 @@ describe("extractJsonLdRecipe", () => {
     expect(recipe?.cookTime).toBe(60);
     expect(recipe?.cuisine).toBe("American");
     expect(recipe?.tags).toEqual(["main course", "chili", "comfort food"]);
-    expect(recipe?.ingredients[1]).toEqual({
+    expect(recipe?.ingredients[1]).toMatchObject({
       quantity: "1",
       unit: "can",
       name: "kidney beans (15 oz)",

@@ -12,6 +12,11 @@ import {
   userSearchHistory,
 } from "@/db/schema.recipes";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
+import {
+  parseSearchTerms,
+  recipeMatchesTerms,
+  titleMatchRank,
+} from "@/lib/search/recipe-text-search";
 import type { RecipeDifficulty } from "@/lib/types";
 import type {
   RecipeSearchResult,
@@ -102,109 +107,10 @@ export async function searchRecipes(
       conditions.push(inArray(recipes.id, recipeIds));
     }
 
-    // Full-text search using FTS if query provided
-    if (query && query.trim().length > 0) {
-      // Sanitize search terms - remove special characters that can break FTS
-      const sanitizeForFts = (term: string) =>
-        term.replace(/[^a-zA-Z0-9\s]/g, "").trim();
-      const cleanQuery = sanitizeForFts(query);
-
-      if (!cleanQuery) {
-        // If query becomes empty after sanitization, skip FTS and use fallback
-        const likePattern = `%${query}%`;
-        conditions.push(
-          sql`(
-            ${recipes.title} LIKE ${likePattern} OR
-            ${recipes.description} LIKE ${likePattern} OR
-            ${recipes.cuisine} LIKE ${likePattern} OR
-            ${recipes.sourceName} LIKE ${likePattern} OR
-            ${recipes.sourceUrl} LIKE ${likePattern}
-          )`,
-        );
-      } else {
-        const searchTerms = cleanQuery.split(/\s+/).filter(Boolean);
-
-        // Create search strategies with proper FTS5 syntax
-        const searchStrategies = [];
-
-        // Strategy 1: Exact phrase match (highest relevance)
-        if (searchTerms.length === 1) {
-          searchStrategies.push(`"${searchTerms[0]}"`);
-        } else {
-          searchStrategies.push(`"${cleanQuery}"`);
-        }
-
-        // Strategy 2: All terms must appear (AND logic)
-        if (searchTerms.length > 1) {
-          searchStrategies.push(searchTerms.join(" AND "));
-        }
-
-        // Strategy 3: Prefix matching for single terms
-        if (searchTerms.length === 1 && searchTerms[0].length >= 3) {
-          searchStrategies.push(`${searchTerms[0]}*`);
-        }
-
-        // Strategy 4: Any term can appear (OR logic) - most fuzzy
-        if (searchTerms.length > 1) {
-          searchStrategies.push(searchTerms.join(" OR "));
-        }
-
-        let ftsResults: Array<{ id: string }> = [];
-
-        for (const strategy of searchStrategies) {
-          try {
-            ftsResults = (await db.all(sql`
-              SELECT id FROM recipes_fts 
-              WHERE recipes_fts MATCH ${strategy}
-              ORDER BY rank
-              LIMIT 100
-            `)) as Array<{ id: string }>;
-
-            if (ftsResults.length > 0) {
-              break;
-            }
-          } catch (_error) {}
-        }
-
-        const sourcePattern = `%${query.trim()}%`;
-        const matchesSource = sql`(
-          ${recipes.sourceName} LIKE ${sourcePattern} OR
-          ${recipes.sourceUrl} LIKE ${sourcePattern}
-        )`;
-
-        if (ftsResults.length > 0) {
-          const recipeIds = ftsResults.map((row) => row.id);
-          conditions.push(
-            sql`(${inArray(recipes.id, recipeIds)} OR ${matchesSource})`,
-          );
-        } else {
-          // Enhanced fallback with ingredient and instruction search
-          const likePattern = `%${query}%`;
-          conditions.push(
-            sql`(
-              ${recipes.title} LIKE ${likePattern} OR
-              ${recipes.description} LIKE ${likePattern} OR
-              ${recipes.cuisine} LIKE ${likePattern} OR
-              ${matchesSource} OR
-              EXISTS (
-                SELECT 1 FROM recipe_ingredients ri 
-                WHERE ri.recipe_id = ${recipes.id} 
-                AND (ri.name LIKE ${likePattern} OR ri.notes LIKE ${likePattern})
-              ) OR
-              EXISTS (
-                SELECT 1 FROM recipe_instructions inst 
-                WHERE inst.recipe_id = ${recipes.id} 
-                AND inst.instruction LIKE ${likePattern}
-              ) OR
-              EXISTS (
-                SELECT 1 FROM recipe_notes rn 
-                WHERE rn.recipe_id = ${recipes.id} 
-                AND rn.content LIKE ${likePattern}
-              )
-            )`,
-          );
-        }
-      }
+    const searchTerms = parseSearchTerms(query ?? "");
+    const matchesTerms = recipeMatchesTerms(searchTerms);
+    if (matchesTerms) {
+      conditions.push(matchesTerms);
     }
 
     // Filter by cuisine
@@ -306,6 +212,11 @@ export async function searchRecipes(
     if (sortColumn) {
       searchResults = await finalQuery
         .orderBy(sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn))
+        .limit(limit)
+        .offset(offset);
+    } else if (searchTerms.length > 0) {
+      searchResults = await finalQuery
+        .orderBy(titleMatchRank(searchTerms), desc(recipes.createdAt))
         .limit(limit)
         .offset(offset);
     } else {

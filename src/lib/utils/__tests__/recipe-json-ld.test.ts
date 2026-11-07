@@ -228,9 +228,10 @@ describe("reading it back with Tastebase's import parser", () => {
       tags: ["soup"],
     });
     expect(parsed?.recipe.ingredients.map((item) => item.name)).toEqual([
-      "olive oil, divided",
+      "olive oil",
       "stock",
     ]);
+    expect(parsed?.recipe.ingredients[0].notes).toBe("divided");
   });
 
   it("keeps every step in order, including steps in sections", () => {

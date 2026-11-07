@@ -248,6 +248,20 @@ Tastebase provides comprehensive recipe management capabilities for shared insta
 - Configurable file size limits and supported formats
 - Automatic image optimization and thumbnails
 
+## Recipe Import
+
+English recipes only. `src/lib/import/import-recipe.ts` tries JSON-LD, then microdata, then page text, and page text must pass `pageTextIsRecipe` or nothing is filled in. `ingredient-parser.ts` reads each line in stages (amount, unit, second measures, adjustments, then name and notes via `ingredient-notes-split.ts`). `import-quality.ts` holds the row checks behind confidence scores and warnings.
+
+An author's second measure and an adjustment stay in the ingredient name, as in `flour (125 g), plus 2 tbsp`, because `ingredient-scaling.ts` reads and scales them there. Everything else goes in `notes`.
+
+The parser is split by stage: `ingredient-cleaning.ts` (clutter and amount spelling), `ingredient-measures.ts` (amounts, sizes and what follows the unit), `ingredient-vocabulary.ts` (the unit table), `ingredient-parser.ts` (one line) and `ingredient-list.ts` (sections and lists).
+
+Tests that guard it:
+- `ingredient-parser.test.ts`: exact cases. When a line parses badly, add it to "lines that have gone wrong before".
+- `ingredient-grid.test.ts`: every combination of amount, unit, name, second measure and note.
+- `real-ingredient-lines.test.ts`: about 1,900 real lines from about 30 sites. It checks rules (no broken rows, amounts the scaler can read, editor limits) and compares every line's output with `fixtures/real-ingredient-lines.snapshot.txt`. When a change is meant to alter output, read the snapshot diff line by line before accepting it with `pnpm exec vitest run -u`.
+- `pnpm run import:survey`: imports real pages over the network and reports problems. It isn't run in CI, so run it after changing the parser or the page checks.
+
 ## Key Features & Implementation
 
 ### Authentication (BetterAuth)

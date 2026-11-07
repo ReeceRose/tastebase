@@ -1,9 +1,12 @@
 import * as cheerio from "cheerio";
 import { stripHtml } from "@/lib/import/html-to-text";
+import { parseIngredientList, toGroupName } from "@/lib/import/ingredient-list";
 import {
-  extractTemperature,
-  extractTimeMinutes,
-  parseIngredientLines,
+  type StepText,
+  toParsedInstructions,
+} from "@/lib/import/instruction-cleaning";
+import { readCardIngredientGroups } from "@/lib/import/recipe-card-groups";
+import {
   parseIsoDuration,
   parseServings,
 } from "@/lib/import/recipe-text-helpers";
@@ -38,17 +41,24 @@ export interface JsonLdRecipe {
 const MAX_TAGS = 20;
 const MAX_TAG_LENGTH = 30;
 const MAX_SEARCH_DEPTH = 6;
+// Keywords written for search engines: "salsa recipe", "easy pasta recipes".
+const SEARCH_PHRASE = /\brecipes?$/i;
 
 function isObject(value: JsonValue | undefined): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function matchesType(value: JsonValue, type: string): boolean {
+  if (typeof value !== "string") return false;
+  const name = value.split(/[/:#]/).pop() ?? value;
+  return name.toLowerCase() === type.toLowerCase();
+}
+
 function hasType(node: JsonObject, type: string): boolean {
   const value = node["@type"];
-  if (typeof value === "string") {
-    return value === type || value.endsWith(`/${type}`);
-  }
-  return Array.isArray(value) && value.some((item) => item === type);
+  return Array.isArray(value)
+    ? value.some((item) => matchesType(item, type))
+    : value !== undefined && matchesType(value, type);
 }
 
 function findRecipeNode(value: JsonValue, depth: number): JsonObject | null {
@@ -132,7 +142,10 @@ function readDuration(value: JsonValue | undefined): number | null {
   return text ? parseIsoDuration(text) : null;
 }
 
-function collectInstructionTexts(value: JsonValue | undefined): string[] {
+function collectSteps(
+  value: JsonValue | undefined,
+  groupName: string | null,
+): StepText[] {
   if (value === undefined || value === null) {
     return [];
   }
@@ -140,35 +153,50 @@ function collectInstructionTexts(value: JsonValue | undefined): string[] {
     return stripHtml(value)
       .split(/\n+/)
       .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+      .filter((line) => line.length > 0)
+      .map((text) => ({ text, groupName }));
   }
   if (Array.isArray(value)) {
-    return value.flatMap((item) => collectInstructionTexts(item));
+    return value.flatMap((item) => collectSteps(item, groupName));
   }
-  if (!isObject(value)) {
+  if (!isObject(value) || hasType(value, "HowToTip")) {
     return [];
   }
   if (hasType(value, "HowToSection") || value.itemListElement !== undefined) {
-    return collectInstructionTexts(value.itemListElement);
+    const name = toGroupName(readText(value.name) ?? "") ?? groupName;
+    return collectSteps(value.itemListElement, name);
   }
   const text = readText(value.text ?? value.name ?? value.description);
-  return text ? [text] : [];
+  return text ? [{ text, groupName }] : [];
 }
 
 function toInstructions(value: JsonValue | undefined): ParsedInstruction[] {
-  return collectInstructionTexts(value).map((instruction, index) => ({
-    step: index + 1,
-    instruction,
-    timeMinutes: extractTimeMinutes(instruction),
-    temperature: extractTemperature(instruction),
-  }));
+  return toParsedInstructions(collectSteps(value, null));
 }
 
-function toIngredients(value: JsonValue | undefined): ParsedIngredient[] {
+function ingredientLines(value: JsonValue | undefined): string[] {
+  if (typeof value === "string") {
+    return stripHtml(value)
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+  }
   const lines = Array.isArray(value) ? value : value ? [value] : [];
-  return lines
-    .map((line) => readText(line))
-    .flatMap((line) => (line ? parseIngredientLines(line) : []));
+  return lines.flatMap((line) => {
+    const text = readText(line);
+    return text ? [text] : [];
+  });
+}
+
+function toIngredients(
+  value: JsonValue | undefined,
+  html: string,
+): ParsedIngredient[] {
+  const lines = ingredientLines(value);
+  return parseIngredientList(
+    lines,
+    readCardIngredientGroups(html, lines.length),
+  );
 }
 
 function singularWord(word: string): string {
@@ -197,7 +225,10 @@ function toTags(node: JsonObject, ingredients: ParsedIngredient[]): string[] {
   );
   const keywords = readTextList(node.keywords).filter((keyword) => {
     const words = comparableWords(keyword);
-    return !ingredientWords.some((ingredient) => ingredient.includes(words));
+    return (
+      !SEARCH_PHRASE.test(keyword) &&
+      !ingredientWords.some((ingredient) => ingredient.includes(words))
+    );
   });
   const tags = [...readTextList(node.recipeCategory), ...keywords]
     .map((tag) => tag.toLowerCase())
@@ -215,12 +246,15 @@ function toDifficulty(node: JsonObject): RecipeDifficulty | null {
   return match ?? null;
 }
 
-function normalizeRecipe(node: JsonObject): RecipeParsingResult {
+function normalizeRecipe(node: JsonObject, html: string): RecipeParsingResult {
   const prepTime = readDuration(node.prepTime);
   const cookTime = readDuration(node.cookTime);
   const totalTime = readDuration(node.totalTime);
   const servingsText = readText(node.recipeYield ?? node.yield);
-  const ingredients = toIngredients(node.recipeIngredient ?? node.ingredients);
+  const ingredients = toIngredients(
+    node.recipeIngredient ?? node.ingredients,
+    html,
+  );
 
   return {
     title: readText(node.name ?? node.headline),
@@ -364,7 +398,7 @@ export function extractJsonLdRecipe(html: string): JsonLdRecipe | null {
     const node = findRecipeNode(script, 0);
     if (node) {
       return {
-        recipe: normalizeRecipe(node),
+        recipe: normalizeRecipe(node, html),
         siteName: readSiteName(node, scripts),
         imageUrl: readImageUrl(node.image ?? node.thumbnailUrl),
         stepImageUrls: readStepImages(node.recipeInstructions),

@@ -1,7 +1,7 @@
+import { parseIngredientList } from "@/lib/import/ingredient-list";
 import {
   extractTemperature,
   extractTimeMinutes,
-  parseIngredientLines,
   stripListMarker,
 } from "@/lib/import/recipe-text-helpers";
 import { RecipeDifficulty, type RecipeSwatch } from "@/lib/types";
@@ -200,14 +200,14 @@ function lines(text: string): string[] {
 }
 
 export function parsePastedIngredients(text: string): EditorIngredient[] {
-  return lines(text)
-    .flatMap((line) => parseIngredientLines(line))
-    .map((parsed) => ({
-      ...emptyIngredient(),
-      name: parsed.name,
-      amount: parsed.quantity ?? "",
-      unit: parsed.unit ?? "",
-    }));
+  return parseIngredientList(lines(text)).map((parsed) => ({
+    name: parsed.name,
+    amount: parsed.quantity ?? "",
+    unit: parsed.unit ?? "",
+    notes: (parsed.notes ?? "").slice(0, 200),
+    groupName: parsed.groupName ?? "",
+    isOptional: parsed.isOptional,
+  }));
 }
 
 export function parsePastedSteps(text: string): EditorInstruction[] {
