@@ -4,6 +4,27 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.7 — 2026-11-07
+
+Recipes, people and tags now get more produce colours, and the recipe editor and sidebar keep up as you work.
+
+### What's Changed
+
+#### Features
+- **More swatch colours**: there are new produce colours for recipes, members and tags, so fewer things end up sharing a colour.
+- **Editor section tracking**: as you scroll through the recipe editor, the section nav shows which part you're in.
+- **Live sidebar counts**: the recipe and list counts in the navigation change as soon as you add or remove something. You no longer need to reload the page.
+
+#### Improvements
+- Small layout fixes to the recipe photo strip.
+- The design system docs now cover the new swatches.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.7
+```
+
 ## v0.1.6 — 2026-11-07
 
 Recipes can now have a video link, and pages show loading placeholders that match their final layout.
