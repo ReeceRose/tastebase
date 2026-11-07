@@ -139,6 +139,10 @@ docker compose pull       # Update to latest version
 ./scripts/release.sh      # Tag a release; CI publishes the image (docs/RELEASES.md)
 ```
 
+## Marketing Site
+
+`site/` is the public website at https://tastebase.reecerose.com: plain HTML and CSS with no build step, deployed by Vercel as its own project (root directory `site`). It's separate from the Next.js app and excluded from Biome and the Docker image. `vercel.json` skips deploys when nothing in `site/` changed. Update `site/sitemap.xml`'s `lastmod` when page content changes, and keep `site/guide.html` in step with `docs/DEPLOYMENT.md`. The sample recipe's amounts come from the app's own conversion code: after changing it, run `pnpm exec tsx scripts/generate-site-recipe.ts`.
+
 ## CI/CD Integration
 
 One workflow, `.github/workflows/ci.yml`, modelled on the Reclaim repo. It runs on pull requests to `main`, pushes to `main`, and `v*.*.*` tags.
@@ -326,9 +330,12 @@ DATABASE_URL=
 BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=
 
-# API Key Encryption (Required for AI features)
+# API Key Encryption (Required)
 ENCRYPTION_SECRET=           # 64-character secret for encrypting AI API keys
 CURRENT_ENCRYPTION_VERSION=  # Version for key rotation (default: 1)
+
+# Sign-ups (optional)
+ALLOW_SIGN_UPS=              # false stops new accounts; the first account always works (default: true)
 ```
 
 ### Generating Secure Encryption Keys

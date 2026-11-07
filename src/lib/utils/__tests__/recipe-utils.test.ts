@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  addRecipeSlugSuffix,
   generateRecipeSlug,
   parseIngredientAmount,
 } from "@/lib/utils/recipe-utils";
+import { slugSchema } from "@/lib/validations/recipe-schemas";
 
 describe("Recipe Utilities", () => {
   describe("parseIngredientAmount", () => {
@@ -74,6 +76,74 @@ describe("Recipe Utilities", () => {
         ),
       ).toBe("super-long-recipe-title-with-many-words-that-shoul");
       expect(generateRecipeSlug("Recipe@#$%^&*()Title")).toBe("recipetitle");
+    });
+
+    it("should not end in a hyphen when truncation lands on a word break", () => {
+      expect(
+        generateRecipeSlug(
+          "Salad-e Shirazi (Persian Cucumber, Tomato and Onion Salad)",
+        ),
+      ).toBe("salad-e-shirazi-persian-cucumber-tomato-and-onion");
+    });
+
+    it("should fall back when the title has no usable characters", () => {
+      expect(generateRecipeSlug("سالاد شیرازی")).toBe("recipe");
+    });
+
+    it("should convert accented letters instead of dropping them", () => {
+      expect(generateRecipeSlug("Crème Brûlée")).toBe("creme-brulee");
+      expect(generateRecipeSlug("Jalapeño Poppers")).toBe("jalapeno-poppers");
+      expect(generateRecipeSlug("Smørrebrød")).toBe("smorrebrod");
+      expect(generateRecipeSlug("Bœuf Bourguignon")).toBe("boeuf-bourguignon");
+    });
+
+    it("should not turn fractions into digits", () => {
+      expect(generateRecipeSlug("½ Cup Soup")).toBe("cup-soup");
+    });
+
+    it("should always produce a slug the recipe schema accepts", () => {
+      const titles = [
+        "Salad-e Shirazi (Persian Cucumber, Tomato and Onion Salad)",
+        "سالاد شیرازی",
+        "---",
+        "- Leading and trailing -",
+        `${"a".repeat(49)} word`,
+        `Crème ${"é".repeat(60)}`,
+      ];
+
+      for (const title of titles) {
+        const slug = generateRecipeSlug(title);
+
+        expect(slugSchema.safeParse(slug).success).toBe(true);
+        expect(
+          slugSchema.safeParse(addRecipeSlugSuffix(slug, 100)).success,
+        ).toBe(true);
+      }
+    });
+  });
+
+  describe("addRecipeSlugSuffix", () => {
+    it("should append the counter to a short slug", () => {
+      expect(addRecipeSlugSuffix("chocolate-chip-cookies", 2)).toBe(
+        "chocolate-chip-cookies-2",
+      );
+    });
+
+    it("should stay within the length limit and not double the hyphen", () => {
+      const slug = addRecipeSlugSuffix(
+        "salad-e-shirazi-persian-cucumber-tomato-and-onions",
+        1,
+      );
+
+      expect(slug).toBe("salad-e-shirazi-persian-cucumber-tomato-and-onio-1");
+      expect(slug).toHaveLength(50);
+
+      expect(
+        addRecipeSlugSuffix(
+          "salad-e-shirazi-persian-cucumber-tomato-and-on-ion",
+          10,
+        ),
+      ).toBe("salad-e-shirazi-persian-cucumber-tomato-and-on-10");
     });
   });
 });

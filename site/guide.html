@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Guide: install and use Tastebase</title>
+    <meta name="description" content="Install Tastebase with Docker, set up your household, save recipes from anywhere, and keep it updated and backed up.">
+    <link rel="canonical" href="https://tastebase.reecerose.com/guide">
+    <meta name="theme-color" content="#234a2f">
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+    <link rel="preload" href="/assets/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/assets/site.css">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Tastebase">
+    <meta property="og:title" content="Guide: install and use Tastebase">
+    <meta property="og:description" content="Install with Docker, set up your household, save recipes from anywhere, and keep it updated and backed up.">
+    <meta property="og:url" content="https://tastebase.reecerose.com/guide">
+    <meta property="og:image" content="https://tastebase.reecerose.com/assets/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="The Tastebase logo, a tomato-red drop with a bite out of it, on leek green">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Install and use Tastebase",
+        "url": "https://tastebase.reecerose.com/guide",
+        "image": "https://tastebase.reecerose.com/assets/og-image.png",
+        "about": { "@type": "SoftwareApplication", "name": "Tastebase", "url": "https://tastebase.reecerose.com/" }
+      }
+    </script>
+    <script src="/assets/site.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="site-header">
+        <a class="wordmark" href="/">
+          <img src="/assets/logo.svg" alt="" width="30" height="30">
+          Tastebase
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <a href="/guide" aria-current="page">Guide</a>
+          <a href="https://github.com/ReeceRose/tastebase">GitHub</a>
+        </nav>
+      </header>
+
+      <div class="guide">
+        <div class="guide-head">
+          <h1 class="guide-title">Guide</h1>
+          <p class="lead">How to install Tastebase, get the house on it and keep it running.</p>
+        </div>
+
+        <nav class="guide-toc" aria-labelledby="toc-title">
+          <h2 id="toc-title">On this page</h2>
+          <ul>
+            <li><a href="#install">Install</a></li>
+            <li><a href="#household">Set up the house</a></li>
+            <li><a href="#recipes">Add recipes</a></li>
+            <li><a href="#cooking">Cook</a></li>
+            <li><a href="#updates">Update and back up</a></li>
+            <li><a href="#https">Reach it from outside</a></li>
+            <li><a href="#troubleshooting">Troubleshooting</a></li>
+          </ul>
+        </nav>
+
+        <main class="guide-body" id="main">
+          <section id="install">
+            <h2>Install</h2>
+            <p>Tastebase runs as one Docker container. The image works on <code>linux/amd64</code> and <code>linux/arm64</code>, so a NAS, a Raspberry Pi 4 or 5, or any Linux server will do. You need Docker with Compose.</p>
+            <ol class="steps">
+              <li>
+                <p>Get the Compose file and the settings template.</p>
+                <div class="code">
+                  <pre><code>mkdir tastebase &amp;&amp; cd tastebase
+curl -O https://raw.githubusercontent.com/ReeceRose/tastebase/main/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/ReeceRose/tastebase/main/.env.docker.example</code></pre>
+                </div>
+              </li>
+              <li>
+                <p>Make two secrets. Run this twice and paste one result into <code>BETTER_AUTH_SECRET</code> and the other into <code>ENCRYPTION_SECRET</code> in <code>.env</code>. They must be different.</p>
+                <div class="code">
+                  <pre><code>openssl rand -base64 48</code></pre>
+                </div>
+              </li>
+              <li>
+                <p>Set <code>BETTER_AUTH_URL</code> in <code>.env</code> to the address people will type, such as <code>http://192.168.1.100:3000</code>. It has to match what's in the browser, including the port, or sign-in won't work.</p>
+              </li>
+              <li>
+                <p>Start it.</p>
+                <div class="code">
+                  <pre><code>docker compose up -d</code></pre>
+                </div>
+              </li>
+              <li>
+                <p>Open your <code>BETTER_AUTH_URL</code> and create the first account.</p>
+              </li>
+            </ol>
+            <p>Recipes live in the <code>tastebase-data</code> volume and photos in <code>tastebase-uploads</code>, so both survive restarts and upgrades.</p>
+            <p>Using Unraid? There's a <a href="https://github.com/ReeceRose/tastebase/blob/main/docs/DEPLOYMENT_UNRAID.md">separate Unraid guide</a>. For <code>docker run</code> and host folders, see the <a href="https://github.com/ReeceRose/tastebase/blob/main/docs/DEPLOYMENT.md">deployment guide</a>.</p>
+          </section>
+
+          <section id="household">
+            <h2>Set up the house</h2>
+            <p>Everyone else opens the same address and picks <strong>Create an account</strong>. There are no invitations to send.</p>
+            <div class="callout">
+              <p>While sign-ups are open, anyone who can reach your Tastebase can create an account and see recipes shared with the house. Close them once everyone's in.</p>
+            </div>
+            <h3>Close sign-ups</h3>
+            <p>Add this to <code>.env</code>, then apply it. Bring it back to <code>true</code> whenever someone new joins.</p>
+            <div class="code">
+              <pre><code>echo "ALLOW_SIGN_UPS=false" &gt;&gt; .env
+docker compose up -d</code></pre>
+            </div>
+            <h3>Who sees what</h3>
+            <p>Each recipe is either <strong>Shared with the house</strong> or <strong>Only you</strong>. Notes work the same way: leave one for everyone, or keep it to yourself.</p>
+            <h3>Forgotten passwords</h3>
+            <p>Tastebase doesn't send email. When someone asks for a password reset, the link is written to the server log, and whoever runs the server can pass it on.</p>
+            <div class="code">
+              <pre><code>docker compose logs tastebase | grep resetLink</code></pre>
+            </div>
+          </section>
+
+          <section id="recipes">
+            <h2>Add recipes</h2>
+            <p>Start from <strong>Add a recipe</strong>. Every import opens in the editor, so you can check it before saving.</p>
+            <h3>Link, text or photo</h3>
+            <ul>
+              <li><strong>Link:</strong> reads the recipe data from most sites, then falls back to the page text. The recipe's photo becomes the main photo, and you can pick from the page's other photos.</li>
+              <li><strong>Text:</strong> paste a recipe and it's split into ingredients and steps.</li>
+              <li><strong>Photo:</strong> take a picture of a cookbook page. It's read on your server.</li>
+            </ul>
+            <h3>The browser extension</h3>
+            <p>Save to Tastebase brings in the page you're looking at. It works on sites that block link imports, like Serious Eats and Allrecipes, and on subscriber sites you're signed in to, like NYT Cooking. It works in Chrome, Edge, Brave and Arc, and sends nothing anywhere except your own Tastebase.</p>
+            <ol class="steps">
+              <li><p><a href="https://github.com/ReeceRose/tastebase/archive/refs/heads/main.zip">Download the Tastebase source</a> and unzip it.</p></li>
+              <li><p>Open <code>chrome://extensions</code> and turn on <strong>Developer mode</strong>.</p></li>
+              <li><p>Click <strong>Load unpacked</strong> and choose the <code>extensions/chrome</code> folder.</p></li>
+              <li><p>On the setup page that opens, enter your Tastebase address and allow access when asked.</p></li>
+              <li><p>Pin the extension. On any recipe, click its icon or press <strong>Alt+Shift+T</strong>, then <strong>Save to Tastebase</strong>.</p></li>
+            </ol>
+            <h3>From your phone</h3>
+            <p>The steps are in Tastebase under <strong>Settings</strong>, <strong>Saving recipes</strong>, with your address already filled in.</p>
+            <ul>
+              <li><strong>Android:</strong> install Tastebase from Chrome's menu with <strong>Add to home screen</strong>, then share any recipe link to it. Android only installs from an <code>https</code> address, so you'll need <a href="#https">one of the options below</a>.</li>
+              <li><strong>iPhone and iPad:</strong> iOS doesn't let web apps join the share sheet, so you set up a Shortcut once.</li>
+            </ul>
+            <p>On a phone, Tastebase reads the recipe from the link itself. A few sites block that. For those, copy the recipe text and paste it into <strong>Add a recipe</strong>.</p>
+          </section>
+
+          <section id="cooking">
+            <h2>Cook</h2>
+            <p>Open a recipe and choose <strong>Start cooking</strong>. Cook mode shows one step at a time, full screen, with timers and ingredient tick-offs, and keeps the screen on.</p>
+            <p>On the recipe page, change the servings to scale the amounts, or switch between metric and imperial. Your default units are in <strong>Settings</strong>, <strong>Units</strong>.</p>
+          </section>
+
+          <section id="updates">
+            <h2>Update and back up</h2>
+            <h3>Update</h3>
+            <p>Database changes apply on their own when the new container starts. Back up first.</p>
+            <div class="code">
+              <pre><code>docker compose pull
+docker compose up -d</code></pre>
+            </div>
+            <p><code>latest</code> always points at the newest release. To choose when you upgrade, pin a version in <code>docker-compose.yml</code>, such as <code>ghcr.io/reecerose/tastebase:0.1.1</code>. What's changed is listed on the <a href="https://github.com/ReeceRose/tastebase/releases">Releases page</a>.</p>
+            <h3>Back up</h3>
+            <p>This stops Tastebase so the database is consistent, then writes one archive of your recipes and photos to the current folder.</p>
+            <div class="code">
+              <pre><code>docker compose stop
+docker run --rm --volumes-from tastebase -v "$PWD":/backup alpine \
+  tar czf /backup/tastebase-$(date +%Y%m%d).tar.gz -C /app data uploads
+docker compose start</code></pre>
+            </div>
+            <h3>Restore</h3>
+            <p>This replaces what's there now. Change the filename to your backup's.</p>
+            <div class="code">
+              <pre><code>docker compose stop
+docker run --rm --volumes-from tastebase -v "$PWD":/backup alpine \
+  sh -c "cd /app &amp;&amp; tar xzf /backup/tastebase-20261107.tar.gz"
+docker compose start</code></pre>
+            </div>
+          </section>
+
+          <section id="https">
+            <h2>Reach it from outside</h2>
+            <p>Don't expose port <code>3000</code> directly to the internet. To use Tastebase away from home, or to get the <code>https</code> address Android needs, pick one of these and set <code>BETTER_AUTH_URL</code> to the new address. If it can be reached from the internet, <a href="#household">close sign-ups</a> first.</p>
+            <ul>
+              <li><strong>A private network:</strong> Tailscale gives you a secure address only your devices can reach.</li>
+              <li><strong>A Cloudflare Tunnel:</strong> needs no open ports.</li>
+              <li><strong>A reverse proxy:</strong> serves Tastebase on your own domain.</li>
+            </ul>
+            <p>With Caddy, this is all it takes, and it handles the certificate for you:</p>
+            <div class="code">
+              <pre><code>recipes.example.com {
+    reverse_proxy localhost:3000
+}</code></pre>
+            </div>
+            <p>With Nginx, set <code>client_max_body_size 10m;</code>, because photo uploads go up to 10 MB and Nginx stops at 1 MB by default. The <a href="https://github.com/ReeceRose/tastebase/blob/main/docs/DEPLOYMENT.md#reverse-proxy-and-https">deployment guide</a> has full Nginx and Traefik examples.</p>
+          </section>
+
+          <section id="troubleshooting">
+            <h2>Troubleshooting</h2>
+            <p>Start with the log. It usually names the problem.</p>
+            <div class="code">
+              <pre><code>docker compose logs tastebase</code></pre>
+            </div>
+            <div class="fixes">
+              <div class="fix">
+                <h3 class="fix-title">Sign-in loops back to the sign-in page</h3>
+                <p><code>BETTER_AUTH_URL</code> doesn't match the address in the browser. Check the scheme, host and port.</p>
+              </div>
+              <div class="fix">
+                <h3 class="fix-title">The log says "Invalid environment variables"</h3>
+                <p>It names the variable, and it's usually <code>ENCRYPTION_SECRET</code>. Generate it again with <code>openssl rand -base64 48</code>, which has the mix of characters it requires.</p>
+              </div>
+              <div class="fix">
+                <h3 class="fix-title">The log says "unable to open database file"</h3>
+                <p>The data folder isn't writable. If you mounted host folders, run <code>sudo chown -R 1001:1001</code> on them, because the container runs as uid 1001.</p>
+              </div>
+              <div class="fix">
+                <h3 class="fix-title">The port is already in use</h3>
+                <p>Change the left side of <code>ports:</code> in <code>docker-compose.yml</code>, for example <code>"8080:3000"</code>, and update <code>BETTER_AUTH_URL</code> to match.</p>
+              </div>
+              <div class="fix">
+                <h3 class="fix-title">It won't start after an update</h3>
+                <p>The container won't start if a database change fails. Restore your last backup and <a href="https://github.com/ReeceRose/tastebase/issues">open an issue</a> with the log.</p>
+              </div>
+              <div class="fix">
+                <h3 class="fix-title">Checking that it's healthy</h3>
+                <p>Run <code>curl http://localhost:3000/api/health</code>. It returns <code>"status":"ok"</code>, or a 503 if the database can't be reached.</p>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <footer class="site-footer">
+        <span>Tastebase is MIT licensed.</span>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="https://github.com/ReeceRose/tastebase">GitHub</a></li>
+          <li><a href="https://github.com/ReeceRose/tastebase/releases">Releases</a></li>
+          <li><a href="https://github.com/ReeceRose/tastebase/issues">Report an issue</a></li>
+        </ul>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -37,6 +37,9 @@ pnpm-debug.log*
 .gitignore
 .gitattributes
 
+# Marketing site (deployed separately)
+site
+
 # Documentation
 README.md
 CHANGELOG.md

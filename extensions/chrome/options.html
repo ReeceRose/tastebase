@@ -21,6 +21,11 @@
           <label for="setup-address">Your Tastebase address</label>
           <input id="setup-address" class="input" type="text" inputmode="url" autocomplete="url" placeholder="localhost:3000" required />
         </div>
+        <div class="field">
+          <label for="setup-backup-address">Backup address (optional)</label>
+          <input id="setup-backup-address" class="input" type="text" inputmode="url" autocomplete="off" placeholder="100.64.0.1:3000" />
+          <p class="caption muted">Used when the first one doesn't answer, like a Tailscale address for when you're away.</p>
+        </div>
         <p id="setup-error" class="message-error" role="alert" hidden></p>
         <button class="button button-accent" type="submit">Connect</button>
       </form>
@@ -28,7 +33,7 @@
       <section id="connected" class="card" hidden>
         <h2>You're connected</h2>
         <p class="muted">
-          Recipes will open in <strong id="connected-address"></strong>.
+          Recipes will open in <strong id="connected-address"></strong><span id="connected-backup" hidden>, or <strong id="connected-backup-address"></strong> when that doesn't answer</span>.
         </p>
         <ol class="steps">
           <li>Pin Save to Tastebase: click the puzzle piece in Chrome's toolbar, then the pin.</li>

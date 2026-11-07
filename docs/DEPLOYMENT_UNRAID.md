@@ -54,6 +54,10 @@ openssl rand -base64 48   # ENCRYPTION_SECRET (must be different)
    | `BETTER_AUTH_URL` | `http://YOUR_UNRAID_IP:3000` |
    | `ENCRYPTION_SECRET` | your second secret |
 
+   To also reach Tastebase another way, such as over Tailscale, add `BETTER_AUTH_TRUSTED_ORIGINS` with those addresses, separated by commas with no spaces.
+
+   Once everyone has an account, add `ALLOW_SIGN_UPS` set to `false` so nobody else can create one.
+
 6. Click **Apply**, check the container's log, then open `http://YOUR_UNRAID_IP:3000` and create the first account.
 
 **Updating:** click **Check for Updates** on the Docker tab, then **Apply Update** on Tastebase.
@@ -165,6 +169,8 @@ SWAG and Tastebase must be on the same custom Docker network. Then run `docker r
 **Photo uploads fail.** The uploads folder isn't writable. Run the same `chown` command.
 
 **Sign-in loops back to the sign-in page.** `BETTER_AUTH_URL` doesn't exactly match the address in your browser.
+
+**"Invalid origin" on sign-in.** The address in your browser isn't trusted. Add it to `BETTER_AUTH_TRUSTED_ORIGINS` in the container template, with no quotes, path or trailing slash, then click **Apply**.
 
 **Can't reach the web UI.** Check the port mapping and that nothing else uses port 3000. `curl http://localhost:3000/api/health` from the Unraid terminal should return `{"status":"ok",...}`.
 

@@ -1,4 +1,4 @@
-import { getTastebaseOrigin } from "./connection.js";
+import { getTastebaseOrigins } from "./connection.js";
 
 // Keep these names in sync with src/hooks/use-extension-page-import.ts.
 const PAGE_EVENT = "tastebase:extension-page";
@@ -273,9 +273,9 @@ async function takePage(tabId) {
   return page;
 }
 
-async function saveRecipe(tabId, imageUrl) {
-  const origin = await getTastebaseOrigin();
-  if (!origin) {
+async function saveRecipe(tabId, imageUrl, origin) {
+  const origins = await getTastebaseOrigins();
+  if (!origins.includes(origin)) {
     return { ok: false, error: "Connect your Tastebase first." };
   }
 
@@ -349,8 +349,11 @@ function updateProgress(tabId, progress) {
 async function deliverIfReady(tab) {
   if (tab.status !== "complete") return;
   const tabId = tab.id;
-  const origin = await getTastebaseOrigin();
-  if (!origin || !tab.url?.startsWith(`${origin}${IMPORT_PATH}`)) return;
+  const origins = await getTastebaseOrigins();
+  const isImportPage = origins.some((origin) =>
+    tab.url?.startsWith(`${origin}${IMPORT_PATH}`),
+  );
+  if (!isImportPage) return;
 
   const page = await takePage(tabId);
   if (page) {
@@ -374,8 +377,10 @@ async function deliverIfReady(tab) {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type !== SAVE_MESSAGE) return false;
-  saveRecipe(message.tabId, message.imageUrl ?? null).then(sendResponse, () =>
-    sendResponse({ ok: false, error: "Something went wrong. Try again." }),
+  saveRecipe(message.tabId, message.imageUrl ?? null, message.origin).then(
+    sendResponse,
+    () =>
+      sendResponse({ ok: false, error: "Something went wrong. Try again." }),
   );
   return true;
 });
@@ -400,20 +405,20 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
 });
 
 // Marks the connected Tastebase's pages so the app can tell the extension is
-// installed. Re-registered whenever the address or permission changes.
+// installed. Re-registered whenever an address or permission changes.
 const PRESENCE_SCRIPT_ID = "tastebase-presence";
 
 async function syncPresenceScript() {
   await chrome.scripting
     .unregisterContentScripts({ ids: [PRESENCE_SCRIPT_ID] })
     .catch(() => undefined);
-  const origin = await getTastebaseOrigin();
-  if (!origin) return;
+  const origins = await getTastebaseOrigins();
+  if (origins.length === 0) return;
   await chrome.scripting
     .registerContentScripts([
       {
         id: PRESENCE_SCRIPT_ID,
-        matches: [`${origin}/*`],
+        matches: origins.map((origin) => `${origin}/*`),
         js: ["presence.js"],
         runAt: "document_start",
       },
@@ -426,5 +431,7 @@ chrome.runtime.onStartup.addListener(syncPresenceScript);
 chrome.permissions.onAdded.addListener(syncPresenceScript);
 chrome.permissions.onRemoved.addListener(syncPresenceScript);
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "sync" && changes.tastebaseUrl) syncPresenceScript();
+  if (area === "sync" && (changes.tastebaseUrl || changes.tastebaseBackupUrl)) {
+    syncPresenceScript();
+  }
 });

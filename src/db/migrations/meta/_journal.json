@@ -134,6 +134,13 @@
       "when": 1792196126411,
       "tag": "0018_add_recipe_cooks",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1794069604675,
+      "tag": "0019_repair_invalid_recipe_slugs",
+      "breakpoints": true
     }
   ]
 }

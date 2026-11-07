@@ -1,7 +1,6 @@
 "use client";
 
 import { Camera, Link2, Loader2, PenLine, Type } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import { ExtensionSuggestionCard } from "@/components/cards/extension-suggestion-card";
 import { RecipeImageUpload } from "@/components/forms/recipe-image-upload";
@@ -221,19 +220,6 @@ export function AddRecipeStart({
               description={photoDescription(capabilities)}
             />
           </div>
-        )}
-
-        {capabilities && !capabilities.aiConfigured && (
-          <p className="text-meta font-normal text-muted-foreground">
-            Imports work without AI. For messy text and photos you can{" "}
-            <Link
-              href="/settings?section=import"
-              className="underline decoration-2 underline-offset-4 hover:decoration-accent"
-            >
-              add an AI provider
-            </Link>
-            .
-          </p>
         )}
       </div>
     </div>

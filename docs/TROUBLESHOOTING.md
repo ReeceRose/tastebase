@@ -84,6 +84,19 @@ BETTER_AUTH_URL="http://localhost:3000"
 
 Ensure the `BETTER_AUTH_SECRET` is at least 32 characters long.
 
+### "Invalid origin" on Sign-in
+
+**Problem**: Signing in shows "Invalid origin", usually when reaching Tastebase through a second address such as a Tailscale IP or name.
+
+**Solution**: BetterAuth only trusts `BETTER_AUTH_URL` and the addresses in `BETTER_AUTH_TRUSTED_ORIGINS`, and the match must be exact, including the scheme and port. Keep your main address in `BETTER_AUTH_URL` and list the others:
+
+```bash
+BETTER_AUTH_URL=http://192.168.1.100:3000
+BETTER_AUTH_TRUSTED_ORIGINS=http://100.64.0.1:3000
+```
+
+Separate multiple addresses with commas and no spaces, and leave out quotes (in env files and Unraid), paths and trailing slashes. In Docker, recreate the container afterwards, because `docker restart` won't apply the change.
+
 ### BetterAuth Schema Issues
 
 **Problem**: Sign up fails with database constraint errors like:

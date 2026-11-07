@@ -2,13 +2,15 @@
 
 # Tastebase
 
+**[Website](https://tastebase.reecerose.com) | [Guide](https://tastebase.reecerose.com/guide)**
+
 A simple, local-first recipe management application designed for shared instances. Keep your group's recipes organized and accessible on your own server with Docker deployment - no cloud dependencies, no subscriptions, just your shared recipe collection stored locally and securely.
 
 ## 🚀 Features
 
 - **🏠 Local-First** - Everything stored on your server, no cloud dependencies
 - **🧺 Made for a household** - Everyone on the instance shares recipes, leaves notes and sees what the house has been cooking
-- **📥 Recipe Import** - Paste a link, the text or a photo of a cookbook page. Works without AI; optionally add OpenAI, Anthropic, Google or a local Ollama model to tidy up messy imports
+- **📥 Recipe Import** - Paste a link, the text or a photo of a cookbook page
 - **✍️ One editor** - Paste whole ingredient lists or steps, autosaved drafts on your device, photos, tags and a colour for every recipe
 - **👩‍🍳 Cook mode** - Full-screen steps, timers, ingredient tick-offs and a screen that stays on
 - **⚖️ Scaling and units** - Scale servings up or down and switch metric/imperial on any recipe
@@ -154,7 +156,9 @@ tastebase/
 | `DATABASE_URL` | Yes | Path to the SQLite file, e.g. `tastebase.db` locally or `file:/app/data/tastebase.db` in Docker |
 | `BETTER_AUTH_SECRET` | Yes | Signs sessions |
 | `BETTER_AUTH_URL` | Yes | The address people use to reach Tastebase |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | No | Other addresses people use, such as a Tailscale IP. Comma-separated, no spaces |
 | `ENCRYPTION_SECRET` | Yes | Encrypts the AI keys people add in Settings. Must differ from `BETTER_AUTH_SECRET` |
+| `ALLOW_SIGN_UPS` | No | Set to `false` once everyone has an account (default `true`). The first account always works |
 | `CURRENT_ENCRYPTION_VERSION` | No | Bump when rotating `ENCRYPTION_SECRET` (default `1`) |
 | `OLLAMA_BASE_URL` | No | Default Ollama address (default `http://localhost:11434`) |
 
@@ -197,7 +201,7 @@ docker build -t tastebase . # Build the image from source
 
 ### Core Recipe Operations
 - **Create Recipes** - Manual entry with structured forms
-- **Import Recipes** - From links, pasted text or photos, with optional AI
+- **Import Recipes** - From links, pasted text or photos
 - **Edit & Update** - Full recipe editing with validation
 - **Delete Recipes** - Safe deletion with confirmation
 - **Recipe Validation** - Ensure all required fields are present
@@ -207,9 +211,8 @@ docker build -t tastebase . # Build the image from source
 - **Browser Extension** - [Save to Tastebase](extensions/chrome/README.md) imports the page you're viewing, including sites that block automated imports (Serious Eats, Allrecipes) and subscriber sites you're signed in to (NYT Cooking)
 - **Save from your phone** - Install Tastebase on Android to share recipe links straight into it, or set up an iPhone Shortcut (steps in Settings → Saving recipes)
 - **Text Import** - Paste a recipe and it is split into ingredients and steps
-- **Photo Import** - OCR on the server, or an AI vision model if you've added one
+- **Photo Import** - OCR on the server
 - **Review in the editor** - Imports open in the editor so you can check everything before saving
-- **Optional AI tidy-up** - If an AI provider is set up, one click cleans up a messy import
 
 ### Search & Organization
 - **Search** - Names, ingredients, steps and notes
@@ -274,7 +277,7 @@ Tests are organized by feature and type:
 - Unit tests for utilities and server actions
 - Component tests for UI interactions
 - Integration tests for complete recipe workflows
-- AI parsing tests for import functionality
+- Parsing tests for import functionality
 
 ## 🚢 Where to Run It
 
@@ -417,7 +420,7 @@ This recipe app is designed to be your group's shared recipe collection: import 
 
 ### Why Choose This Recipe App?
 
-- ✅ **Import from anywhere** - Links, pasted text or photos, with optional AI
+- ✅ **Import from anywhere** - Links, pasted text or photos
 - ✅ **Made for a household** - Shared recipes, notes and activity, with private recipes when you want them
 - ✅ **Self-Hosted** - Your data stays on your server
 - ✅ **Complete Workflow** - From import to cooking with notes and tips

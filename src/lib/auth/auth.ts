@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -9,6 +10,10 @@ import {
   verificationTokens,
 } from "@/db/schema.base";
 import { recipeImages, recipes } from "@/db/schema.recipes";
+import {
+  areSignUpsOpen,
+  SIGN_UPS_CLOSED_MESSAGE,
+} from "@/lib/auth/sign-up-policy";
 import { env } from "@/lib/config/env";
 import { createOperationLogger } from "@/lib/logging/logger";
 
@@ -101,6 +106,13 @@ export const auth = betterAuth({
         );
       },
     },
+  },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-up/email" && !(await areSignUpsOpen())) {
+        throw new APIError("FORBIDDEN", { message: SIGN_UPS_CLOSED_MESSAGE });
+      }
+    }),
   },
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,

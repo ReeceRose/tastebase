@@ -18,7 +18,7 @@ Tastebase uses **AES-256-GCM encryption** with **scrypt key derivation** to prot
 ### Environment Variables
 
 ```bash
-# Required for AI features
+# Required
 ENCRYPTION_SECRET="your-64-character-encryption-secret"
 CURRENT_ENCRYPTION_VERSION=1
 

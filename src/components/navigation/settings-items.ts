@@ -25,8 +25,7 @@ export const SETTINGS_SECTIONS: SettingsItem[] = [
   {
     id: SettingsSection.IMPORT,
     label: "Import and AI",
-    description:
-      "Imports work without AI. Add a provider if you want help with messy text and photos.",
+    description: "Add a provider if you want help with messy text and photos.",
   },
   {
     id: SettingsSection.SAVING,

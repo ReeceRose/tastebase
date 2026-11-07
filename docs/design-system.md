@@ -168,8 +168,8 @@ Note bubbles use `rounded-[20px_20px_20px_6px]`: the tail corner points at the a
 ## 5. Motion
 
 - Default transition is 160ms `ease-out` on colour, background and transform. Nothing moves on its own.
-- **Feedback motion only:** checking an ingredient (tick fills, row fades to 45%), saving a favourite (heart scales 1 → 1.15 → 1), opening a dialog (fade plus 8px rise).
-- Tiles get no hover lift or shadow. Hover darkens the swatch by 6% (`brightness-95`), and keyboard focus shows a 3px ring.
+- **Feedback motion only,** answering what someone does: hovering a tile (below), checking an ingredient (tick fills, row fades to 45%), saving a favourite (heart scales 1 → 1.15 → 1), opening a dialog (fade plus 8px rise).
+- Tiles never lift or gain a shadow. On hover and keyboard focus, the tile's circle motif swells with a small spring (300ms; `scale-[1.35]` on recipe tiles, `scale-110` on tag and list tiles, whose text sits closer to it) and a photo zooms slowly to 105% (500ms). Hover also darkens the swatch by 6% (`brightness-95`), and keyboard focus shows a 3px ring. Use `TILE_MOTIF_MOTION` from `ui/circle-motif.tsx`, with `motion-safe:` on the scale so reduced motion turns it off.
 - `prefers-reduced-motion`: all transforms off, colour changes stay.
 
 ---

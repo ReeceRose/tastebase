@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { CreateAccountLink } from "@/components/auth/create-account-link";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { safeReturnPath } from "@/lib/utils/return-path";
@@ -15,7 +17,14 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
   return (
     <AuthShell>
-      <SignInForm returnTo={safeReturnPath(next ?? null)} />
+      <SignInForm
+        returnTo={safeReturnPath(next ?? null)}
+        createAccountLink={
+          <Suspense fallback={null}>
+            <CreateAccountLink />
+          </Suspense>
+        }
+      />
     </AuthShell>
   );
 }

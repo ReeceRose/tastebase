@@ -1,12 +1,12 @@
 import {
-  checkSession,
   connect,
   displayAddress,
+  findConnection,
   findSavedRecipe,
-  getSavedAddress,
-  getTastebaseOrigin,
+  getSavedAddresses,
+  getTastebaseOrigins,
+  parseAddresses,
   SessionState,
-  toOrigin,
 } from "./connection.js";
 
 const SAVE_MESSAGE = "tastebase:save";
@@ -18,7 +18,9 @@ const saveButton = element("save-button");
 const saveAnywayButton = element("save-anyway-button");
 const errorMessage = element("error");
 
+let origins = [];
 let origin = null;
+let connection = null;
 let tab = null;
 let preview = null;
 let saving = false;
@@ -191,7 +193,7 @@ async function readPreview() {
   if (!tab?.id || !/^https?:/.test(tab.url ?? "")) {
     return { kind: "not-a-page" };
   }
-  if (tab.url.startsWith(origin)) {
+  if (origins.some((candidate) => tab.url.startsWith(candidate))) {
     return { kind: "in-tastebase" };
   }
   try {
@@ -310,27 +312,23 @@ function renderFooter(session) {
 
 async function load() {
   showError("");
-  origin = await getTastebaseOrigin();
-  if (!origin) {
+  origins = await getTastebaseOrigins();
+  if (origins.length === 0) {
     await showSetup();
     return;
   }
 
   settingsButton.hidden = false;
-  for (const node of document.querySelectorAll(".tastebase-address")) {
-    node.textContent = displayAddress(origin);
-  }
+  element("unreachable-address").textContent = origins
+    .map(displayAddress)
+    .join(" or ");
   show("loading");
   const thisLoad = ++loadCount;
   const isStale = () => thisLoad !== loadCount;
+  const thisConnection = findConnection(origins);
+  connection = thisConnection;
 
   [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const pageUrl = /^https?:/.test(tab?.url ?? "") ? tab.url : null;
-  const sessionCheck = checkSession(origin);
-  const savedCheck =
-    pageUrl && !pageUrl.startsWith(origin)
-      ? findSavedRecipe(origin, pageUrl)
-      : Promise.resolve(null);
 
   // Reading the page is quick, but Tastebase can be slow to answer, so show
   // the recipe straight away and fill in the rest when it replies.
@@ -342,8 +340,11 @@ async function load() {
     renderRecipe(preview);
   }
 
-  const session = await sessionCheck;
+  const reached = await thisConnection;
   if (isStale()) return;
+  const { session } = reached;
+  origin = reached.origin;
+  element("signed-out-address").textContent = displayAddress(origin);
   renderFooter(session);
   if (saving) return;
 
@@ -392,12 +393,14 @@ async function load() {
     return;
   }
   if (!earlyRecipe) renderRecipe(preview);
-  const saved = await savedCheck;
+  const saved = await findSavedRecipe(origin, tab.url);
   if (!isStale() && !saving) renderSaved(saved);
 }
 
 async function showSetup() {
-  element("setup-address").value = displayAddress(await getSavedAddress());
+  const { primary, backup } = await getSavedAddresses();
+  element("setup-address").value = displayAddress(primary);
+  element("setup-backup-address").value = displayAddress(backup);
   element("setup-error").hidden = true;
   element("footer").hidden = true;
   show("setup");
@@ -418,12 +421,28 @@ async function save(button) {
   showError("");
   setBusy(button, "Opening Tastebase…");
   for (const other of [saveButton, saveAnywayButton]) other.disabled = true;
+  const restore = () => {
+    saving = false;
+    button.replaceChildren(...original);
+    button.disabled = false;
+    for (const other of [saveButton, saveAnywayButton]) other.disabled = false;
+  };
+
+  // The recipe shows before we know which address answers, so a quick click
+  // waits here for that instead of opening an address that's down.
+  const reached = await connection;
+  if (reached.session.state === SessionState.UNREACHABLE) {
+    restore();
+    show("unreachable");
+    return;
+  }
 
   const response = await chrome.runtime
     .sendMessage({
       type: SAVE_MESSAGE,
       tabId: tab.id,
       imageUrl: preview?.imageUrl ?? null,
+      origin: reached.origin,
     })
     .catch(() => null);
 
@@ -431,10 +450,7 @@ async function save(button) {
     window.close();
     return;
   }
-  saving = false;
-  button.replaceChildren(...original);
-  button.disabled = false;
-  for (const other of [saveButton, saveAnywayButton]) other.disabled = false;
+  restore();
   showError(response?.error ?? "Something went wrong. Try again.");
 }
 
@@ -464,19 +480,22 @@ settingsButton.addEventListener("click", () => {
 element("setup-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const setupError = element("setup-error");
-  const next = toOrigin(element("setup-address").value);
+  const next = parseAddresses(
+    element("setup-address").value,
+    element("setup-backup-address").value,
+  );
   if (!next) {
     setupError.textContent = "That doesn't look like a web address.";
     setupError.hidden = false;
     return;
   }
-  connect(next).then((granted) => {
+  connect(next.primary, next.backup).then((granted) => {
     if (granted) {
       load();
       return;
     }
     setupError.textContent =
-      "Chrome needs your permission to open Tastebase at that address.";
+      "Chrome needs your permission to open Tastebase at those addresses.";
     setupError.hidden = false;
   });
 });

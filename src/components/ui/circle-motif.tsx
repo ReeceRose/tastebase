@@ -1,5 +1,8 @@
 import { cn } from "@/lib/utils";
 
+export const TILE_MOTIF_MOTION =
+  "transition-[scale] duration-300 ease-[cubic-bezier(0.34,1.4,0.64,1)]";
+
 interface CircleMotifProps {
   className?: string;
 }

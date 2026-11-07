@@ -1,19 +1,24 @@
 import {
   connect,
   displayAddress,
-  getSavedAddress,
-  getTastebaseOrigin,
-  toOrigin,
+  getSavedAddresses,
+  getTastebaseOrigins,
+  parseAddresses,
 } from "./connection.js";
 
 const form = document.getElementById("setup-form");
 const input = document.getElementById("setup-address");
+const backupInput = document.getElementById("setup-backup-address");
 const error = document.getElementById("setup-error");
 const connected = document.getElementById("connected");
 
-function showConnected(origin) {
+function showConnected([primary, backup]) {
   document.getElementById("connected-address").textContent =
-    displayAddress(origin);
+    displayAddress(primary);
+  document.getElementById("connected-backup").hidden = !backup;
+  document.getElementById("connected-backup-address").textContent = backup
+    ? displayAddress(backup)
+    : "";
   form.hidden = true;
   connected.hidden = false;
 }
@@ -26,33 +31,34 @@ function showForm() {
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
-  const origin = toOrigin(input.value);
-  if (!origin) {
+  const next = parseAddresses(input.value, backupInput.value);
+  if (!next) {
     error.textContent = "That doesn't look like a web address.";
     error.hidden = false;
     return;
   }
   error.hidden = true;
-  connect(origin).then((granted) => {
+  connect(next.primary, next.backup).then((granted) => {
     if (granted) {
-      showConnected(origin);
+      showConnected([next.primary, next.backup]);
       return;
     }
     error.textContent =
-      "Chrome needs your permission to open Tastebase at that address.";
+      "Chrome needs your permission to open Tastebase at those addresses.";
     error.hidden = false;
   });
 });
 
 document.getElementById("change-address").addEventListener("click", showForm);
 
-const [origin, saved] = await Promise.all([
-  getTastebaseOrigin(),
-  getSavedAddress(),
+const [origins, saved] = await Promise.all([
+  getTastebaseOrigins(),
+  getSavedAddresses(),
 ]);
-input.value = displayAddress(saved);
-if (origin) {
-  showConnected(origin);
+input.value = displayAddress(saved.primary);
+backupInput.value = displayAddress(saved.backup);
+if (origins.length > 0) {
+  showConnected(origins);
 } else {
   showForm();
 }

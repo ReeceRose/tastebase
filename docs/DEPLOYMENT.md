@@ -30,9 +30,11 @@ Mount both. Without them, every recipe and photo is lost when the container is r
 | `BETTER_AUTH_SECRET` | Yes | output of `openssl rand -base64 48` |
 | `BETTER_AUTH_URL` | Yes | `http://192.168.1.100:3000` or `https://recipes.example.com` |
 | `ENCRYPTION_SECRET` | Yes | a second, different `openssl rand -base64 48` |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | No | `http://100.64.0.1:3000`, for any other address people use |
+| `ALLOW_SIGN_UPS` | No | `false`, once everyone has an account |
 | `CURRENT_ENCRYPTION_VERSION` | No | `1` |
 
-`BETTER_AUTH_URL` must match the address in people's browsers, including the port, or sign-in won't work. Full reference: [environment-variables.md](./environment-variables.md).
+`BETTER_AUTH_URL` must match the address in people's browsers, including the port, or sign-in won't work. If people also reach Tastebase another way, such as over Tailscale, list those addresses in `BETTER_AUTH_TRUSTED_ORIGINS`, separated by commas with no spaces. Full reference: [environment-variables.md](./environment-variables.md).
 
 ## Option 1: Docker Compose (recommended)
 
@@ -227,6 +229,8 @@ It returns `503` if the database can't be reached. The Compose file already uses
 
 **Sign-in loops back to the sign-in page.** `BETTER_AUTH_URL` doesn't match the address in the browser (check the scheme, host and port).
 
+**"Invalid origin" on sign-in.** The address in the browser isn't trusted. Add it to `BETTER_AUTH_TRUSTED_ORIGINS`, for example `http://100.64.0.1:3000` for a Tailscale IP, with no quotes, path or trailing slash. Then recreate the container, because `docker restart` won't apply the change.
+
 **Migration errors on start.** Migrations run automatically and the container won't start if one fails. Restore your last backup and [open an issue](https://github.com/ReeceRose/tastebase/issues) with the log.
 
 **Start completely fresh.** This deletes every recipe, account and photo:
@@ -243,8 +247,9 @@ More: [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).
 1. Generate unique secrets; never reuse the examples.
 2. Use HTTPS for anything reachable from outside your home network.
 3. If you're not using a reverse proxy, don't expose port 3000 to the internet.
-4. Schedule backups.
-5. Keep up with releases.
+4. Set `ALLOW_SIGN_UPS=false` once everyone has an account. While it's on, anyone who can reach Tastebase can create an account and see shared recipes.
+5. Schedule backups.
+6. Keep up with releases.
 
 ## Support
 

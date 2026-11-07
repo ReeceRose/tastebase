@@ -37,9 +37,15 @@ type SignInFormData = z.infer<typeof signInSchema>;
 
 interface SignInFormProps extends React.ComponentProps<"div"> {
   returnTo: string;
+  createAccountLink: React.ReactNode;
 }
 
-export function SignInForm({ className, returnTo, ...props }: SignInFormProps) {
+export function SignInForm({
+  className,
+  returnTo,
+  createAccountLink,
+  ...props
+}: SignInFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -168,15 +174,7 @@ export function SignInForm({ className, returnTo, ...props }: SignInFormProps) {
               </div>
             </div>
 
-            <div className="mt-4 text-center text-sm">
-              New here?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4"
-              >
-                Create an account
-              </Link>
-            </div>
+            {createAccountLink}
           </form>
         </CardContent>
       </Card>

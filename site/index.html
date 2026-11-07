@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tastebase: your household's recipes, on your own server</title>
+    <meta name="description" content="Tastebase is a free, open-source recipe app you host yourself. Everyone in the house saves recipes from links, text or photos, cooks from a full-screen view and leaves notes for each other.">
+    <link rel="canonical" href="https://tastebase.reecerose.com/">
+    <meta name="theme-color" content="#234a2f">
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+    <link rel="preload" href="/assets/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/assets/site.css">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Tastebase">
+    <meta property="og:title" content="Tastebase: your household's recipes, on your own server">
+    <meta property="og:description" content="A free, open-source recipe app you host yourself. Save recipes from anywhere, cook from a full-screen view and leave notes for the house.">
+    <meta property="og:url" content="https://tastebase.reecerose.com/">
+    <meta property="og:image" content="https://tastebase.reecerose.com/assets/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="The Tastebase logo, a tomato-red drop with a bite out of it, on leek green">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Tastebase",
+        "url": "https://tastebase.reecerose.com/",
+        "description": "A free, open-source recipe app for households, self-hosted with Docker.",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Linux (Docker)",
+        "license": "https://opensource.org/licenses/MIT",
+        "sameAs": "https://github.com/ReeceRose/tastebase",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CAD" }
+      }
+    </script>
+    <script src="/assets/sample-recipe.js" defer></script>
+    <script src="/assets/site.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="site-header">
+        <a class="wordmark" href="/">
+          <img src="/assets/logo.svg" alt="" width="30" height="30">
+          Tastebase
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <a href="/guide">Guide</a>
+          <a href="https://github.com/ReeceRose/tastebase">GitHub</a>
+        </nav>
+      </header>
+
+      <main id="main">
+        <section class="crate">
+          <div class="crate-copy">
+            <h1>Every recipe your house cooks, in one place you own.</h1>
+            <p>Tastebase is a recipe app you run on your own server. Everyone in the house gets an account, saves recipes from anywhere and leaves notes for each other. It's free and open source, and your recipes stay on your machine.</p>
+            <div class="actions">
+              <a class="btn btn-accent" href="#install">Install Tastebase</a>
+              <a class="btn btn-outline" href="/guide">Read the guide</a>
+            </div>
+          </div>
+
+          <div class="tile tile-a swatch-tomato" aria-hidden="true">
+            <div class="tile-title">Sunday tomato ragù</div>
+            <div class="tile-meta"><span>3 h 20</span><span class="avatar">P</span></div>
+          </div>
+          <div class="tile tile-b swatch-sky" aria-hidden="true">
+            <div class="tile-title">Lemon ricotta pancakes</div>
+            <div class="tile-meta"><span>25 min</span><span class="avatar">M</span></div>
+          </div>
+          <div class="tile tile-c swatch-turmeric" aria-hidden="true">
+            <div class="tile-title">Weeknight red lentil dal</div>
+            <div class="tile-meta"><span>35 min</span><span class="avatar">S</span></div>
+          </div>
+          <div class="tile tile-d swatch-aubergine" aria-hidden="true">
+            <div class="tile-title">Miso-glazed aubergine</div>
+            <div class="tile-meta"><span>40 min</span><span class="avatar">P</span></div>
+          </div>
+          <div class="tile tile-e swatch-leek" aria-hidden="true">
+            <div class="tile-title">Charred leek and white bean soup</div>
+            <div class="tile-meta"><span>45 min</span><span class="avatar">T</span></div>
+          </div>
+          <div class="tile tile-f swatch-radish" aria-hidden="true">
+            <div class="tile-title">Radish butter toast</div>
+            <div class="tile-meta"><span>10 min</span><span class="avatar">M</span></div>
+          </div>
+          <div class="tile tile-g swatch-beet" aria-hidden="true">
+            <div class="tile-title">Grandma's beet and orange salad</div>
+            <div class="tile-meta"><span>1 h 10</span><span class="avatar">S</span></div>
+          </div>
+          <div class="tile tile-h swatch-herb" aria-hidden="true">
+            <div class="tile-title">Green goddess chicken</div>
+            <div class="tile-meta"><span>50 min</span><span class="avatar">T</span></div>
+          </div>
+          <p class="crate-note">Sample recipes, to show how a collection looks.</p>
+        </section>
+
+        <section class="preview" id="recipe" data-recipe>
+          <h2 class="section-title">Try a recipe.</h2>
+          <p class="lead">This is how a recipe looks in Tastebase, using a sample recipe. Change the servings, switch units and tick things off, the same way you would in the app.</p>
+
+          <div class="recipe-hero swatch-leek">
+            <p class="recipe-by">Your recipe, shared with the house</p>
+            <h3 class="recipe-title">Charred leek and white bean soup</h3>
+            <p class="recipe-desc">Smoky, creamy and mostly pantry staples. Blending half the pot makes it thick without any cream.</p>
+            <dl class="recipe-facts">
+              <div><dt>Prep</dt><dd>15 min</dd></div>
+              <div><dt>Cook</dt><dd>30 min</dd></div>
+              <div><dt>Serves</dt><dd data-servings-fact>4</dd></div>
+              <div><dt>Difficulty</dt><dd>Easy</dd></div>
+            </dl>
+          </div>
+
+          <div class="recipe-body">
+            <div class="recipe-panel">
+              <div class="panel-head">
+                <h3>Ingredients</h3>
+                <div class="stepper" data-controls hidden>
+                  <button type="button" data-less aria-label="Fewer servings">&minus;</button>
+                  <span aria-live="polite" data-servings>Serves 4</span>
+                  <button type="button" data-more aria-label="More servings">+</button>
+                </div>
+              </div>
+              <p class="scale-note" data-note hidden></p>
+              <ul class="ingredients">
+                  <li><label class="ingredient"><input type="checkbox" data-tick><span class="tick"></span><span class="ingredient-amount" data-amount="0">2</span><span class="ingredient-name">large leeks<span class="muted">, halved lengthwise</span></span></label></li>
+                  <li><label class="ingredient"><input type="checkbox" data-tick><span class="tick"></span><span class="ingredient-amount" data-amount="1">3 tbsp</span><span class="ingredient-name">olive oil</span></label></li>
+                  <li><label class="ingredient"><input type="checkbox" data-tick><span class="tick"></span><span class="ingredient-amount" data-amount="2">3 cloves</span><span class="ingredient-name">garlic<span class="muted">, sliced</span></span></label></li>
+                  <li><label class="ingredient"><input type="checkbox" data-tick><span class="tick"></span><span class="ingredient-amount" data-amount="3">2 cans</span><span class="ingredient-name">white beans<span class="muted">, drained</span></span></label></li>
+                  <li><label class="ingredient"><input type="checkbox" data-tick><span class="tick"></span><span class="ingredient-amount" data-amount="4">4 cups</span><span class="ingredient-name">vegetable stock</span></label></li>
+                  <li><label class="ingredient"><input type="checkbox" data-tick><span class="tick"></span><span class="ingredient-amount" data-amount="5">1 tsp</span><span class="ingredient-name">dried rosemary</span></label></li>
+                  <li><label class="ingredient"><input type="checkbox" data-tick><span class="tick"></span><span class="ingredient-amount" data-amount="6">2 tbsp</span><span class="ingredient-name">lemon juice</span></label></li>
+                  <li><label class="ingredient"><input type="checkbox" data-tick><span class="tick"></span><span class="ingredient-amount" data-amount="7">1 tsp</span><span class="ingredient-name">salt</span></label></li>
+                  <li><label class="ingredient"><input type="checkbox" data-tick><span class="tick"></span><span class="ingredient-amount" data-amount="8">½ tsp</span><span class="ingredient-name">black pepper</span></label></li>
+              </ul>
+              <div class="panel-foot" data-controls hidden>
+                <div class="segmented" role="group" aria-label="Units">
+                  <button type="button" data-system="metric" aria-pressed="false">Metric</button>
+                  <button type="button" data-system="imperial" aria-pressed="true">Imperial</button>
+                </div>
+                <div class="panel-links">
+                  <button type="button" class="link-btn" data-reset hidden>Back to 4</button>
+                  <button type="button" class="link-btn" data-untick hidden>Untick all</button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="method-title">Method</h3>
+              <ol class="method">
+                  <li><p>Heat a heavy pot over high heat. Char the leeks cut side down until black in spots, then slice them.</p><span class="pill">8 min</span></li>
+                  <li><p>Lower the heat to medium. Add the oil, leeks, garlic and rosemary, and cook until the garlic is soft.</p><span class="pill">5 min</span></li>
+                  <li><p>Add the beans and stock. Simmer until the beans turn creamy.</p><span class="pill">12 min</span></li>
+                  <li><p>Blend half the soup and stir it back into the pot.</p><span class="pill">5 min</span></li>
+                  <li><p>Stir in the lemon juice, salt and pepper. Taste and adjust.</p></li>
+                  <li><p>Ladle into bowls and serve hot.</p></li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <section class="scene">
+          <div>
+            <h2 class="section-title">Bring recipes in from anywhere.</h2>
+            <p class="lead">Each one opens in the editor, so you can check it before it's saved.</p>
+            <ul class="scene-points">
+              <li><strong>A link.</strong> Reads the recipe from most sites and brings its photo along.</li>
+              <li><strong>Text.</strong> Paste a recipe and it's split into ingredients and steps.</li>
+              <li><strong>A photo.</strong> Snap a cookbook page and it's read for you.</li>
+              <li><strong>The browser extension.</strong> Works on sites that block imports and on subscriber sites you're signed in to.</li>
+              <li><strong>Your phone.</strong> Share a link straight in from Android or an iPhone Shortcut.</li>
+            </ul>
+          </div>
+          <div class="mock mock-paper" aria-hidden="true">
+            <div class="popup">
+              <div class="popup-photo"></div>
+              <h3>Charred leek and white bean soup</h3>
+              <p>9 ingredients, 6 steps</p>
+              <div class="popup-save">Save to Tastebase</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="scene">
+          <div>
+            <h2 class="section-title">Cook from a screen you can read across the kitchen.</h2>
+            <p class="lead">Cook mode shows one step at a time, full screen, with timers and ingredient tick-offs. The screen stays on while you cook.</p>
+            <ul class="scene-points">
+              <li><strong>Scale it.</strong> Change the servings and the amounts follow.</li>
+              <li><strong>Switch units.</strong> Metric or imperial, on any recipe.</li>
+            </ul>
+          </div>
+          <div class="mock cook swatch-leek" aria-hidden="true">
+            <div class="cook-progress">Step 3 of 6</div>
+            <div class="cook-step">Simmer until the beans turn creamy.</div>
+            <div class="cook-timer">12:00 <span>Start</span></div>
+            <ul class="cook-ticks">
+              <li class="is-done"><span class="tick"></span>2 large leeks</li>
+              <li><span class="tick"></span>2 cans white beans</li>
+              <li><span class="tick"></span>4 cups vegetable stock</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="band">
+          <h2 class="section-title">Also in the box.</h2>
+          <dl class="facts">
+            <div>
+              <dt>Notes for the house</dt>
+              <dd>Leave notes and ratings on each other's recipes, or keep them to yourself.</dd>
+            </div>
+            <div>
+              <dt>Shared or only you</dt>
+              <dd>Share a recipe with everyone on your Tastebase, or keep it private.</dd>
+            </div>
+            <div>
+              <dt>A home for what's next</dt>
+              <dd>What's new, what you opened last and what's not been made in a while.</dd>
+            </div>
+            <div>
+              <dt>Search that looks everywhere</dt>
+              <dd>Names, ingredients, steps and notes. Filter by cook, time, difficulty, cuisine and tag.</dd>
+            </div>
+            <div>
+              <dt>A colour for every recipe</dt>
+              <dd>Your collection is easy to scan, even with no photos.</dd>
+            </div>
+            <div>
+              <dt>Favourites and recent</dt>
+              <dd>The recipes you've saved and the ones you opened last.</dd>
+            </div>
+            <div>
+              <dt>Phones and desktops</dt>
+              <dd>A sidebar on desktop and a tab bar on your phone.</dd>
+            </div>
+            <div>
+              <dt>Light and dark</dt>
+              <dd>Follows your device, or pick one.</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="own">
+          <h2 class="section-title">It runs on your machine, and that's the whole deal.</h2>
+          <dl class="own-list">
+            <div>
+              <dt>Runs on what you already have</dt>
+              <dd>A Synology, QNAP, Unraid or TrueNAS box, a Raspberry Pi 4 or 5, or any Linux server with Docker.</dd>
+            </div>
+            <div>
+              <dt>Your data is yours</dt>
+              <dd>One SQLite database and a folder of photos, on your disk, easy to back up.</dd>
+            </div>
+            <div>
+              <dt>Free, with no subscription</dt>
+              <dd>Open source under the MIT licence. It doesn't need a cloud service, and everyone's account lives on your own server.</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="install" id="install">
+          <div>
+            <h2 class="section-title">Install it.</h2>
+            <p class="lead">You need a machine with Docker. Set two secrets and the address you'll use in <code>.env</code>, start it, and create the first account.</p>
+            <div class="actions">
+              <a class="btn btn-outline" href="/guide#install">See every step</a>
+            </div>
+          </div>
+          <div class="code">
+            <pre><code>mkdir tastebase &amp;&amp; cd tastebase
+curl -O https://raw.githubusercontent.com/ReeceRose/tastebase/main/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/ReeceRose/tastebase/main/.env.docker.example
+docker compose up -d</code></pre>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <span>Tastebase is MIT licensed.</span>
+        <ul>
+          <li><a href="/guide">Guide</a></li>
+          <li><a href="https://github.com/ReeceRose/tastebase">GitHub</a></li>
+          <li><a href="https://github.com/ReeceRose/tastebase/releases">Releases</a></li>
+          <li><a href="https://github.com/ReeceRose/tastebase/issues">Report an issue</a></li>
+        </ul>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -34,6 +34,21 @@ and save** takes you through sign-in and the recipe comes along.
 
 Use the gear in the popup to change the Tastebase address.
 
+## Reaching Tastebase from more than one network
+
+Add a **backup address** if you reach Tastebase differently when you're away,
+like a LAN IP at home and a Tailscale address elsewhere. The popup tries both
+each time it opens and uses the first address unless only the backup answers.
+
+Tastebase has to accept both addresses, and you sign in to each one separately
+because browsers keep cookies per address. Set one as `BETTER_AUTH_URL` and the
+other in `BETTER_AUTH_TRUSTED_ORIGINS` (see
+[environment-variables.md](../../docs/environment-variables.md)).
+
+Addresses without a scheme are treated as `https://` unless they're an IP or
+`localhost`, so type `http://` in front of a Tailscale name served over plain
+HTTP.
+
 ## How it works
 
 1. When the popup opens it reads the page's recipe data (JSON-LD) for the
@@ -52,7 +67,7 @@ Use the gear in the popup to change the Tastebase address.
 On your Tastebase's own pages, a tiny script (`presence.js`) sets a
 `data-tastebase-extension` attribute so **Add a recipe** knows the extension
 is installed and points you to it instead of suggesting you install it. It
-only runs on the Tastebase address you connected.
+only runs on the Tastebase addresses you connected.
 
 Nothing is sent anywhere except your own Tastebase. The extension only reads
 a page when you open the popup on it.

@@ -116,12 +116,39 @@ export function groupInstructionsByGroup(
     );
 }
 
+const RECIPE_SLUG_MAX_LENGTH = 50;
+const RECIPE_SLUG_FALLBACK = "recipe";
+const UNDECOMPOSABLE_LETTERS: Record<string, string> = {
+  æ: "ae",
+  œ: "oe",
+  ø: "o",
+  ß: "ss",
+  ł: "l",
+  đ: "d",
+  ð: "d",
+  þ: "th",
+};
+
 export function generateRecipeSlug(title: string): string {
-  return title
+  const slug = title
     .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Mark}/gu, "")
+    .replace(/[æœøßłđðþ]/g, (letter) => UNDECOMPOSABLE_LETTERS[letter])
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .substring(0, 50);
+    .substring(0, RECIPE_SLUG_MAX_LENGTH)
+    .replace(/^-|-$/g, "");
+
+  return slug || RECIPE_SLUG_FALLBACK;
+}
+
+export function addRecipeSlugSuffix(baseSlug: string, counter: number): string {
+  const suffix = `-${counter}`;
+  const base = baseSlug
+    .substring(0, RECIPE_SLUG_MAX_LENGTH - suffix.length)
+    .replace(/-$/, "");
+
+  return `${base}${suffix}`;
 }

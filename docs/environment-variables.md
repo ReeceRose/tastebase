@@ -17,13 +17,15 @@ Copy `.env.example` to `.env.local` for development. In Docker, set them in `doc
 
 | Variable | Default | What it does |
 | --- | --- | --- |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | unset | Other addresses people use to reach Tastebase, such as a LAN IP or Tailscale name. Comma-separated with no spaces, each with its scheme and port. If `BETTER_AUTH_URL` is `https://`, these must be `https://` too, because sign-in cookies won't save over plain `http://`. |
+| `ALLOW_SIGN_UPS` | `true` | Set to `false` once everyone has an account, so nobody else can create one. The first account always works. |
 | `CURRENT_ENCRYPTION_VERSION` | `1` | Bump when rotating `ENCRYPTION_SECRET`; see [security/key-rotation.md](./security/key-rotation.md). |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Default Ollama address when someone adds Ollama in Settings without a host. |
 | `BETTER_AUTH_TELEMETRY` | `0` | BetterAuth telemetry. Leave at `0`. |
 | `NODE_ENV` | `development` | Set to `production` by the Docker image. |
 | `SKIP_ENV_VALIDATION` | unset | Skips validation. Only used during the Docker build. |
 
-AI is optional. Provider keys (OpenAI, Anthropic, Google) are **not** environment variables: each person adds their own in **Settings → Import and AI**, and they're stored encrypted with `ENCRYPTION_SECRET`.
+AI provider keys (OpenAI, Anthropic, Google) are **not** environment variables: each person adds their own in **Settings → Import and AI**, and they're stored encrypted with `ENCRYPTION_SECRET`.
 
 ## Generating secrets
 
@@ -62,6 +64,7 @@ ENCRYPTION_SECRET="<from the command above>"
 
 - **"Invalid environment variables" on start:** the message names the variable. `ENCRYPTION_SECRET` is the usual one; regenerate it with the command above.
 - **Sign-in redirects to the wrong address:** `BETTER_AUTH_URL` doesn't match the address in your browser.
+- **"Invalid origin" on sign-in:** the address in your browser isn't trusted. Set it as `BETTER_AUTH_URL` or add it to `BETTER_AUTH_TRUSTED_ORIGINS`.
 - **AI keys stop working after changing `ENCRYPTION_SECRET`:** stored keys can't be decrypted with the new secret. Follow the rotation guide, or have people re-enter their keys in Settings.
 
 More help: [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).

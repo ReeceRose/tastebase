@@ -1,20 +1,30 @@
 // Where the user's Tastebase lives and whether we're allowed to open it.
 
-export async function getTastebaseOrigin() {
-  const { tastebaseUrl } = await chrome.storage.sync.get("tastebaseUrl");
-  if (!tastebaseUrl) return null;
-  const granted = await chrome.permissions.contains({
-    origins: [`${tastebaseUrl}/*`],
-  });
-  return granted ? tastebaseUrl : null;
+// How long the primary address gets to answer once the backup already has.
+// Keeps the primary preferred when both work, like at home with Tailscale on.
+const PRIMARY_GRACE_MS = 1000;
+
+// The addresses we're allowed to open, primary first.
+export async function getTastebaseOrigins() {
+  const { primary, backup } = await getSavedAddresses();
+  const origins = [primary, backup].filter(Boolean);
+  const granted = await Promise.all(
+    origins.map((origin) =>
+      chrome.permissions.contains({ origins: [`${origin}/*`] }),
+    ),
+  );
+  return origins.filter((_, index) => granted[index]);
 }
 
-export async function getSavedAddress() {
-  const { tastebaseUrl } = await chrome.storage.sync.get("tastebaseUrl");
-  return tastebaseUrl ?? "";
+export async function getSavedAddresses() {
+  const { tastebaseUrl, tastebaseBackupUrl } = await chrome.storage.sync.get([
+    "tastebaseUrl",
+    "tastebaseBackupUrl",
+  ]);
+  return { primary: tastebaseUrl ?? "", backup: tastebaseBackupUrl ?? "" };
 }
 
-export function toOrigin(input) {
+function toOrigin(input) {
   const trimmed = input.trim();
   const withScheme = /^https?:\/\//i.test(trimmed)
     ? trimmed
@@ -33,9 +43,24 @@ export function displayAddress(origin) {
 // chrome.permissions.request must run straight from the click, so call this
 // before awaiting anything else. The address is stored first because Chrome's
 // permission prompt can close the popup before the request resolves.
-export function connect(origin) {
-  chrome.storage.sync.set({ tastebaseUrl: origin });
-  return chrome.permissions.request({ origins: [`${origin}/*`] });
+export function connect(primary, backup) {
+  chrome.storage.sync.set({
+    tastebaseUrl: primary,
+    tastebaseBackupUrl: backup,
+  });
+  const origins = [primary, backup].filter(Boolean);
+  return chrome.permissions.request({
+    origins: origins.map((origin) => `${origin}/*`),
+  });
+}
+
+// Reads the setup form's two fields. An empty or repeated backup means none.
+export function parseAddresses(primaryInput, backupInput) {
+  const primary = toOrigin(primaryInput);
+  const hasBackup = backupInput.trim() !== "";
+  const backup = hasBackup ? toOrigin(backupInput) : null;
+  if (!primary || (hasBackup && !backup)) return null;
+  return { primary, backup: backup === primary ? null : backup };
 }
 
 export const SessionState = Object.freeze({
@@ -58,6 +83,31 @@ export async function checkSession(origin) {
   } catch {
     return { state: SessionState.UNREACHABLE, name: null };
   }
+}
+
+// Picks the address to use. Both are tried at once so being away from home
+// doesn't mean waiting out the primary's timeout on every popup. If neither
+// answers, the result is the primary's unreachable state.
+export async function findConnection(origins) {
+  const [primary, backup] = origins.map(async (origin) => ({
+    origin,
+    session: await checkSession(origin),
+  }));
+  if (!backup) return primary;
+
+  const isReachable = (result) =>
+    result.session.state !== SessionState.UNREACHABLE;
+  const graceOver = backup.then((result) =>
+    isReachable(result)
+      ? new Promise((resolve) =>
+          setTimeout(() => resolve(null), PRIMARY_GRACE_MS),
+        )
+      : primary,
+  );
+  const first = await Promise.race([primary, graceOver]);
+  if (first && isReachable(first)) return first;
+  const fallback = await backup;
+  return isReachable(fallback) ? fallback : primary;
 }
 
 // A recipe already in Tastebase from the same page, or null.

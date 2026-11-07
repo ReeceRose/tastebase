@@ -42,6 +42,7 @@ export const env = createEnv({
     BETTER_AUTH_SECRET: z.string().min(1),
     BETTER_AUTH_URL: z.url(),
     BETTER_AUTH_TELEMETRY: z.string().default("0"),
+    ALLOW_SIGN_UPS: z.enum(["true", "false"]).default("true"),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -84,6 +85,7 @@ export const env = createEnv({
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
     BETTER_AUTH_TELEMETRY: process.env.BETTER_AUTH_TELEMETRY,
+    ALLOW_SIGN_UPS: process.env.ALLOW_SIGN_UPS,
     NODE_ENV: process.env.NODE_ENV,
     OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL,
     ENCRYPTION_SECRET: process.env.ENCRYPTION_SECRET,

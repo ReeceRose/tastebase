@@ -1,7 +1,7 @@
 import { Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { CircleMotif } from "@/components/ui/circle-motif";
+import { CircleMotif, TILE_MOTIF_MOTION } from "@/components/ui/circle-motif";
 import { memberInitial } from "@/components/ui/member-avatar";
 import type { RecipeSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -38,13 +38,13 @@ export function RecipeTile({
       )}
     >
       {recipe.heroImage ? (
-        <div className="relative aspect-[16/10] w-full shrink-0 bg-black/10">
+        <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-black/10">
           <Image
             src={`/api/recipes/images/${recipe.heroImage.filename}`}
             alt=""
             fill
             priority={priority}
-            className="object-cover"
+            className="object-cover transition-[scale] duration-500 ease-out motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 320px"
             unoptimized
           />
@@ -52,7 +52,8 @@ export function RecipeTile({
       ) : (
         <CircleMotif
           className={cn(
-            "-right-9 -bottom-14 transition-transform duration-200 group-hover:scale-105",
+            "-right-9 -bottom-14 motion-safe:group-hover:scale-[1.35] motion-safe:group-focus-visible:scale-[1.35]",
+            TILE_MOTIF_MOTION,
             compact ? "size-[110px]" : "size-[140px]",
             classes.deep,
           )}

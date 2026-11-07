@@ -451,17 +451,17 @@ export async function reorderRecipeImages(
     }
 
     // Update sort order for each image
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       for (let i = 0; i < imageIds.length; i++) {
-        await tx
-          .update(recipeImages)
+        tx.update(recipeImages)
           .set({ sortOrder: i })
           .where(
             and(
               eq(recipeImages.id, imageIds[i]),
               eq(recipeImages.recipeId, recipeId),
             ),
-          );
+          )
+          .run();
       }
     });
 

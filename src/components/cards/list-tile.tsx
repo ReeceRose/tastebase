@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CircleMotif } from "@/components/ui/circle-motif";
+import { CircleMotif, TILE_MOTIF_MOTION } from "@/components/ui/circle-motif";
 import type { RecipeListTileData } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
 import { swatchClasses } from "@/lib/utils/swatches";
@@ -24,7 +24,8 @@ export function ListTile({ list }: ListTileProps) {
     >
       <CircleMotif
         className={cn(
-          "-right-10 -bottom-16 size-[130px] transition-transform duration-200 group-hover:scale-105",
+          "-right-10 -bottom-16 size-[130px] motion-safe:group-hover:scale-110 motion-safe:group-focus-visible:scale-110",
+          TILE_MOTIF_MOTION,
           classes.deep,
         )}
       />

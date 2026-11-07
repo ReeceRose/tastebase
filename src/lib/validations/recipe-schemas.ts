@@ -2,7 +2,7 @@ import { z } from "zod";
 import { RecipeDifficulty, RecipeSwatch, SortOrder } from "@/lib/types";
 import { RECIPE_CONSTANTS } from "@/lib/utils/recipe-constants";
 
-const slugSchema = z
+export const slugSchema = z
   .string()
   .min(1, "Slug is required")
   .max(50, "Slug must be 50 characters or less")

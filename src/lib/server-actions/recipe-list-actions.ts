@@ -259,20 +259,22 @@ export async function createRecipeList(
       .where(eq(recipeCollections.userId, user.id));
 
     const now = new Date();
-    await db.transaction(async (tx) => {
-      await tx.insert(recipeCollections).values({
-        id,
-        userId: user.id,
-        name,
-        color: swatch,
-        sortOrder: total,
-        createdAt: now,
-        updatedAt: now,
-      });
+    db.transaction((tx) => {
+      tx.insert(recipeCollections)
+        .values({
+          id,
+          userId: user.id,
+          name,
+          color: swatch,
+          sortOrder: total,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
       if (recipeId) {
-        await tx
-          .insert(recipeCollectionItems)
-          .values({ id: nanoid(), collectionId: id, recipeId, addedAt: now });
+        tx.insert(recipeCollectionItems)
+          .values({ id: nanoid(), collectionId: id, recipeId, addedAt: now })
+          .run();
       }
     });
 
@@ -331,13 +333,13 @@ export async function deleteRecipeList(
     const list = await findOwnedList(listId, user.id);
     if (!list) return { success: false, error: "List not found" };
 
-    await db.transaction(async (tx) => {
-      await tx
-        .delete(recipeCollectionItems)
-        .where(eq(recipeCollectionItems.collectionId, listId));
-      await tx
-        .delete(recipeCollections)
-        .where(eq(recipeCollections.id, listId));
+    db.transaction((tx) => {
+      tx.delete(recipeCollectionItems)
+        .where(eq(recipeCollectionItems.collectionId, listId))
+        .run();
+      tx.delete(recipeCollections)
+        .where(eq(recipeCollections.id, listId))
+        .run();
     });
 
     logger.info({ listId, userId: user.id }, "Recipe list deleted");

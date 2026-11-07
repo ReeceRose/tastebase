@@ -90,8 +90,7 @@ export function AISettingsForm() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        AI is optional. Tastebase imports most recipe links and tidy text on its
-        own. An AI provider helps with messy text and photos of recipes.
+        An AI provider helps with messy text and photos of recipes.
       </p>
 
       {configurations.length > 0 && (

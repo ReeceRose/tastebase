@@ -67,7 +67,7 @@
       <section id="view-signed-out" class="view" hidden>
         <h1>Sign in to Tastebase</h1>
         <p id="signed-out-text" class="muted">
-          You're signed out of <strong class="tastebase-address"></strong> in
+          You're signed out of <strong id="signed-out-address"></strong> in
           this browser.
         </p>
         <button id="sign-in-button" class="button button-accent button-block" type="button">Sign in and save</button>
@@ -76,7 +76,7 @@
       <section id="view-unreachable" class="view" hidden>
         <h1>Can't reach Tastebase</h1>
         <p class="muted">
-          Nothing answered at <strong class="tastebase-address"></strong>. Check
+          Nothing answered at <strong id="unreachable-address"></strong>. Check
           that Tastebase is running, or change the address.
         </p>
         <button id="retry-button" class="button button-outline button-block" type="button">Try again</button>
@@ -89,6 +89,11 @@
           <div class="field">
             <label for="setup-address">Tastebase address</label>
             <input id="setup-address" class="input" type="text" inputmode="url" autocomplete="url" placeholder="localhost:3000" required />
+          </div>
+          <div class="field">
+            <label for="setup-backup-address">Backup address (optional)</label>
+            <input id="setup-backup-address" class="input" type="text" inputmode="url" autocomplete="off" placeholder="100.64.0.1:3000" />
+            <p class="caption muted">Used when the first one doesn't answer, like a Tailscale address for when you're away.</p>
           </div>
           <p id="setup-error" class="message-error" role="alert" hidden></p>
           <button class="button button-accent button-block" type="submit">Connect</button>

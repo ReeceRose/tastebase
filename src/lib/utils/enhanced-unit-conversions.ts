@@ -1,201 +1,167 @@
 /**
- * Enhanced unit conversion with more intuitive cooking-friendly conversions
- * Optimizes common kitchen measurements for better UX
+ * Converts ingredient amounts between metric and imperial using kitchen
+ * measures (a 250 ml cup, a 15 ml tablespoon) and amounts a cook would measure.
  */
 
 import { MeasurementUnit } from "@/lib/types";
-import {
-  convertToCanonical,
-  formatAmount,
-  getUnitCategory,
-  parseAmount,
-} from "@/lib/utils/unit-conversions";
+import { parseQuantity, parseRange } from "@/lib/utils/quantity-parsing";
+import { formatAmount, normalizeUnit } from "@/lib/utils/unit-conversions";
 
-// Enhanced conversion mappings for common cooking measurements
-const COOKING_CONVERSIONS = {
-  // Volume conversions - optimized for cooking intuition
-  volume: {
-    imperial_to_metric: {
-      // Small measurements: direct to ml
-      "1/4 tsp": { amount: "1.25", unit: "ml" },
-      "1/2 tsp": { amount: "2.5", unit: "ml" },
-      "1 tsp": { amount: "5", unit: "ml" },
-      "2 tsp": { amount: "10", unit: "ml" },
-      "1/2 tbsp": { amount: "7.5", unit: "ml" },
-      "1 tbsp": { amount: "15", unit: "ml" },
-      "2 tbsp": { amount: "30", unit: "ml" },
-      "1/4 cup": { amount: "60", unit: "ml" },
-      "1/3 cup": { amount: "80", unit: "ml" },
-      "1/2 cup": { amount: "125", unit: "ml" },
-      "2/3 cup": { amount: "160", unit: "ml" },
-      "3/4 cup": { amount: "180", unit: "ml" },
-      "1 cup": { amount: "250", unit: "ml" },
-      "2 cups": { amount: "500", unit: "ml" },
-      "3 cups": { amount: "750", unit: "ml" },
-      "4 cups": { amount: "1", unit: "L" },
-    },
-    metric_to_imperial: {
-      // Common metric amounts to nice imperial equivalents
-      "5 ml": { amount: "1", unit: "tsp" },
-      "15 ml": { amount: "1", unit: "tbsp" },
-      "30 ml": { amount: "2", unit: "tbsp" },
-      "60 ml": { amount: "1/4", unit: "cup" },
-      "125 ml": { amount: "1/2", unit: "cup" },
-      "250 ml": { amount: "1", unit: "cup" },
-      "500 ml": { amount: "2", unit: "cups" },
-      "1 L": { amount: "4", unit: "cups" },
-    },
-  },
-  // Weight conversions - optimized for baking precision
-  weight: {
-    imperial_to_metric: {
-      "1 oz": { amount: "30", unit: "g" },
-      "2 oz": { amount: "60", unit: "g" },
-      "4 oz": { amount: "125", unit: "g" },
-      "8 oz": { amount: "250", unit: "g" },
-      "12 oz": { amount: "375", unit: "g" },
-      "1 lb": { amount: "450", unit: "g" },
-      "2 lbs": { amount: "900", unit: "g" },
-      "3 lbs": { amount: "1.4", unit: "kg" },
-    },
-    metric_to_imperial: {
-      "30 g": { amount: "1", unit: "oz" },
-      "125 g": { amount: "4", unit: "oz" },
-      "250 g": { amount: "8", unit: "oz" },
-      "450 g": { amount: "1", unit: "lb" },
-      "500 g": { amount: "1.1", unit: "lbs" },
-      "1 kg": { amount: "2.2", unit: "lbs" },
-    },
-  },
-} as const;
+const MILLILITRES: Record<string, number> = {
+  tsp: 5,
+  tbsp: 15,
+  "fl oz": 30,
+  cup: 250,
+  pt: 500,
+  qt: 1000,
+  gal: 4000,
+  ml: 1,
+  l: 1000,
+};
 
-/**
- * Get enhanced cooking-friendly conversion
- * Prioritizes common cooking measurements over mathematical precision
- */
-function getEnhancedConversion(
-  amount: string,
-  unit: string,
-  targetSystem: MeasurementUnit,
-): { amount: string; unit: string; isEnhanced: boolean } {
-  const normalizedAmount = parseAmount(amount);
-  const category = getUnitCategory(unit);
+const GRAMS: Record<string, number> = {
+  oz: 28.35,
+  lb: 453.6,
+  g: 1,
+  kg: 1000,
+};
 
-  if (!category || category === "count") {
-    return { amount, unit, isEnhanced: false };
+const METRIC_UNITS = new Set(["ml", "l", "g", "kg"]);
+
+const KITCHEN_MILLILITRES: [number, number][] = [
+  [250 / 4, 60],
+  [250 / 3, 80],
+  [(250 * 2) / 3, 160],
+  [(250 * 3) / 4, 180],
+];
+
+const KITCHEN_GRAMS: [number, number][] = [
+  [28.35, 30],
+  [56.7, 60],
+  [113.4, 125],
+  [226.8, 250],
+  [340.2, 375],
+  [453.6, 450],
+  [907.2, 900],
+  [1360.8, 1400],
+];
+
+const QUARTERS = [0, 1 / 4, 1 / 2, 3 / 4, 1];
+const QUARTERS_AND_THIRDS = [0, 1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4, 1];
+const EIGHTHS = [0, 1 / 8, 1 / 4, 3 / 8, 1 / 2, 5 / 8, 3 / 4, 7 / 8, 1];
+
+interface DisplayUnit {
+  label: string;
+  size: number;
+  steps: number[];
+}
+
+function snap(value: number, steps: number[]): number {
+  const whole = Math.floor(value);
+  const part = value - whole;
+  const nearest = steps.reduce((best, step) =>
+    Math.abs(step - part) < Math.abs(best - part) ? step : best,
+  );
+  return whole + nearest || steps[1];
+}
+
+function roundMetric(value: number): number {
+  const step = value < 5 ? 0.25 : value < 25 ? 0.5 : value < 100 ? 5 : 10;
+  return Math.max(Math.round(value / step) * step, step);
+}
+
+function metricText(value: number): string {
+  return String(Math.round(value * 100) / 100);
+}
+
+function kitchenMetric(base: number, table: [number, number][]): number {
+  const match = table.find(([exact]) => Math.abs(exact - base) < 0.5);
+  return match ? match[1] : roundMetric(base);
+}
+
+function imperialVolumeUnit(millilitres: number): DisplayUnit {
+  if (millilitres < 15) {
+    return { label: "tsp", size: 5, steps: EIGHTHS };
   }
-
-  // Create lookup key for common conversions
-  const lookupKey = `${amount} ${unit}`;
-
-  if (category === "volume") {
-    const conversions =
-      targetSystem === MeasurementUnit.METRIC
-        ? COOKING_CONVERSIONS.volume.imperial_to_metric
-        : COOKING_CONVERSIONS.volume.metric_to_imperial;
-
-    if (lookupKey in conversions) {
-      const result = conversions[lookupKey as keyof typeof conversions] as {
-        amount: string | number;
-        unit: string;
-      };
-      return {
-        amount:
-          typeof result.amount === "string"
-            ? result.amount
-            : result.amount.toString(),
-        unit: result.unit,
-        isEnhanced: true,
-      };
-    }
+  if (millilitres < 60) {
+    return { label: "tbsp", size: 15, steps: QUARTERS };
   }
+  return { label: "cup", size: 250, steps: QUARTERS_AND_THIRDS };
+}
 
-  if (category === "weight") {
-    const conversions =
-      targetSystem === MeasurementUnit.METRIC
-        ? COOKING_CONVERSIONS.weight.imperial_to_metric
-        : COOKING_CONVERSIONS.weight.metric_to_imperial;
-
-    if (lookupKey in conversions) {
-      const result = conversions[lookupKey as keyof typeof conversions] as {
-        amount: string | number;
-        unit: string;
-      };
-      return {
-        amount:
-          typeof result.amount === "string"
-            ? result.amount
-            : result.amount.toString(),
-        unit: result.unit,
-        isEnhanced: true,
-      };
-    }
+function imperialWeightUnit(grams: number): DisplayUnit {
+  if (grams < 425) {
+    return { label: "oz", size: 28.35, steps: QUARTERS };
   }
+  return { label: "lb", size: 453.6, steps: QUARTERS };
+}
 
-  // Fall back to mathematical conversion
-  const canonical = convertToCanonical(normalizedAmount, unit);
-  if (category === "volume") {
-    const ml = canonical.amount / 0.033814; // fl oz to ml
-    if (targetSystem === MeasurementUnit.METRIC) {
-      if (ml >= 1000) {
-        return {
-          amount: formatAmount(ml / 1000),
-          unit: "L",
-          isEnhanced: false,
-        };
-      }
-      return {
-        amount: Math.round(ml).toString(),
-        unit: "ml",
-        isEnhanced: false,
-      };
-    }
-  }
+function convertToImperial(
+  bases: number[],
+  isVolume: boolean,
+): { amounts: string[]; unit: string } {
+  const largest = Math.max(...bases);
+  const unit = isVolume
+    ? imperialVolumeUnit(largest)
+    : imperialWeightUnit(largest);
+  return {
+    amounts: bases.map((base) =>
+      formatAmount(snap(base / unit.size, unit.steps)),
+    ),
+    unit: unit.label,
+  };
+}
 
-  if (category === "weight") {
-    const grams = canonical.amount / 0.035274; // oz to g
-    if (targetSystem === MeasurementUnit.METRIC) {
-      if (grams >= 1000) {
-        return {
-          amount: formatAmount(grams / 1000),
-          unit: "kg",
-          isEnhanced: false,
-        };
-      }
-      return {
-        amount: Math.round(grams).toString(),
-        unit: "g",
-        isEnhanced: false,
-      };
-    }
-  }
-
-  // Default fallback
-  return { amount, unit, isEnhanced: false };
+function convertToMetric(
+  bases: number[],
+  isVolume: boolean,
+  fromMetric: boolean,
+): { amounts: string[]; unit: string } {
+  const table = isVolume ? KITCHEN_MILLILITRES : KITCHEN_GRAMS;
+  const values = bases.map((base) =>
+    fromMetric ? base : kitchenMetric(base, table),
+  );
+  const large = Math.max(...values) >= 1000;
+  const size = large ? 1000 : 1;
+  const unit = isVolume ? (large ? "L" : "ml") : large ? "kg" : "g";
+  return {
+    amounts: values.map((value) => metricText(value / size)),
+    unit,
+  };
 }
 
 /**
- * Format ingredient with enhanced cooking-friendly conversions
+ * Format an ingredient amount for the reader's measurement system. Amounts
+ * already in that system, counts and anything that isn't a plain number
+ * (such as "to taste") are returned as written.
  */
 export function formatIngredientForDisplayEnhanced(
   amount: string,
   unit: string,
   userSystem: MeasurementUnit,
-): { amount: string; unit: string; isEnhanced: boolean } {
-  // Handle special cases that don't need conversion
-  if (
-    !amount ||
-    amount.toLowerCase().includes("to taste") ||
-    amount.toLowerCase().includes("for serving") ||
-    amount.toLowerCase().includes("as needed") ||
-    unit === "whole" ||
-    unit === "small" ||
-    unit === "medium" ||
-    unit === "large"
-  ) {
-    return { amount: amount || "", unit: unit || "", isEnhanced: false };
-  }
+): { amount: string; unit: string } {
+  const unchanged = { amount, unit };
+  const normalized = normalizeUnit(unit);
+  const size = MILLILITRES[normalized] ?? GRAMS[normalized];
+  if (!size) return unchanged;
 
-  // Try enhanced conversion first
-  return getEnhancedConversion(amount, unit, userSystem);
+  const range = parseRange(amount);
+  const single = range ? null : parseQuantity(amount);
+  if (!range && single === null) return unchanged;
+
+  const fromMetric = METRIC_UNITS.has(normalized);
+  const wantsMetric = userSystem === MeasurementUnit.METRIC;
+  if (!wantsMetric && !fromMetric) return unchanged;
+
+  const quantities = range ? [range.low, range.high] : [single ?? 0];
+  const bases = quantities.map((quantity) => quantity * size);
+  const isVolume = normalized in MILLILITRES;
+  const converted = wantsMetric
+    ? convertToMetric(bases, isVolume, fromMetric)
+    : convertToImperial(bases, isVolume);
+
+  return {
+    amount: converted.amounts.join("–"),
+    unit: converted.unit,
+  };
 }

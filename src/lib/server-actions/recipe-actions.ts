@@ -4,7 +4,6 @@ import { and, count, eq, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import type { z } from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema.base";
 import {
@@ -21,7 +20,10 @@ import { auth } from "@/lib/auth/auth";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
 import type { RecipeWithRelations } from "@/lib/types/recipe-types";
 import { describeRecipeChanges } from "@/lib/utils/recipe-changes";
-import { generateRecipeSlug } from "@/lib/utils/recipe-utils";
+import {
+  addRecipeSlugSuffix,
+  generateRecipeSlug,
+} from "@/lib/utils/recipe-utils";
 import {
   type CreateRecipeInput,
   createRecipeNoteSchema,
@@ -53,144 +55,76 @@ async function generateUniqueSlug(
       return slug;
     }
 
-    slug = `${baseSlug}-${counter}`;
+    slug = addRecipeSlugSuffix(baseSlug, counter);
     counter++;
+  }
+}
+
+type RecipeTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+function saveRecipeTags(
+  tx: RecipeTransaction,
+  recipeId: string,
+  tags: string[],
+) {
+  for (const tagName of tags) {
+    const [existingTag] = tx
+      .select({ id: recipeTags.id })
+      .from(recipeTags)
+      .where(eq(recipeTags.name, tagName))
+      .limit(1)
+      .all();
+    const tagId = existingTag?.id ?? nanoid();
+
+    if (!existingTag) {
+      tx.insert(recipeTags)
+        .values({ id: tagId, name: tagName, createdAt: new Date() })
+        .run();
+    }
+
+    tx.insert(recipeTagRelations)
+      .values({ recipeId, tagId })
+      .onConflictDoNothing()
+      .run();
   }
 }
 
 export async function createRecipe(rawData: CreateRecipeInput) {
   logger.info({ rawData }, "Creating new recipe");
 
-  // Define variables outside try-catch so they're accessible in error handling
-  let recipeId: string | undefined;
-  let validatedData: z.infer<typeof createRecipeSchema> | undefined;
-  let completeData: z.infer<typeof createRecipeWithSlugSchema> | undefined;
-  let session: Awaited<ReturnType<typeof auth.api.getSession>> | undefined;
-
   try {
-    session = await auth.api.getSession({
+    const session = await auth.api.getSession({
       headers: await headers(),
     });
     if (!session?.user?.id) {
       return { success: false, error: "Authentication required" };
     }
+    const userId = session.user.id;
 
-    validatedData = createRecipeSchema.parse(rawData);
-
-    recipeId = nanoid();
-
+    const validatedData = createRecipeSchema.parse(rawData);
+    const recipeId = nanoid();
     const slug = await generateUniqueSlug(validatedData.title);
-
-    // Validate the complete data with slug
-    completeData = createRecipeWithSlugSchema.parse({
+    const completeData = createRecipeWithSlugSchema.parse({
       ...validatedData,
       slug,
     });
 
-    // Check if user exists
     const userExists = await db
       .select({ id: users.id })
       .from(users)
-      .where(eq(users.id, session.user.id))
+      .where(eq(users.id, userId))
       .limit(1);
 
     if (userExists.length === 0) {
-      console.error("❌ User not found in database:", session.user.id);
+      console.error("❌ User not found in database:", userId);
       return { success: false, error: "User not found in database" };
     }
 
-    // Start transaction (no console.log inside to avoid promise issues)
-    await db.transaction(async (tx) => {
-      await tx.insert(recipes).values({
-        id: recipeId as string,
-        slug: completeData?.slug as string,
-        userId: session?.user.id as string,
-        title: validatedData?.title as string,
-        description: validatedData?.description,
-        servings: validatedData?.servings,
-        prepTimeMinutes: validatedData?.prepTimeMinutes,
-        cookTimeMinutes: validatedData?.cookTimeMinutes,
-        difficulty: validatedData?.difficulty,
-        cuisine: validatedData?.cuisine,
-        sourceUrl: validatedData?.sourceUrl,
-        sourceName: validatedData?.sourceName,
-        isPublic: validatedData?.isPublic as boolean,
-        isArchived: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      if (validatedData?.ingredients?.length) {
-        await tx.insert(recipeIngredients).values(
-          validatedData?.ingredients?.map((ingredient, index: number) => ({
-            id: nanoid(),
-            recipeId: recipeId as string,
-            name: ingredient.name,
-            amount: ingredient.amount,
-            unit: ingredient.unit,
-            notes: ingredient.notes,
-            groupName: ingredient.groupName,
-            sortOrder: index,
-            isOptional: ingredient.isOptional,
-          })),
-        );
-      }
-
-      if (validatedData?.instructions?.length) {
-        const instructionData = validatedData?.instructions?.map(
-          (instruction, index: number) => ({
-            id: nanoid(),
-            recipeId: recipeId as string,
-            stepNumber: index + 1,
-            instruction: instruction.instruction,
-            timeMinutes: instruction.timeMinutes || null,
-            temperature: instruction.temperature || null,
-            notes: null, // AI parsing doesn't provide notes
-            groupName: null, // AI parsing doesn't provide groupName
-          }),
-        );
-
-        await tx.insert(recipeInstructions).values(instructionData);
-      }
-    });
-
-    // Process tags after main transaction completes
-    if (validatedData.tags?.length) {
-      for (const tagName of validatedData.tags) {
-        let tagId: string;
-
-        const existingTag = await db
-          .select({ id: recipeTags.id })
-          .from(recipeTags)
-          .where(eq(recipeTags.name, tagName))
-          .limit(1);
-
-        if (existingTag.length > 0) {
-          tagId = existingTag[0].id;
-        } else {
-          const insertedTags = await db
-            .insert(recipeTags)
-            .values({
-              id: nanoid(),
-              name: tagName,
-              createdAt: new Date(),
-            })
-            .returning({ id: recipeTags.id });
-          tagId = insertedTags[0].id;
-        }
-
-        await db.insert(recipeTagRelations).values({
-          recipeId,
-          tagId,
-        });
-      }
-    }
-
-    // Create the recipe object after transaction completes
+    const now = new Date();
     const recipe = {
       id: recipeId,
       slug: completeData.slug,
-      userId: session.user.id,
+      userId,
       title: validatedData.title,
       description: validatedData.description,
       servings: validatedData.servings,
@@ -203,71 +137,58 @@ export async function createRecipe(rawData: CreateRecipeInput) {
       sourceName: validatedData.sourceName,
       isPublic: validatedData.isPublic,
       isArchived: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     };
 
-    logger.info(
-      { recipeId: recipe.id, userId: session.user.id },
-      "Recipe created successfully",
-    );
+    db.transaction((tx) => {
+      tx.insert(recipes).values(recipe).run();
+
+      if (validatedData.ingredients?.length) {
+        tx.insert(recipeIngredients)
+          .values(
+            validatedData.ingredients.map((ingredient, index: number) => ({
+              id: nanoid(),
+              recipeId,
+              name: ingredient.name,
+              amount: ingredient.amount,
+              unit: ingredient.unit,
+              notes: ingredient.notes,
+              groupName: ingredient.groupName,
+              sortOrder: index,
+              isOptional: ingredient.isOptional,
+            })),
+          )
+          .run();
+      }
+
+      if (validatedData.instructions?.length) {
+        tx.insert(recipeInstructions)
+          .values(
+            validatedData.instructions.map((instruction, index: number) => ({
+              id: nanoid(),
+              recipeId,
+              stepNumber: index + 1,
+              instruction: instruction.instruction,
+              timeMinutes: instruction.timeMinutes || null,
+              temperature: instruction.temperature || null,
+              notes: null,
+              groupName: null,
+            })),
+          )
+          .run();
+      }
+
+      if (validatedData.tags?.length) {
+        saveRecipeTags(tx, recipeId, validatedData.tags);
+      }
+    });
+
+    logger.info({ recipeId, userId }, "Recipe created successfully");
     revalidatePath("/", "layout");
     return { success: true, data: recipe };
   } catch (error) {
     console.error("💥 Database error:", error);
-
-    // Special handling for the "Transaction function cannot return a promise" error
-    // This error occurs even when the transaction completes successfully
-    if (
-      error instanceof TypeError &&
-      error.message === "Transaction function cannot return a promise"
-    ) {
-      // Check if recipe was actually created by querying the database (only if recipeId was generated)
-      if (recipeId && completeData && session?.user && validatedData) {
-        try {
-          const createdRecipe = await db
-            .select({ id: recipes.id, slug: recipes.slug })
-            .from(recipes)
-            .where(eq(recipes.id, recipeId))
-            .limit(1);
-
-          if (createdRecipe.length > 0) {
-            const recipe = {
-              id: recipeId,
-              slug: completeData.slug,
-              userId: session.user.id,
-              title: validatedData.title,
-              description: validatedData.description,
-              servings: validatedData.servings,
-              prepTimeMinutes: validatedData.prepTimeMinutes,
-              cookTimeMinutes: validatedData.cookTimeMinutes,
-              difficulty: validatedData.difficulty,
-              cuisine: validatedData.cuisine,
-              swatch: validatedData.swatch ?? null,
-              sourceUrl: validatedData.sourceUrl,
-              sourceName: validatedData.sourceName,
-              isPublic: validatedData.isPublic,
-              isArchived: false,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            };
-
-            logger.info(
-              { recipeId: recipe.id, userId: session.user.id },
-              "Recipe created successfully (recovered from transaction error)",
-            );
-            revalidatePath("/", "layout");
-            return { success: true, data: recipe };
-          }
-        } catch (checkError) {
-          console.error("❌ Failed to verify recipe creation:", checkError);
-        }
-      } else {
-        console.error(
-          "❌ Cannot verify recipe creation - recipeId not generated",
-        );
-      }
-    }
 
     logError(logger, "Failed to create recipe", error);
 
@@ -453,7 +374,7 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
       instructionsAfter: instructions ?? null,
     });
 
-    const updatedRecipe = await db.transaction(async (tx) => {
+    const updatedRecipe = db.transaction((tx) => {
       const updateData = {
         title: recipeData.title ?? existingRecipe.title,
         slug,
@@ -470,102 +391,82 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
         updatedAt: new Date(),
       };
 
-      const [updated] = await tx
+      const [updated] = tx
         .update(recipes)
         .set(updateData)
         .where(eq(recipes.id, recipeId))
-        .returning();
+        .returning()
+        .all();
 
       if (ingredients) {
-        await tx
-          .delete(recipeIngredients)
-          .where(eq(recipeIngredients.recipeId, recipeId));
+        tx.delete(recipeIngredients)
+          .where(eq(recipeIngredients.recipeId, recipeId))
+          .run();
         if (ingredients.length > 0) {
-          await tx.insert(recipeIngredients).values(
-            ingredients.map((ingredient, index) => ({
-              id: nanoid(),
-              recipeId,
-              name: ingredient.name,
-              amount: ingredient.amount,
-              unit: ingredient.unit,
-              notes: ingredient.notes,
-              groupName: ingredient.groupName,
-              sortOrder: index,
-              isOptional: ingredient.isOptional,
-            })),
-          );
+          tx.insert(recipeIngredients)
+            .values(
+              ingredients.map((ingredient, index) => ({
+                id: nanoid(),
+                recipeId,
+                name: ingredient.name,
+                amount: ingredient.amount,
+                unit: ingredient.unit,
+                notes: ingredient.notes,
+                groupName: ingredient.groupName,
+                sortOrder: index,
+                isOptional: ingredient.isOptional,
+              })),
+            )
+            .run();
         }
       }
 
       if (instructions) {
-        await tx
-          .delete(recipeInstructions)
-          .where(eq(recipeInstructions.recipeId, recipeId));
+        tx.delete(recipeInstructions)
+          .where(eq(recipeInstructions.recipeId, recipeId))
+          .run();
         if (instructions.length > 0) {
-          await tx.insert(recipeInstructions).values(
-            instructions.map((instruction, index) => ({
-              id: nanoid(),
-              recipeId,
-              stepNumber: index + 1,
-              instruction: instruction.instruction,
-              timeMinutes: instruction.timeMinutes || null,
-              temperature: instruction.temperature || null,
-              notes: instruction.notes || null, // Manual edits may have notes
-              groupName: instruction.groupName || null, // Manual edits may have groupName
-            })),
-          );
+          tx.insert(recipeInstructions)
+            .values(
+              instructions.map((instruction, index) => ({
+                id: nanoid(),
+                recipeId,
+                stepNumber: index + 1,
+                instruction: instruction.instruction,
+                timeMinutes: instruction.timeMinutes || null,
+                temperature: instruction.temperature || null,
+                notes: instruction.notes || null,
+                groupName: instruction.groupName || null,
+              })),
+            )
+            .run();
         }
       }
 
       if (tags) {
-        await tx
-          .delete(recipeTagRelations)
-          .where(eq(recipeTagRelations.recipeId, recipeId));
-
-        for (const tagName of tags) {
-          let tagId: string;
-
-          const existingTag = await tx
-            .select({ id: recipeTags.id })
-            .from(recipeTags)
-            .where(eq(recipeTags.name, tagName))
-            .limit(1);
-
-          if (existingTag.length > 0) {
-            tagId = existingTag[0].id;
-          } else {
-            const [newTag] = await tx
-              .insert(recipeTags)
-              .values({
-                id: nanoid(),
-                name: tagName,
-                createdAt: new Date(),
-              })
-              .returning({ id: recipeTags.id });
-            tagId = newTag.id;
-          }
-
-          await tx.insert(recipeTagRelations).values({
-            recipeId,
-            tagId,
-          });
-        }
+        tx.delete(recipeTagRelations)
+          .where(eq(recipeTagRelations.recipeId, recipeId))
+          .run();
+        saveRecipeTags(tx, recipeId, tags);
       }
 
       if (changes) {
-        const [{ value: previousVersions }] = await tx
+        const [{ value: previousVersions }] = tx
           .select({ value: count() })
           .from(recipeModifications)
-          .where(eq(recipeModifications.recipeId, recipeId));
-        await tx.insert(recipeModifications).values({
-          id: nanoid(),
-          recipeId,
-          userId: session.user.id,
-          changeType: changes.type,
-          changeDescription: changes.description,
-          versionNumber: previousVersions + 1,
-          createdAt: new Date(),
-        });
+          .where(eq(recipeModifications.recipeId, recipeId))
+          .all();
+        tx.insert(recipeModifications)
+          .values({
+            id: nanoid(),
+            recipeId,
+            userId: session.user.id,
+            changeType: changes.type,
+            changeDescription: changes.description,
+            versionNumber: previousVersions + 1,
+            createdAt: new Date(),
+          })
+          .run();
       }
 
       return updated;
@@ -583,11 +484,8 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
 }
 
 export async function deleteRecipe(recipeId: string) {
-  // Define variables outside try-catch so they're accessible in error handling
-  let session: Awaited<ReturnType<typeof auth.api.getSession>> | undefined;
-
   try {
-    session = await auth.api.getSession({
+    const session = await auth.api.getSession({
       headers: await headers(),
     });
     if (!session?.user?.id) {
@@ -610,21 +508,20 @@ export async function deleteRecipe(recipeId: string) {
       .from(recipeImages)
       .where(eq(recipeImages.recipeId, recipeId));
 
-    // Delete all related records OUTSIDE transaction to avoid foreign key async issues
-    await db
-      .delete(recipeTagRelations)
-      .where(eq(recipeTagRelations.recipeId, recipeId));
-    await db.delete(recipeNotes).where(eq(recipeNotes.recipeId, recipeId));
-    await db.delete(recipeImages).where(eq(recipeImages.recipeId, recipeId));
-    await db
-      .delete(recipeInstructions)
-      .where(eq(recipeInstructions.recipeId, recipeId));
-    await db
-      .delete(recipeIngredients)
-      .where(eq(recipeIngredients.recipeId, recipeId));
-
-    // Delete the main recipe record (no transaction needed)
-    await db.delete(recipes).where(eq(recipes.id, recipeId));
+    db.transaction((tx) => {
+      tx.delete(recipeTagRelations)
+        .where(eq(recipeTagRelations.recipeId, recipeId))
+        .run();
+      tx.delete(recipeNotes).where(eq(recipeNotes.recipeId, recipeId)).run();
+      tx.delete(recipeImages).where(eq(recipeImages.recipeId, recipeId)).run();
+      tx.delete(recipeInstructions)
+        .where(eq(recipeInstructions.recipeId, recipeId))
+        .run();
+      tx.delete(recipeIngredients)
+        .where(eq(recipeIngredients.recipeId, recipeId))
+        .run();
+      tx.delete(recipes).where(eq(recipes.id, recipeId)).run();
+    });
 
     // Clean up image files AFTER database transaction completes
     if (imagesToDelete.length > 0) {
@@ -650,37 +547,6 @@ export async function deleteRecipe(recipeId: string) {
     revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
-    console.error("💥 Recipe deletion error:", error);
-
-    // Special handling for the "Transaction function cannot return a promise" error
-    // This error occurs even when the transaction completes successfully
-    if (
-      error instanceof TypeError &&
-      error.message === "Transaction function cannot return a promise"
-    ) {
-      // Check if recipe was actually deleted by querying the database
-      try {
-        const deletedRecipe = await db
-          .select({ id: recipes.id })
-          .from(recipes)
-          .where(eq(recipes.id, recipeId))
-          .limit(1);
-
-        if (deletedRecipe.length === 0) {
-          logger.info(
-            { recipeId, userId: session?.user?.id },
-            "Recipe deleted successfully (recovered from transaction error)",
-          );
-          revalidatePath("/", "layout");
-          return { success: true };
-        } else {
-          console.error("❌ Recipe still exists in database - deletion failed");
-        }
-      } catch (checkError) {
-        console.error("❌ Failed to verify recipe deletion:", checkError);
-      }
-    }
-
     logError(logger, "Failed to delete recipe", error, { recipeId });
     return { success: false, error: "Failed to delete recipe" };
   }

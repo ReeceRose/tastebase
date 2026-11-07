@@ -1,61 +1,73 @@
 import type { MeasurementUnit, TemperatureUnit } from "@/lib/types";
 import { formatIngredientForDisplayEnhanced } from "@/lib/utils/enhanced-unit-conversions";
 import {
+  parseQuantity,
+  parseRange,
+  QUANTITY_PATTERN,
+} from "@/lib/utils/quantity-parsing";
+import {
   formatAmount,
   formatTemperatureForDisplay,
 } from "@/lib/utils/unit-conversions";
 
-const UNICODE_FRACTIONS: Record<string, number> = {
-  "½": 1 / 2,
-  "⅓": 1 / 3,
-  "⅔": 2 / 3,
-  "¼": 1 / 4,
-  "¾": 3 / 4,
-  "⅕": 1 / 5,
-  "⅖": 2 / 5,
-  "⅗": 3 / 5,
-  "⅘": 4 / 5,
-  "⅙": 1 / 6,
-  "⅚": 5 / 6,
-  "⅛": 1 / 8,
-  "⅜": 3 / 8,
-  "⅝": 5 / 8,
-  "⅞": 7 / 8,
-};
+export { parseQuantity };
 
-const UNICODE_CLASS = Object.keys(UNICODE_FRACTIONS).join("");
-const QUANTITY = `(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+\\s*[${UNICODE_CLASS}]|[${UNICODE_CLASS}]|\\d+(?:[.,]\\d+)?)`;
 const RANGE_PATTERN = new RegExp(
-  `^(${QUANTITY})\\s*(?:-|–|to)\\s*(${QUANTITY})(.*)$`,
+  `^(${QUANTITY_PATTERN})\\s*(?:-|–|to)\\s*(${QUANTITY_PATTERN})(.*)$`,
   "i",
 );
-const SINGLE_PATTERN = new RegExp(`^(${QUANTITY})(.*)$`);
+const SINGLE_PATTERN = new RegExp(`^(${QUANTITY_PATTERN})(.*)$`);
 
-export function parseQuantity(raw: string): number | null {
-  const value = raw.trim().replace(",", ".");
-  if (!value) return null;
+const UNIT_FORMS: [string, string][] = [
+  ["bag", "bags"],
+  ["bottle", "bottles"],
+  ["box", "boxes"],
+  ["bulb", "bulbs"],
+  ["bunch", "bunches"],
+  ["can", "cans"],
+  ["clove", "cloves"],
+  ["cup", "cups"],
+  ["dash", "dashes"],
+  ["ear", "ears"],
+  ["fillet", "fillets"],
+  ["gallon", "gallons"],
+  ["gram", "grams"],
+  ["handful", "handfuls"],
+  ["head", "heads"],
+  ["item", "items"],
+  ["jar", "jars"],
+  ["kilogram", "kilograms"],
+  ["lb", "lbs"],
+  ["leaf", "leaves"],
+  ["liter", "liters"],
+  ["litre", "litres"],
+  ["milliliter", "milliliters"],
+  ["millilitre", "millilitres"],
+  ["ounce", "ounces"],
+  ["package", "packages"],
+  ["piece", "pieces"],
+  ["pinch", "pinches"],
+  ["pint", "pints"],
+  ["pkg", "pkgs"],
+  ["pound", "pounds"],
+  ["quart", "quarts"],
+  ["rib", "ribs"],
+  ["slice", "slices"],
+  ["sprig", "sprigs"],
+  ["stalk", "stalks"],
+  ["stick", "sticks"],
+  ["strip", "strips"],
+  ["tablespoon", "tablespoons"],
+  ["teaspoon", "teaspoons"],
+];
 
-  const mixed = value.match(/^(\d+)\s+(\d+)\/(\d+)$/);
-  if (mixed) {
-    const denominator = Number(mixed[3]);
-    if (denominator === 0) return null;
-    return Number(mixed[1]) + Number(mixed[2]) / denominator;
-  }
-
-  const fraction = value.match(/^(\d+)\/(\d+)$/);
-  if (fraction) {
-    const denominator = Number(fraction[2]);
-    return denominator === 0 ? null : Number(fraction[1]) / denominator;
-  }
-
-  const unicode = value.match(new RegExp(`^(\\d*)\\s*([${UNICODE_CLASS}])$`));
-  if (unicode) {
-    const whole = unicode[1] ? Number(unicode[1]) : 0;
-    return whole + UNICODE_FRACTIONS[unicode[2]];
-  }
-
-  const decimal = Number(value);
-  return Number.isFinite(decimal) ? decimal : null;
+function matchUnitToAmount(amount: string, unit: string): string {
+  const quantity = parseRange(amount)?.high ?? parseQuantity(amount);
+  if (quantity === null) return unit;
+  const lower = unit.toLowerCase();
+  const forms = UNIT_FORMS.find((pair) => pair.includes(lower));
+  if (!forms) return unit;
+  return quantity > 1 ? forms[1] : forms[0];
 }
 
 function scaleQuantity(raw: string, factor: number): string {
@@ -102,15 +114,16 @@ export function displayIngredientAmount(
 ): DisplayAmount {
   const scaled = scaleAmount(amount, factor);
   const baseUnit = unit?.trim() ?? "";
-  if (!system || !scaled || !baseUnit) {
+  if (!scaled || !baseUnit) {
     return { amount: scaled, unit: baseUnit };
   }
-  const converted = formatIngredientForDisplayEnhanced(
-    scaled,
-    baseUnit,
-    system,
-  );
-  return { amount: converted.amount, unit: converted.unit };
+  const converted = system
+    ? formatIngredientForDisplayEnhanced(scaled, baseUnit, system)
+    : { amount: scaled, unit: baseUnit };
+  return {
+    amount: converted.amount,
+    unit: matchUnitToAmount(converted.amount, converted.unit),
+  };
 }
 
 const TEMPERATURE_IN_TEXT = /(\d{2,3})\s?°\s?([FC])\b/g;
