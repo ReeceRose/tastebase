@@ -48,9 +48,14 @@ function contains(column: AnySQLiteColumn, pattern: string): SQL {
   return sql`${column} LIKE ${pattern} ESCAPE '\\'`;
 }
 
+// Drizzle types and() and or() as possibly undefined for an empty list, so
+// these stand in for "always" and "never".
+const ALWAYS = sql`1 = 1`;
+const NEVER = sql`1 = 0`;
+
 function recipeContainsTerm(term: string): SQL {
   const pattern = likePattern(term);
-  return or(
+  const matches = or(
     contains(recipes.title, pattern),
     contains(recipes.description, pattern),
     contains(recipes.cuisine, pattern),
@@ -78,17 +83,20 @@ function recipeContainsTerm(term: string): SQL {
       AND ${contains(recipeTags.name, pattern)}
     )`,
   );
+  return matches ?? NEVER;
 }
 
 // Every word has to appear somewhere on the recipe, in any order.
 export function recipeMatchesTerms(terms: string[]): SQL | null {
-  return terms.length > 0 ? and(...terms.map(recipeContainsTerm)) : null;
+  return terms.length > 0
+    ? (and(...terms.map(recipeContainsTerm)) ?? null)
+    : null;
 }
 
 // Sorts recipes with every word in the title ahead of the rest.
 export function titleMatchRank(terms: string[]): SQL {
-  const inTitle = and(
-    ...terms.map((term) => contains(recipes.title, likePattern(term))),
-  );
+  const inTitle =
+    and(...terms.map((term) => contains(recipes.title, likePattern(term)))) ??
+    ALWAYS;
   return sql`CASE WHEN ${inTitle} THEN 0 ELSE 1 END`;
 }
