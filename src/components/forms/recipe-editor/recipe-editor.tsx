@@ -145,22 +145,22 @@ export function RecipeEditor({
   };
 
   const attachPending = async (recipeId: string, title: string) => {
-    const results = await Promise.all(
-      pending.map((image, index) =>
-        attachImageToRecipe({
-          recipeId,
-          filename: image.filename,
-          originalName: image.originalName,
-          mimeType: mimeTypeFor(image.filename),
-          fileSize: image.fileSize,
-          width: image.width ?? undefined,
-          height: image.height ?? undefined,
-          altText: title,
-          isHero: index === 0,
-        }).catch(() => ({ success: false })),
-      ),
-    );
-    return results.filter((result) => !result.success).length;
+    let failed = 0;
+    for (const [index, image] of pending.entries()) {
+      const result = await attachImageToRecipe({
+        recipeId,
+        filename: image.filename,
+        originalName: image.originalName,
+        mimeType: mimeTypeFor(image.filename),
+        fileSize: image.fileSize,
+        width: image.width ?? undefined,
+        height: image.height ?? undefined,
+        altText: title,
+        isHero: index === 0,
+      }).catch(() => ({ success: false }));
+      if (!result.success) failed += 1;
+    }
+    return failed;
   };
 
   const save = () => {

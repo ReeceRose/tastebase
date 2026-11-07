@@ -1,17 +1,21 @@
 "use client";
 
-import { Star, Trash2 } from "lucide-react";
-import Image from "next/image";
-import { type Dispatch, type SetStateAction, useTransition } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
 import { EditorSectionCard } from "@/components/forms/recipe-editor/editor-field";
 import { EditorPhotoSuggestions } from "@/components/forms/recipe-editor/editor-photo-suggestions";
+import { EditorPhotoTile } from "@/components/forms/recipe-editor/editor-photo-tile";
 import { ImageUpload } from "@/components/recipe-images/image-upload";
 import {
   attachImageToRecipe,
   deleteRecipeImage,
   getRecipeImages,
-  setHeroImage,
+  reorderRecipeImages,
 } from "@/lib/server-actions/recipe-image-actions";
 import { EditorSection } from "@/lib/types";
 import type { PhotoSuggestion } from "@/lib/types/import-types";
@@ -38,8 +42,20 @@ interface UploadedFile {
   height?: number;
 }
 
-const tileButton =
-  "grid size-9 place-items-center rounded-full bg-white/90 text-ink-fixed outline-none hover:bg-white focus-visible:ring-[3px] focus-visible:ring-ring";
+interface PhotoTile {
+  key: string;
+  src: string;
+  alt: string;
+  move: (to: number) => void;
+  remove: () => void;
+}
+
+function moveItem<T>(items: T[], from: number, to: number): T[] {
+  const next = [...items];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next;
+}
 
 export function EditorPhotos({
   recipeId,
@@ -51,6 +67,8 @@ export function EditorPhotos({
   suggestions,
 }: EditorPhotosProps) {
   const [isWorking, startWork] = useTransition();
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
 
   const refresh = async (id: string) => {
     const result = await getRecipeImages(id);
@@ -67,7 +85,7 @@ export function EditorPhotos({
       url: file.url,
     };
     if (!recipeId) {
-      onPendingChange([...pending, next]);
+      onPendingChange((current) => [...current, next]);
       return;
     }
     startWork(async () => {
@@ -90,13 +108,17 @@ export function EditorPhotos({
     });
   };
 
-  const makeMain = (imageId: string) => {
+  const moveSaved = (from: number, to: number) => {
     if (!recipeId) return;
+    const next = moveItem(images, from, to);
+    onImagesChange(next);
     startWork(async () => {
-      const result = await setHeroImage(recipeId, imageId);
+      const result = await reorderRecipeImages(
+        recipeId,
+        next.map((image) => image.id),
+      );
       if (!result.success) {
-        toast.error(result.error || "Couldn't change the main photo");
-        return;
+        toast.error(result.error || "Couldn't reorder the photos");
       }
       await refresh(recipeId);
     });
@@ -114,15 +136,38 @@ export function EditorPhotos({
     });
   };
 
-  const hasPhotos = images.length > 0 || pending.length > 0;
+  const tiles: PhotoTile[] = recipeId
+    ? images.map((image, index) => ({
+        key: image.id,
+        src: `/api/recipes/images/${image.filename}`,
+        alt: image.altText || "",
+        move: (to: number) => moveSaved(index, to),
+        remove: () => removeSaved(image.id),
+      }))
+    : pending.map((image, index) => ({
+        key: image.filename,
+        src: image.url,
+        alt: "",
+        move: (to: number) =>
+          onPendingChange((current) => moveItem(current, index, to)),
+        remove: () =>
+          onPendingChange((current) =>
+            current.filter((item) => item.filename !== image.filename),
+          ),
+      }));
+
+  const endDrag = () => {
+    setDragFrom(null);
+    setDragOver(null);
+  };
 
   return (
     <EditorSectionCard
       id={EditorSection.PHOTOS}
       title="Photos"
-      description="The main photo shows on the recipe tile and at the top of the recipe. Without one, the recipe uses its colour."
+      description="Drag photos or use the arrows to change their order. The first is the main photo, shown on the recipe tile and at the top of the recipe. Without one, the recipe uses its colour."
     >
-      {hasPhotos && (
+      {tiles.length > 0 && (
         <ul
           className={cn(
             "mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4",
@@ -130,98 +175,29 @@ export function EditorPhotos({
           )}
           aria-busy={isWorking}
         >
-          {images.map((image) => (
-            <li
-              key={image.id}
-              className="relative aspect-[4/3] overflow-hidden rounded-control bg-muted"
-            >
-              <Image
-                src={`/api/recipes/images/${image.filename}`}
-                alt={image.altText || ""}
-                fill
-                sizes="240px"
-                className="object-cover"
-                unoptimized
-              />
-              {image.isHero && (
-                <span className="absolute top-2 left-2 rounded-full bg-accent px-2.5 py-0.5 text-caption text-accent-foreground">
-                  Main photo
-                </span>
-              )}
-              <div className="absolute right-2 bottom-2 flex gap-1.5">
-                {!image.isHero && (
-                  <button
-                    type="button"
-                    className={tileButton}
-                    onClick={() => makeMain(image.id)}
-                    aria-label="Make this the main photo"
-                  >
-                    <Star className="size-4" />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className={tileButton}
-                  onClick={() => removeSaved(image.id)}
-                  aria-label="Delete photo"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
-            </li>
-          ))}
-          {pending.map((image, index) => (
-            <li
-              key={image.filename}
-              className="relative aspect-[4/3] overflow-hidden rounded-control bg-muted"
-            >
-              <Image
-                src={image.url}
-                alt=""
-                fill
-                sizes="240px"
-                className="object-cover"
-                unoptimized
-              />
-              {index === 0 && (
-                <span className="absolute top-2 left-2 rounded-full bg-accent px-2.5 py-0.5 text-caption text-accent-foreground">
-                  Main photo
-                </span>
-              )}
-              <div className="absolute right-2 bottom-2 flex gap-1.5">
-                {index > 0 && (
-                  <button
-                    type="button"
-                    className={tileButton}
-                    onClick={() =>
-                      onPendingChange([
-                        image,
-                        ...pending.filter(
-                          (item) => item.filename !== image.filename,
-                        ),
-                      ])
-                    }
-                    aria-label="Make this the main photo"
-                  >
-                    <Star className="size-4" />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className={tileButton}
-                  onClick={() =>
-                    onPendingChange(
-                      pending.filter(
-                        (item) => item.filename !== image.filename,
-                      ),
-                    )
-                  }
-                  aria-label="Remove photo"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
-            </li>
+          {tiles.map((tile, index) => (
+            <EditorPhotoTile
+              key={tile.key}
+              src={tile.src}
+              alt={tile.alt}
+              index={index}
+              count={tiles.length}
+              isDragging={dragFrom === index}
+              isDropTarget={
+                dragFrom !== null && dragFrom !== index && dragOver === index
+              }
+              onMove={tile.move}
+              onRemove={tile.remove}
+              onDragStart={() => setDragFrom(index)}
+              onDragEnter={() => setDragOver(index)}
+              onDragEnd={endDrag}
+              onDrop={() => {
+                if (dragFrom !== null && dragFrom !== index) {
+                  tiles[dragFrom].move(index);
+                }
+                endDrag();
+              }}
+            />
           ))}
         </ul>
       )}

@@ -366,67 +366,6 @@ export async function getRecipeImages(recipeId: string) {
   }
 }
 
-export async function setHeroImage(recipeId: string, imageId: string) {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    if (!session?.user?.id) {
-      return { success: false, error: "Authentication required" };
-    }
-
-    // Verify both recipe and image exist and belong to user
-    const imageExists = await db
-      .select({
-        image: recipeImages,
-        recipe: recipes,
-      })
-      .from(recipeImages)
-      .innerJoin(recipes, eq(recipeImages.recipeId, recipes.id))
-      .where(
-        and(
-          eq(recipeImages.id, imageId),
-          eq(recipeImages.recipeId, recipeId),
-          eq(recipes.userId, session.user.id),
-        ),
-      )
-      .limit(1);
-
-    if (!imageExists.length) {
-      return { success: false, error: "Image not found" };
-    }
-
-    // Use individual queries instead of transaction to avoid Drizzle transaction issues
-    // First unset current hero image
-    await db
-      .update(recipeImages)
-      .set({ isHero: false })
-      .where(
-        and(eq(recipeImages.recipeId, recipeId), eq(recipeImages.isHero, true)),
-      );
-
-    // Then set new hero image
-    await db
-      .update(recipeImages)
-      .set({ isHero: true })
-      .where(eq(recipeImages.id, imageId));
-
-    logger.info(
-      {
-        imageId,
-        recipeId,
-        userId: session.user.id,
-      },
-      "Hero image updated successfully",
-    );
-
-    return { success: true };
-  } catch (error) {
-    logError(logger, "Failed to set hero image", error, { recipeId, imageId });
-    return { success: false, error: "Failed to set hero image" };
-  }
-}
-
 export async function reorderRecipeImages(
   recipeId: string,
   imageIds: string[],
@@ -450,11 +389,11 @@ export async function reorderRecipeImages(
       return { success: false, error: "Recipe not found" };
     }
 
-    // Update sort order for each image
+    // The first photo in the order is the main photo
     db.transaction((tx) => {
       for (let i = 0; i < imageIds.length; i++) {
         tx.update(recipeImages)
-          .set({ sortOrder: i })
+          .set({ sortOrder: i, isHero: i === 0 })
           .where(
             and(
               eq(recipeImages.id, imageIds[i]),

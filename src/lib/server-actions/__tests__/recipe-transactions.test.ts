@@ -221,6 +221,7 @@ describe("recipe transactions", () => {
         originalName: `${id}.jpg`,
         mimeType: "image/jpeg",
         fileSize: 1,
+        isHero: sortOrder === 0,
         sortOrder,
       });
     }
@@ -228,11 +229,14 @@ describe("recipe transactions", () => {
     const result = await reorderRecipeImages(recipe.id, [second, first]);
 
     expect(result.success).toBe(true);
-    const [image] = await db
+    const images = await db
       .select()
       .from(recipeImages)
-      .where(eq(recipeImages.id, second));
-    expect(image.sortOrder).toBe(0);
+      .orderBy(recipeImages.sortOrder);
+    expect(images.map((image) => [image.id, image.isHero])).toEqual([
+      [second, true],
+      [first, false],
+    ]);
   });
 
   it("creates and deletes a recipe list", async () => {

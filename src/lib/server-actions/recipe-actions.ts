@@ -295,7 +295,11 @@ export async function getRecipeBySlug(
       instructions: instructions.sort(
         (a, b) => (a.stepNumber || 0) - (b.stepNumber || 0),
       ),
-      images: images.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)),
+      images: images.sort(
+        (a, b) =>
+          Number(b.isHero) - Number(a.isHero) ||
+          (a.sortOrder || 0) - (b.sortOrder || 0),
+      ),
       notes: notes
         .map((row) => ({ ...row.note, authorName: row.authorName }))
         .sort((a, b) => {
