@@ -4,6 +4,30 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.3 — 2026-11-07
+
+A smoother recipe workflow, with sharing defaults, cleaner imports and more practical ingredient amounts.
+
+### What's Changed
+
+#### Features
+- **Default recipe visibility:** Choose in Settings whether your new recipes start as public or private.
+- **Structured recipe data:** Recipe pages now include JSON-LD, so tools that understand the format can read them.
+- **Photo navigation:** Use the arrow keys to move between photos in the photo modal.
+
+#### Fixes
+- **Recipe import:** Ingredient lines are now parsed more reliably when importing recipes.
+
+#### Improvements
+- **Metric conversions:** Solid ingredients can now convert to grams using ingredient densities.
+- **Faster builds:** CI and Docker builds have been reworked to run faster.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.3
+```
+
 ## v0.1.2 — 2026-11-07
 
 This release lets you close sign-ups, adds support for reaching Tastebase from more than one address, and makes recipe saves and unit conversions more reliable.
