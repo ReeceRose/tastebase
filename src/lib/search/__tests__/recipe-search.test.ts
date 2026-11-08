@@ -1,4 +1,3 @@
-// @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
 import { users } from "@/db/schema.base";

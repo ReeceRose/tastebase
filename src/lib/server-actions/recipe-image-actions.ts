@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { headers } from "next/headers";
 import { db } from "@/db";
@@ -10,6 +10,8 @@ import { type FileValidationError, saveRecipeImage } from "@/lib/file-storage";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
 import { PhotoRole } from "@/lib/types";
 import {
+  type AttachRecipeImagesInput,
+  attachRecipeImagesSchema,
   type UpdateRecipeImageInput,
   type UploadRecipeImageInput,
   updateRecipeImageSchema,
@@ -81,6 +83,75 @@ export async function uploadRecipeImage(formData: FormData) {
   } catch (error) {
     logError(logger, "Recipe image upload failed", error);
     return { success: false, error: "Internal server error" };
+  }
+}
+
+// The first image becomes the hero. One request and one transaction, however
+// many photos a new recipe brings with it.
+export async function attachImagesToRecipe(rawData: AttachRecipeImagesInput) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    if (!session?.user?.id) {
+      return { success: false, error: "Authentication required" };
+    }
+
+    const { recipeId, altText, images } =
+      attachRecipeImagesSchema.parse(rawData);
+
+    const [recipe] = await db
+      .select({ id: recipes.id })
+      .from(recipes)
+      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, session.user.id)))
+      .limit(1);
+
+    if (!recipe) {
+      return { success: false, error: "Recipe not found" };
+    }
+
+    const [{ value: existingCount }] = await db
+      .select({ value: count() })
+      .from(recipeImages)
+      .where(eq(recipeImages.recipeId, recipeId));
+
+    const uploadedAt = new Date();
+    db.transaction((tx) => {
+      tx.update(recipeImages)
+        .set({ isHero: false })
+        .where(eq(recipeImages.recipeId, recipeId))
+        .run();
+      tx.insert(recipeImages)
+        .values(
+          images.map((image, index) => ({
+            id: nanoid(),
+            recipeId,
+            filename: image.filename,
+            originalName: image.originalName,
+            mimeType: image.mimeType,
+            fileSize: image.fileSize,
+            width: image.width,
+            height: image.height,
+            altText,
+            isHero: index === 0,
+            sortOrder: existingCount + index,
+            photoRole: image.photoRole,
+            stepNumber:
+              image.photoRole === PhotoRole.STEP ? image.stepNumber : null,
+            uploadedAt,
+          })),
+        )
+        .run();
+    });
+
+    logger.info(
+      { recipeId, userId: session.user.id, count: images.length },
+      "Recipe images attached successfully",
+    );
+    return { success: true };
+  } catch (error) {
+    logError(logger, "Failed to attach images to recipe", error);
+    return { success: false, error: "Failed to attach images to recipe" };
   }
 }
 

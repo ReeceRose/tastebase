@@ -270,6 +270,28 @@ export const uploadRecipeImageSchema = z.object({
   stepNumber: z.number().int().min(1).nullable().optional(),
 });
 
+export const attachRecipeImagesSchema = z.object({
+  recipeId: z.string().min(1, "Recipe ID is required"),
+  altText: z
+    .string()
+    .max(200, "Alt text must be 200 characters or less")
+    .optional(),
+  images: z
+    .array(
+      z.object({
+        filename: z.string().min(1),
+        originalName: z.string(),
+        mimeType: z.string().min(1),
+        fileSize: z.number().int().min(0),
+        width: z.number().int().nullable(),
+        height: z.number().int().nullable(),
+        photoRole: z.nativeEnum(PhotoRole).nullable(),
+        stepNumber: z.number().int().min(1).nullable(),
+      }),
+    )
+    .min(1),
+});
+
 export const updateRecipeImageSchema = z.object({
   id: z.string().min(1, "Image ID is required"),
   altText: z
@@ -288,3 +310,4 @@ export type UpdateRecipeNoteInput = z.infer<typeof updateRecipeNoteSchema>;
 export type RecipeSearchParams = z.infer<typeof recipeSearchSchema>;
 export type UploadRecipeImageInput = z.infer<typeof uploadRecipeImageSchema>;
 export type UpdateRecipeImageInput = z.infer<typeof updateRecipeImageSchema>;
+export type AttachRecipeImagesInput = z.infer<typeof attachRecipeImagesSchema>;

@@ -425,7 +425,7 @@ Follow this step-by-step process to add new features consistently:
 ## Testing Strategy
 
 - Unit tests for server actions and utilities
-- Component tests for UI interactions
+- Component tests for UI interactions (tests run in Node by default; start a component test file with `// @vitest-environment jsdom`)
 - Integration tests for full workflows (auth, CRUD)
 - Database tests use separate test database
 - Mock external services in tests

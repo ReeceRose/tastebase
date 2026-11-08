@@ -1,4 +1,3 @@
-// @vitest-environment node
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";

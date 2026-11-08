@@ -19,7 +19,7 @@ import {
   createRecipe,
   updateRecipe,
 } from "@/lib/server-actions/recipe-actions";
-import { attachImageToRecipe } from "@/lib/server-actions/recipe-image-actions";
+import { attachImagesToRecipe } from "@/lib/server-actions/recipe-image-actions";
 import { ButtonVariant, EditorSection, RecipeEditorMode } from "@/lib/types";
 import type { PhotoSuggestion } from "@/lib/types/import-types";
 import type {
@@ -152,25 +152,25 @@ export function RecipeEditor({
     title: string,
     photoTags: SavedPhotoTag[],
   ) => {
-    let failed = 0;
-    for (const [index, image] of pending.entries()) {
-      const tag = photoTags.find((item) => item.photo === image.filename);
-      const result = await attachImageToRecipe({
-        recipeId,
-        filename: image.filename,
-        originalName: image.originalName,
-        mimeType: mimeTypeFor(image.filename),
-        fileSize: image.fileSize,
-        width: image.width ?? undefined,
-        height: image.height ?? undefined,
-        altText: title,
-        isHero: index === 0,
-        photoRole: tag?.role ?? null,
-        stepNumber: tag?.stepNumber ?? null,
-      }).catch(() => ({ success: false }));
-      if (!result.success) failed += 1;
-    }
-    return failed;
+    if (pending.length === 0) return true;
+    const result = await attachImagesToRecipe({
+      recipeId,
+      altText: title,
+      images: pending.map((image) => {
+        const tag = photoTags.find((item) => item.photo === image.filename);
+        return {
+          filename: image.filename,
+          originalName: image.originalName,
+          mimeType: mimeTypeFor(image.filename),
+          fileSize: image.fileSize,
+          width: image.width,
+          height: image.height,
+          photoRole: tag?.role ?? null,
+          stepNumber: tag?.stepNumber ?? null,
+        };
+      }),
+    }).catch(() => ({ success: false }));
+    return result.success;
   };
 
   const save = () => {
@@ -202,15 +202,15 @@ export function RecipeEditor({
           toast.error(result.error || "That recipe didn't save. Try again.");
           return;
         }
-        const failed = await attachPending(
+        const attached = await attachPending(
           result.data.id,
           parsed.data.title,
           cleaned.photoTags,
         );
         draft.clear();
         form.reset(form.getValues());
-        if (failed > 0) {
-          toast.warning("Recipe saved, but some photos didn't attach.");
+        if (!attached) {
+          toast.warning("Recipe saved, but the photos didn't attach.");
         } else {
           toast.success("Recipe saved");
         }
@@ -236,7 +236,6 @@ export function RecipeEditor({
       form.reset(form.getValues());
       toast.success("Changes saved");
       router.push(`/recipes/${result.data.slug}`);
-      router.refresh();
     });
   };
 

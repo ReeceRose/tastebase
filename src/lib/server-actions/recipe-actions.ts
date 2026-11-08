@@ -220,7 +220,6 @@ export async function createRecipe(rawData: CreateRecipeInput) {
     });
 
     logger.info({ recipeId, userId }, "Recipe created successfully");
-    revalidatePath("/", "layout");
     return { success: true, data: recipe };
   } catch (error) {
     console.error("💥 Database error:", error);
