@@ -4,6 +4,25 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.18 — 2026-11-08
+
+Recipes now have a dedicated place for extra notes.
+
+### What's Changed
+
+#### Features
+
+- Add a notes field to any recipe from the editor, for anything that doesn't belong in the ingredients or steps.
+- Notes appear in their own panel on the recipe page.
+- Notes are included in both the device and printer PDF exports.
+- Global search now looks through recipe notes, so you can find a recipe by something you wrote there.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.18
+```
+
 ## v0.1.17 — 2026-11-08
 
 A single photo can now illustrate more than one step of a recipe.
