@@ -20,6 +20,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { IngredientList } from "@/components/recipes/ingredient-list";
+import { PhotoStrip } from "@/components/recipes/photo-strip";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -34,12 +35,14 @@ import { recordRecipeCook } from "@/lib/server-actions/recipe-cook-actions";
 import {
   ButtonVariant,
   type MeasurementUnit,
+  PhotoRole,
   type RecipeSwatch,
   type TemperatureUnit,
 } from "@/lib/types";
 import type { RecipeWithRelations } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
 import { convertTemperaturesInText } from "@/lib/utils/ingredient-scaling";
+import { photosForStep, photosWithRole } from "@/lib/utils/photo-tags";
 import { matchStepIngredients } from "@/lib/utils/step-ingredients";
 import { isDarkSwatch, swatchClasses } from "@/lib/utils/swatches";
 import { formatTotalTime } from "@/lib/utils/time-formatting";
@@ -91,6 +94,11 @@ export function CookMode({
   const step = steps[index];
   const usedHere = stepIngredients[index] ?? [];
   const isLast = index === steps.length - 1;
+  const stepPhotos = step ? photosForStep(recipe.images, step.stepNumber) : [];
+  const finishedPhotos = isLast
+    ? photosWithRole(recipe.images, PhotoRole.FINISHED)
+    : [];
+  const ingredientPhotos = photosWithRole(recipe.images, PhotoRole.INGREDIENTS);
   const stepTime = step?.timeMinutes ?? null;
   const stepTimer = step
     ? timers.find((timer) => timer.stepId === step.id)
@@ -117,7 +125,7 @@ export function CookMode({
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (drawerOpen) return;
+      if (drawerOpen || event.defaultPrevented) return;
       if (event.key === "ArrowRight") go(1);
       if (event.key === "ArrowLeft") go(-1);
       if (event.key === "Escape") router.push(recipeHref);
@@ -251,6 +259,37 @@ export function CookMode({
               )}
             </div>
 
+            {index === 0 && ingredientPhotos.length > 0 && (
+              <section
+                aria-label="Ingredients to gather"
+                className="mt-8 space-y-3"
+              >
+                <h2 className="text-meta text-muted-foreground">
+                  Gather your ingredients
+                </h2>
+                <PhotoStrip
+                  images={ingredientPhotos}
+                  title={`${recipe.title}, ingredients`}
+                  minimum={1}
+                  large
+                  label="Ingredient photos"
+                />
+              </section>
+            )}
+
+            {stepPhotos.length > 0 && (
+              <div className="mt-8">
+                <PhotoStrip
+                  key={step.id}
+                  images={stepPhotos}
+                  title={`${recipe.title}, step ${index + 1}`}
+                  minimum={1}
+                  large
+                  label="Photos for this step"
+                />
+              </div>
+            )}
+
             {usedHere.length > 0 && (
               <section
                 aria-label="Ingredients for this step"
@@ -266,6 +305,24 @@ export function CookMode({
                   ticked={ticked}
                   onToggle={toggle}
                   large
+                />
+              </section>
+            )}
+
+            {finishedPhotos.length > 0 && (
+              <section
+                aria-label="What you're aiming for"
+                className="mt-8 space-y-3"
+              >
+                <h2 className="text-meta text-muted-foreground">
+                  What you're aiming for
+                </h2>
+                <PhotoStrip
+                  images={finishedPhotos}
+                  title={`${recipe.title}, finished`}
+                  minimum={1}
+                  large
+                  label="Finished dish photos"
                 />
               </section>
             )}
@@ -332,6 +389,15 @@ export function CookMode({
           <SheetDescription className="sr-only">
             Tick ingredients off as you use them.
           </SheetDescription>
+          {ingredientPhotos.length > 0 && (
+            <PhotoStrip
+              images={ingredientPhotos}
+              title={`${recipe.title}, ingredients`}
+              minimum={1}
+              large
+              label="Ingredient photos"
+            />
+          )}
           <IngredientList
             ingredients={recipe.ingredients}
             factor={1}

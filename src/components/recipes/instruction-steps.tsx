@@ -1,7 +1,9 @@
+import { PhotoStrip } from "@/components/recipes/photo-strip";
 import type { RecipeSwatch, TemperatureUnit } from "@/lib/types";
-import type { RecipeInstruction } from "@/lib/types/recipe-types";
+import type { RecipeImage, RecipeInstruction } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
 import { convertTemperaturesInText } from "@/lib/utils/ingredient-scaling";
+import { photosForStep } from "@/lib/utils/photo-tags";
 import { groupInstructionsByGroup } from "@/lib/utils/recipe-utils";
 import { stepSwatch, swatchClasses } from "@/lib/utils/swatches";
 import { formatTotalTime } from "@/lib/utils/time-formatting";
@@ -9,12 +11,16 @@ import { formatTemperatureForDisplay } from "@/lib/utils/unit-conversions";
 
 interface InstructionStepsProps {
   instructions: RecipeInstruction[];
+  images: RecipeImage[];
+  title: string;
   swatch: RecipeSwatch;
   temperatureUnit: TemperatureUnit;
 }
 
 export function InstructionSteps({
   instructions,
+  images,
+  title,
   swatch,
   temperatureUnit,
 }: InstructionStepsProps) {
@@ -45,6 +51,7 @@ export function InstructionSteps({
               const temperature = step.temperature
                 ? formatTemperatureForDisplay(step.temperature, temperatureUnit)
                 : null;
+              const stepPhotos = photosForStep(images, step.stepNumber);
 
               return (
                 <li
@@ -86,6 +93,16 @@ export function InstructionSteps({
                             {step.notes}
                           </span>
                         )}
+                      </div>
+                    )}
+                    {stepPhotos.length > 0 && (
+                      <div className="mt-3">
+                        <PhotoStrip
+                          images={stepPhotos}
+                          title={`${title}, step ${index + 1}`}
+                          minimum={1}
+                          label={`Photos for step ${index + 1}`}
+                        />
                       </div>
                     )}
                   </div>

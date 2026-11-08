@@ -39,6 +39,7 @@ const RESULT: RecipeImportResult = {
   imageUrl: "https://img.example.com/soup.webp",
   image: null,
   photoUrls: [],
+  stepPhotos: [],
   warnings: [],
 };
 

@@ -13,6 +13,7 @@ import {
 import { createOperationLogger } from "@/lib/logging/logger";
 import { RecipeDifficulty } from "@/lib/types";
 import type {
+  JsonLdStepImage,
   ParsedIngredient,
   ParsedInstruction,
   RecipeParsingResult,
@@ -35,7 +36,7 @@ export interface JsonLdRecipe {
   recipe: RecipeParsingResult;
   siteName: string | null;
   imageUrl: string | null;
-  stepImageUrls: string[];
+  stepImages: JsonLdStepImage[];
 }
 
 const MAX_TAGS = 20;
@@ -339,7 +340,12 @@ function readImageUrl(value: JsonValue | undefined): string | null {
   return candidates.reduce(betterImage).url;
 }
 
-function readStepImages(value: JsonValue | undefined, depth = 0): string[] {
+// Keeps each photo's step text so it can be matched to the imported step.
+// Section photos have no step text.
+function readStepImages(
+  value: JsonValue | undefined,
+  depth = 0,
+): JsonLdStepImage[] {
   if (value === undefined || depth > MAX_SEARCH_DEPTH) {
     return [];
   }
@@ -350,8 +356,12 @@ function readStepImages(value: JsonValue | undefined, depth = 0): string[] {
     return [];
   }
   const own = readImageUrl(value.image);
+  const isSection = value.itemListElement !== undefined;
+  const text = isSection
+    ? ""
+    : (readText(value.text ?? value.name ?? value.description) ?? "");
   return [
-    ...(own ? [own] : []),
+    ...(own ? [{ url: own, text }] : []),
     ...readStepImages(value.itemListElement, depth + 1),
   ];
 }
@@ -401,7 +411,7 @@ export function extractJsonLdRecipe(html: string): JsonLdRecipe | null {
         recipe: normalizeRecipe(node, html),
         siteName: readSiteName(node, scripts),
         imageUrl: readImageUrl(node.image ?? node.thumbnailUrl),
-        stepImageUrls: readStepImages(node.recipeInstructions),
+        stepImages: readStepImages(node.recipeInstructions),
       };
     }
   }

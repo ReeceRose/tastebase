@@ -61,6 +61,17 @@ export interface RecipeParsingResult {
   cuisine: string | null;
 }
 
+// A photo the recipe's structured data attaches to one step.
+export interface JsonLdStepImage {
+  url: string;
+  text: string;
+}
+
+export interface ImportedStepPhoto {
+  url: string;
+  stepNumber: number;
+}
+
 export interface RecipeImportResult {
   recipe: RecipeParsingResult;
   source: RecipeImportSource;
@@ -70,6 +81,7 @@ export interface RecipeImportResult {
   imageUrl: string | null;
   image: PendingImage | null;
   photoUrls: string[];
+  stepPhotos: ImportedStepPhoto[];
   warnings: string[];
 }
 
@@ -88,6 +100,7 @@ export interface CapturedImage {
 export interface PhotoSuggestion {
   url: string;
   image: CapturedImage | null;
+  stepNumber: number | null;
 }
 
 export interface CapturedPage extends FetchedPage {

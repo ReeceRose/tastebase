@@ -1,14 +1,18 @@
 "use client";
 
 import { ArrowDown, ArrowUp, ClipboardPaste, Plus, Trash2 } from "lucide-react";
+import Image from "next/image";
 import { useId, useState } from "react";
-import { useFieldArray, useFormContext } from "react-hook-form";
+import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { EditorSectionCard } from "@/components/forms/recipe-editor/editor-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ButtonVariant, EditorSection } from "@/lib/types";
-import type { RecipeEditorValues } from "@/lib/types/recipe-types";
+import { ButtonVariant, EditorSection, PhotoRole } from "@/lib/types";
+import type {
+  EditorPhotoRef,
+  RecipeEditorValues,
+} from "@/lib/types/recipe-types";
 import {
   emptyInstruction,
   parsePastedSteps,
@@ -16,6 +20,7 @@ import {
 
 interface EditorMethodProps {
   sectionError: string | null;
+  photos: EditorPhotoRef[];
 }
 
 const iconButton =
@@ -24,7 +29,7 @@ const iconButton =
 const numberOrUndefined = (value: string) =>
   value === "" ? undefined : Number(value);
 
-export function EditorMethod({ sectionError }: EditorMethodProps) {
+export function EditorMethod({ sectionError, photos }: EditorMethodProps) {
   const pasteId = useId();
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
@@ -39,6 +44,14 @@ export function EditorMethod({ sectionError }: EditorMethodProps) {
     control,
     name: "instructions",
   });
+  const photoTags = useWatch({ control, name: "photoTags" }) ?? [];
+
+  const photosForStep = (stepKey: string) =>
+    photoTags.flatMap((tag) => {
+      if (tag.role !== PhotoRole.STEP || tag.stepKey !== stepKey) return [];
+      const photo = photos.find((item) => item.photo === tag.photo);
+      return photo ? [photo] : [];
+    });
 
   const addStep = () => {
     append(emptyInstruction(), { shouldFocus: false });
@@ -116,6 +129,7 @@ export function EditorMethod({ sectionError }: EditorMethodProps) {
       <ol className="space-y-3">
         {fields.map((field, index) => {
           const rowError = errors.instructions?.[index]?.instruction?.message;
+          const stepPhotos = photosForStep(field.key);
           return (
             <li
               key={field.id}
@@ -140,6 +154,28 @@ export function EditorMethod({ sectionError }: EditorMethodProps) {
                   <p role="alert" className="text-caption text-destructive">
                     {rowError}
                   </p>
+                )}
+                {stepPhotos.length > 0 && (
+                  <ul
+                    className="flex flex-wrap gap-2"
+                    aria-label={`Photos for step ${index + 1}`}
+                  >
+                    {stepPhotos.map((photo) => (
+                      <li
+                        key={photo.photo}
+                        className="relative size-14 overflow-hidden rounded-control bg-muted"
+                      >
+                        <Image
+                          src={photo.src}
+                          alt=""
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </li>
+                    ))}
+                  </ul>
                 )}
                 <div className="flex flex-wrap items-center gap-2">
                   <Input

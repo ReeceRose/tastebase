@@ -40,6 +40,7 @@ export function photoKey(url: string): string {
 
 // Photos the browser captured come first since they're ready to use, then
 // any the server found. The main photo is already attached, so it's skipped.
+// Photos the recipe ties to a step keep that step.
 export function mergePhotoSuggestions(
   captured: PhotoSuggestion[],
   result: RecipeImportResult,
@@ -47,13 +48,16 @@ export function mergePhotoSuggestions(
   const seen = new Set<string>(
     result.imageUrl ? [photoKey(result.imageUrl)] : [],
   );
+  const stepByKey = new Map(
+    result.stepPhotos.map((photo) => [photoKey(photo.url), photo.stepNumber]),
+  );
   return [
     ...captured,
-    ...result.photoUrls.map((url) => ({ url, image: null })),
-  ].filter((photo) => {
+    ...result.photoUrls.map((url) => ({ url, image: null, stepNumber: null })),
+  ].flatMap((photo) => {
     const key = photoKey(photo.url);
-    if (seen.has(key)) return false;
+    if (seen.has(key)) return [];
     seen.add(key);
-    return true;
+    return [{ ...photo, stepNumber: stepByKey.get(key) ?? null }];
   });
 }

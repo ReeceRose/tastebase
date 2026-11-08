@@ -6,9 +6,11 @@ import {
   useState,
   useTransition,
 } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { EditorSectionCard } from "@/components/forms/recipe-editor/editor-field";
 import { EditorPhotoSuggestions } from "@/components/forms/recipe-editor/editor-photo-suggestions";
+import { EditorPhotoTagPicker } from "@/components/forms/recipe-editor/editor-photo-tag-picker";
 import { EditorPhotoTile } from "@/components/forms/recipe-editor/editor-photo-tile";
 import { ImageUpload } from "@/components/recipe-images/image-upload";
 import {
@@ -19,8 +21,15 @@ import {
 } from "@/lib/server-actions/recipe-image-actions";
 import { EditorSection } from "@/lib/types";
 import type { PhotoSuggestion } from "@/lib/types/import-types";
-import type { PendingImage, RecipeImage } from "@/lib/types/recipe-types";
+import type {
+  EditorPhotoTag,
+  EditorStepOption,
+  PendingImage,
+  RecipeEditorValues,
+  RecipeImage,
+} from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
+import { withPhotoTag } from "@/lib/utils/photo-tags";
 import { mimeTypeFor } from "@/lib/utils/recipe-editor-values";
 
 interface EditorPhotosProps {
@@ -41,6 +50,8 @@ interface UploadedFile {
   width?: number;
   height?: number;
 }
+
+const STEP_PREVIEW_LENGTH = 48;
 
 interface PhotoTile {
   key: string;
@@ -69,6 +80,36 @@ export function EditorPhotos({
   const [isWorking, startWork] = useTransition();
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
+  const { control, getValues, setValue } = useFormContext<RecipeEditorValues>();
+  const instructions = useWatch({ control, name: "instructions" });
+  const photoTags = useWatch({ control, name: "photoTags" }) ?? [];
+
+  const steps: EditorStepOption[] = (instructions ?? []).flatMap(
+    (instruction, index) => {
+      const text = instruction.instruction.trim();
+      if (!text || !instruction.key) return [];
+      return [
+        {
+          key: instruction.key,
+          number: index + 1,
+          preview:
+            text.length > STEP_PREVIEW_LENGTH
+              ? `${text.slice(0, STEP_PREVIEW_LENGTH).trimEnd()}…`
+              : text,
+        },
+      ];
+    },
+  );
+
+  const tagFor = (photo: string) =>
+    photoTags.find((tag) => tag.photo === photo) ?? null;
+
+  const setTag = (photo: string, tag: EditorPhotoTag | null) =>
+    setValue(
+      "photoTags",
+      withPhotoTag(getValues("photoTags") ?? [], photo, tag),
+      { shouldDirty: true },
+    );
 
   const refresh = async (id: string) => {
     const result = await getRecipeImages(id);
@@ -165,7 +206,7 @@ export function EditorPhotos({
     <EditorSectionCard
       id={EditorSection.PHOTOS}
       title="Photos"
-      description="Drag photos or use the arrows to change their order. The first is the main photo, shown on the recipe tile and at the top of the recipe. Without one, the recipe uses its colour."
+      description="Drag photos or use the arrows to change their order. The first is the main photo, shown on the recipe tile and at the top of the recipe. Without one, the recipe uses its colour. Tag a photo with a step, the ingredients or the finished dish and cook mode shows it when you get there."
     >
       {tiles.length > 0 && (
         <ul
@@ -191,6 +232,15 @@ export function EditorPhotos({
               onDragStart={() => setDragFrom(index)}
               onDragEnter={() => setDragOver(index)}
               onDragEnd={endDrag}
+              footer={
+                <EditorPhotoTagPicker
+                  photo={tile.key}
+                  tag={tagFor(tile.key)}
+                  steps={steps}
+                  photoNumber={index + 1}
+                  onChange={(tag) => setTag(tile.key, tag)}
+                />
+              }
               onDrop={() => {
                 if (dragFrom !== null && dragFrom !== index) {
                   tiles[dragFrom].move(index);

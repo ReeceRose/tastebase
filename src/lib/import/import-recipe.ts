@@ -8,10 +8,14 @@ import {
   pageTextIsRecipe,
   scoreStructuredRecipe,
 } from "@/lib/import/import-quality";
-import { extractJsonLdRecipe } from "@/lib/import/json-ld-parser";
+import {
+  extractJsonLdRecipe,
+  type JsonLdRecipe,
+} from "@/lib/import/json-ld-parser";
 import { extractMicrodataRecipe } from "@/lib/import/microdata-parser";
 import { extractTextFromImage } from "@/lib/import/ocr";
 import { findPagePhotos } from "@/lib/import/page-photos";
+import { matchStepPhotos } from "@/lib/import/step-photos";
 import { parseRecipeText } from "@/lib/import/text-recipe-parser";
 import { createOperationLogger } from "@/lib/logging/logger";
 import {
@@ -95,6 +99,7 @@ function importFromParsedText(
     imageUrl: options.imageUrl,
     image: null,
     photoUrls: options.photoUrls,
+    stepPhotos: [],
     warnings: warningsFor(confidence, parsed.recipe),
   };
 }
@@ -114,6 +119,21 @@ export async function importRecipeFromUrl(
 // covers sites that block server-side fetches or need the user's login.
 export function importRecipeFromPage(page: FetchedPage): RecipeImportResult {
   const jsonLd = extractJsonLdRecipe(page.html);
+  const result = importPage(page, jsonLd);
+  const stepImages = (jsonLd?.stepImages ?? []).flatMap((image) => {
+    const url = absoluteHttpUrl(image.url, page.url);
+    return url ? [{ url, text: image.text }] : [];
+  });
+  return {
+    ...result,
+    stepPhotos: matchStepPhotos(stepImages, result.recipe.instructions),
+  };
+}
+
+function importPage(
+  page: FetchedPage,
+  jsonLd: JsonLdRecipe | null,
+): RecipeImportResult {
   const pageText = htmlToText(page.html);
   const sourceName =
     jsonLd?.siteName ?? pageText.siteName ?? hostnameOf(page.url);
@@ -121,7 +141,7 @@ export function importRecipeFromPage(page: FetchedPage): RecipeImportResult {
     jsonLd?.imageUrl ?? pageText.imageUrl,
     page.url,
   );
-  const stepImageUrls = (jsonLd?.stepImageUrls ?? []).flatMap((url) => {
+  const stepImageUrls = (jsonLd?.stepImages ?? []).flatMap(({ url }) => {
     const absolute = absoluteHttpUrl(url, page.url);
     return absolute ? [absolute] : [];
   });
@@ -136,6 +156,7 @@ export function importRecipeFromPage(page: FetchedPage): RecipeImportResult {
     imageUrl,
     image: null,
     photoUrls,
+    stepPhotos: [],
   };
 
   const structured: StructuredCandidate[] = [
@@ -244,6 +265,7 @@ export async function importRecipeFromImage(
       imageUrl: null,
       image: null,
       photoUrls: [],
+      stepPhotos: [],
       warnings: [
         "No text could be read from this image. Try a sharper, well-lit photo.",
       ],

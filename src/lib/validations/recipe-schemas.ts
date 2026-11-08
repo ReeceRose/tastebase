@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { RecipeDifficulty, RecipeSwatch, SortOrder } from "@/lib/types";
+import {
+  PhotoRole,
+  RecipeDifficulty,
+  RecipeSwatch,
+  SortOrder,
+} from "@/lib/types";
 import { RECIPE_CONSTANTS } from "@/lib/utils/recipe-constants";
 
 export const slugSchema = z
@@ -171,8 +176,15 @@ export const createRecipeWithSlugSchema = createRecipeSchema.extend({
   slug: slugSchema,
 });
 
+export const photoTagSchema = z.object({
+  imageId: z.string().min(1),
+  role: z.nativeEnum(PhotoRole),
+  stepNumber: z.number().int().min(1).nullable(),
+});
+
 export const updateRecipeSchema = createRecipeSchema.partial().extend({
   id: z.string().min(1, "Recipe ID is required"),
+  photoTags: z.array(photoTagSchema).optional(),
 });
 
 export const createRecipeNoteSchema = z.object({
@@ -254,6 +266,8 @@ export const uploadRecipeImageSchema = z.object({
     .max(200, "Alt text must be 200 characters or less")
     .optional(),
   isHero: z.boolean().default(false),
+  photoRole: z.nativeEnum(PhotoRole).nullable().optional(),
+  stepNumber: z.number().int().min(1).nullable().optional(),
 });
 
 export const updateRecipeImageSchema = z.object({
@@ -268,6 +282,7 @@ export const updateRecipeImageSchema = z.object({
 
 export type CreateRecipeInput = z.infer<typeof createRecipeSchema>;
 export type UpdateRecipeInput = z.infer<typeof updateRecipeSchema>;
+export type PhotoTagInput = z.infer<typeof photoTagSchema>;
 export type CreateRecipeNoteInput = z.infer<typeof createRecipeNoteSchema>;
 export type UpdateRecipeNoteInput = z.infer<typeof updateRecipeNoteSchema>;
 export type RecipeSearchParams = z.infer<typeof recipeSearchSchema>;

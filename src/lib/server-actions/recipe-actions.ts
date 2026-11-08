@@ -18,6 +18,7 @@ import {
 } from "@/db/schema.recipes";
 import { auth } from "@/lib/auth/auth";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
+import { PhotoRole } from "@/lib/types";
 import type { RecipeWithRelations } from "@/lib/types/recipe-types";
 import { describeRecipeChanges } from "@/lib/utils/recipe-changes";
 import {
@@ -29,6 +30,7 @@ import {
   createRecipeNoteSchema,
   createRecipeSchema,
   createRecipeWithSlugSchema,
+  type PhotoTagInput,
   type UpdateRecipeInput,
   updateRecipeNoteSchema,
   updateRecipeSchema,
@@ -85,6 +87,38 @@ function saveRecipeTags(
     tx.insert(recipeTagRelations)
       .values({ recipeId, tagId })
       .onConflictDoNothing()
+      .run();
+  }
+}
+
+// The editor sends every tagged photo, so anything it leaves out is untagged.
+function savePhotoTags(
+  tx: RecipeTransaction,
+  recipeId: string,
+  photoTags: PhotoTagInput[],
+  stepCount: number | null,
+) {
+  tx.update(recipeImages)
+    .set({ photoRole: null, stepNumber: null })
+    .where(eq(recipeImages.recipeId, recipeId))
+    .run();
+  for (const tag of photoTags) {
+    const isStep = tag.role === PhotoRole.STEP;
+    if (
+      isStep &&
+      (tag.stepNumber === null ||
+        (stepCount !== null && tag.stepNumber > stepCount))
+    ) {
+      continue;
+    }
+    tx.update(recipeImages)
+      .set({ photoRole: tag.role, stepNumber: isStep ? tag.stepNumber : null })
+      .where(
+        and(
+          eq(recipeImages.id, tag.imageId),
+          eq(recipeImages.recipeId, recipeId),
+        ),
+      )
       .run();
   }
 }
@@ -332,6 +366,7 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
       ingredients,
       instructions,
       tags,
+      photoTags,
       ...recipeData
     } = validatedData;
 
@@ -447,6 +482,10 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
             )
             .run();
         }
+      }
+
+      if (photoTags) {
+        savePhotoTags(tx, recipeId, photoTags, instructions?.length ?? null);
       }
 
       if (tags) {

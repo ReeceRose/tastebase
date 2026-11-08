@@ -23,11 +23,14 @@ import { attachImageToRecipe } from "@/lib/server-actions/recipe-image-actions";
 import { ButtonVariant, EditorSection, RecipeEditorMode } from "@/lib/types";
 import type { PhotoSuggestion } from "@/lib/types/import-types";
 import type {
+  EditorPhotoRef,
   PendingImage,
   RecipeEditorValues,
   RecipeImage,
   RecipeWithRelations,
+  SavedPhotoTag,
 } from "@/lib/types/recipe-types";
+import { withEditorKeys } from "@/lib/utils/photo-tags";
 import {
   cleanEditorValues,
   mimeTypeFor,
@@ -144,9 +147,14 @@ export function RecipeEditor({
     }
   };
 
-  const attachPending = async (recipeId: string, title: string) => {
+  const attachPending = async (
+    recipeId: string,
+    title: string,
+    photoTags: SavedPhotoTag[],
+  ) => {
     let failed = 0;
     for (const [index, image] of pending.entries()) {
+      const tag = photoTags.find((item) => item.photo === image.filename);
       const result = await attachImageToRecipe({
         recipeId,
         filename: image.filename,
@@ -157,6 +165,8 @@ export function RecipeEditor({
         height: image.height ?? undefined,
         altText: title,
         isHero: index === 0,
+        photoRole: tag?.role ?? null,
+        stepNumber: tag?.stepNumber ?? null,
       }).catch(() => ({ success: false }));
       if (!result.success) failed += 1;
     }
@@ -192,7 +202,11 @@ export function RecipeEditor({
           toast.error(result.error || "That recipe didn't save. Try again.");
           return;
         }
-        const failed = await attachPending(result.data.id, parsed.data.title);
+        const failed = await attachPending(
+          result.data.id,
+          parsed.data.title,
+          cleaned.photoTags,
+        );
         draft.clear();
         form.reset(form.getValues());
         if (failed > 0) {
@@ -205,7 +219,15 @@ export function RecipeEditor({
       }
 
       if (!recipe) return;
-      const result = await updateRecipe({ ...parsed.data, id: recipe.id });
+      const result = await updateRecipe({
+        ...parsed.data,
+        id: recipe.id,
+        photoTags: cleaned.photoTags.map((tag) => ({
+          imageId: tag.photo,
+          role: tag.role,
+          stepNumber: tag.stepNumber,
+        })),
+      });
       if (!result.success || !result.data) {
         toast.error(result.error || "Your changes didn't save. Try again.");
         return;
@@ -217,6 +239,13 @@ export function RecipeEditor({
       router.refresh();
     });
   };
+
+  const photoRefs: EditorPhotoRef[] = recipe
+    ? images.map((image) => ({
+        photo: image.id,
+        src: `/api/recipes/images/${image.filename}`,
+      }))
+    : pending.map((image) => ({ photo: image.filename, src: image.url }));
 
   const savedLabel = draft.lastSavedAt
     ? "Draft saved on this device"
@@ -294,7 +323,7 @@ export function RecipeEditor({
               size="sm"
               onClick={() => {
                 if (draft.savedDraft) {
-                  form.reset(draft.savedDraft.values, {
+                  form.reset(withEditorKeys(draft.savedDraft.values), {
                     keepDefaultValues: true,
                   });
                 }
@@ -323,6 +352,7 @@ export function RecipeEditor({
             />
             <EditorMethod
               sectionError={sectionErrors[EditorSection.METHOD] ?? null}
+              photos={photoRefs}
             />
             <EditorPhotos
               recipeId={recipe?.id ?? null}

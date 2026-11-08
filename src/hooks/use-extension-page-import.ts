@@ -36,6 +36,7 @@ function toPhotoSuggestions(value: object | null): PhotoSuggestion[] {
         url: item.url,
         image:
           typeof image === "object" && isCapturedImage(image) ? image : null,
+        stepNumber: null,
       },
     ];
   });

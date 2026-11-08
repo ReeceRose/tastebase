@@ -7,12 +7,17 @@ import { RecipeHouseNotes } from "@/components/cards/recipe-house-notes";
 import { RecipeVideoPanel } from "@/components/cards/recipe-video-panel";
 import { InstructionSteps } from "@/components/recipes/instruction-steps";
 import { PhotoStrip } from "@/components/recipes/photo-strip";
-import type { MeasurementUnit, TemperatureUnit } from "@/lib/types";
+import {
+  type MeasurementUnit,
+  PhotoRole,
+  type TemperatureUnit,
+} from "@/lib/types";
 import type {
   RecipeCookSummary,
   RecipeListOption,
   RecipeWithRelations,
 } from "@/lib/types/recipe-types";
+import { photosWithRole } from "@/lib/utils/photo-tags";
 import { resolveSwatch } from "@/lib/utils/swatches";
 import { formatTotalTime } from "@/lib/utils/time-formatting";
 
@@ -45,6 +50,7 @@ export function RecipePage({
 }: RecipePageProps) {
   const swatch = resolveSwatch(recipe.id, recipe.swatch);
   const stepCount = recipe.instructions.length;
+  const ingredientPhotos = photosWithRole(recipe.images, PhotoRole.INGREDIENTS);
   const total = formatTotalTime(
     (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0),
   );
@@ -85,6 +91,16 @@ export function RecipePage({
             servings={recipe.servings}
             preferredSystem={measurementSystem}
           />
+          {ingredientPhotos.length > 0 && (
+            <div className="mt-3">
+              <PhotoStrip
+                images={ingredientPhotos}
+                title={`${recipe.title}, ingredients`}
+                minimum={1}
+                label="Ingredient photos"
+              />
+            </div>
+          )}
         </div>
 
         <section aria-labelledby="method-title" className="min-w-0 space-y-3">
@@ -100,6 +116,8 @@ export function RecipePage({
           </div>
           <InstructionSteps
             instructions={recipe.instructions}
+            images={recipe.images}
+            title={recipe.title}
             swatch={swatch}
             temperatureUnit={temperatureUnit}
           />

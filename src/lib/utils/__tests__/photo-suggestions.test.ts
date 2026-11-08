@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  type ImportedStepPhoto,
   type RecipeImportResult,
   RecipeImportSource,
 } from "@/lib/types/import-types";
@@ -12,6 +13,7 @@ import {
 function result(
   imageUrl: string | null,
   photoUrls: string[],
+  stepPhotos: ImportedStepPhoto[] = [],
 ): RecipeImportResult {
   return {
     recipe: {
@@ -33,6 +35,7 @@ function result(
     imageUrl,
     image: null,
     photoUrls,
+    stepPhotos,
     warnings: [],
   };
 }
@@ -72,10 +75,11 @@ describe("sizeFromUrl", () => {
 describe("mergePhotoSuggestions", () => {
   it("keeps captured photos first and drops the main photo and duplicates", () => {
     const captured = [
-      { url: "https://a.com/soup.jpg", image: null },
+      { url: "https://a.com/soup.jpg", image: null, stepNumber: null },
       {
         url: "https://a.com/step-1.jpg",
         image: { data: "x", mimeType: "image/jpeg" },
+        stepNumber: null,
       },
     ];
     const merged = mergePhotoSuggestions(
@@ -90,5 +94,17 @@ describe("mergePhotoSuggestions", () => {
       "https://a.com/step-2.jpg",
     ]);
     expect(merged[0].image).not.toBeNull();
+  });
+
+  it("keeps the step a photo belongs to", () => {
+    const merged = mergePhotoSuggestions(
+      [],
+      result(
+        null,
+        ["https://a.com/step-1-300x200.jpg", "https://a.com/extra.jpg"],
+        [{ url: "https://a.com/step-1.jpg", stepNumber: 2 }],
+      ),
+    );
+    expect(merged.map((photo) => photo.stepNumber)).toEqual([2, null]);
   });
 });

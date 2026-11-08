@@ -27,7 +27,7 @@ import {
   createRecipeList,
   deleteRecipeList,
 } from "@/lib/server-actions/recipe-list-actions";
-import { RecipeSwatch } from "@/lib/types";
+import { PhotoRole, RecipeSwatch } from "@/lib/types";
 
 vi.mock("@/db", async () => {
   const { default: Database } = await import("better-sqlite3");
@@ -236,6 +236,49 @@ describe("recipe transactions", () => {
     expect(images.map((image) => [image.id, image.isHero])).toEqual([
       [second, true],
       [first, false],
+    ]);
+  });
+
+  it("saves photo tags with an edit and drops tags on missing steps", async () => {
+    const recipe = await createTestRecipe();
+    for (const [sortOrder, id] of ["image-a", "image-b", "image-c"].entries()) {
+      await db.insert(recipeImages).values({
+        id,
+        recipeId: recipe.id,
+        filename: `${id}.jpg`,
+        originalName: `${id}.jpg`,
+        mimeType: "image/jpeg",
+        fileSize: 1,
+        isHero: sortOrder === 0,
+        sortOrder,
+        photoRole: id === "image-c" ? PhotoRole.FINISHED : null,
+      });
+    }
+
+    const result = await updateRecipe({
+      ...recipeInput,
+      id: recipe.id,
+      instructions: [
+        { instruction: "Dice the cucumbers." },
+        { instruction: "Toss with lime." },
+      ],
+      photoTags: [
+        { imageId: "image-a", role: PhotoRole.STEP, stepNumber: 2 },
+        { imageId: "image-b", role: PhotoRole.STEP, stepNumber: 3 },
+      ],
+    });
+
+    expect(result.success).toBe(true);
+    const images = await db
+      .select()
+      .from(recipeImages)
+      .orderBy(recipeImages.sortOrder);
+    expect(
+      images.map((image) => [image.id, image.photoRole, image.stepNumber]),
+    ).toEqual([
+      ["image-a", PhotoRole.STEP, 2],
+      ["image-b", null, null],
+      ["image-c", null, null],
     ]);
   });
 

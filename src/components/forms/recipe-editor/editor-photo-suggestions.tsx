@@ -3,13 +3,18 @@
 import { Loader2, Plus } from "lucide-react";
 import Image from "next/image";
 import { type Dispatch, type SetStateAction, useState } from "react";
+import { useFormContext } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { importSuggestedPhotoAction } from "@/lib/server-actions/recipe-import-actions";
-import { ButtonVariant } from "@/lib/types";
+import { ButtonVariant, PhotoRole } from "@/lib/types";
 import type { PhotoSuggestion } from "@/lib/types/import-types";
-import type { PendingImage } from "@/lib/types/recipe-types";
+import type {
+  PendingImage,
+  RecipeEditorValues,
+} from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
+import { withPhotoTag } from "@/lib/utils/photo-tags";
 
 interface EditorPhotoSuggestionsProps {
   suggestions: PhotoSuggestion[];
@@ -31,6 +36,24 @@ export function EditorPhotoSuggestions({
   const [addedByUrl, setAddedByUrl] = useState<Record<string, string>>({});
   const [adding, setAdding] = useState<Set<string>>(() => new Set());
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
+  const { getValues, setValue } = useFormContext<RecipeEditorValues>();
+  const [importedStepKeys] = useState(() =>
+    (getValues("instructions") ?? []).map((instruction) => instruction.key),
+  );
+
+  const tagStep = (filename: string, stepNumber: number | null) => {
+    const stepKey = stepNumber ? importedStepKeys[stepNumber - 1] : null;
+    if (!stepKey) return;
+    setValue(
+      "photoTags",
+      withPhotoTag(getValues("photoTags") ?? [], filename, {
+        photo: filename,
+        role: PhotoRole.STEP,
+        stepKey,
+      }),
+      { shouldDirty: true },
+    );
+  };
 
   const pendingFilenames = new Set(pending.map((image) => image.filename));
   const isAdded = (url: string) =>
@@ -61,6 +84,7 @@ export function EditorPhotoSuggestions({
       [photo.url]: result.data.filename,
     }));
     onPendingChange((current) => [...current, result.data]);
+    tagStep(result.data.filename, photo.stepNumber);
   };
 
   const addAll = async () => {
@@ -118,6 +142,11 @@ export function EditorPhotoSuggestions({
                   onError={() => hide(photo.url)}
                   unoptimized
                 />
+                {photo.stepNumber && (
+                  <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2.5 py-0.5 text-caption text-ink-fixed">
+                    Step {photo.stepNumber}
+                  </span>
+                )}
                 <span className="absolute right-2 bottom-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-sm font-semibold text-ink-fixed">
                   {busy ? (
                     <Loader2 className="size-4 animate-spin" />

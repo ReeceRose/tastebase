@@ -218,6 +218,13 @@ export enum EditorSection {
   SHARING = "sharing",
 }
 
+// What a recipe photo shows. Untagged photos have no role.
+export enum PhotoRole {
+  INGREDIENTS = "ingredients",
+  STEP = "step",
+  FINISHED = "finished",
+}
+
 export enum RecipeEditorMode {
   CREATE = "create",
   EDIT = "edit",

@@ -173,6 +173,8 @@ export const recipeImages = sqliteTable(
     altText: text("alt_text"),
     isHero: integer("is_hero", { mode: "boolean" }).default(false).notNull(),
     sortOrder: integer("sort_order").notNull(),
+    photoRole: text("photo_role"), // PhotoRole, or null when untagged
+    stepNumber: integer("step_number"), // Set when photoRole is "step"
     metadata: text("metadata", { mode: "json" }),
     uploadedAt: integer("uploaded_at", { mode: "timestamp" })
       .default(sql`(unixepoch())`)

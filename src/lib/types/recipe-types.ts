@@ -12,6 +12,7 @@ import type {
   LibraryScope,
   LibrarySort,
   LibraryVisibility,
+  PhotoRole,
   RecipeChangeType,
   RecipeDifficulty,
   RecipeSwatch,
@@ -269,8 +270,42 @@ export interface StepTimer {
   endsAt: number;
 }
 
+export interface EditorInstruction extends RecipeFormInstruction {
+  // Stays with the step while it moves, so photo tags follow it.
+  key: string;
+}
+
+// A tagged photo in the editor. `photo` is a saved image's id, or the
+// filename of a photo that isn't attached yet.
+export interface EditorPhotoTag {
+  photo: string;
+  role: PhotoRole;
+  stepKey: string | null;
+}
+
 export interface RecipeEditorValues extends RecipeFormData {
+  instructions: EditorInstruction[];
+  photoTags: EditorPhotoTag[];
   swatch: RecipeSwatch | null;
+}
+
+export interface EditorStepOption {
+  key: string;
+  number: number;
+  preview: string;
+}
+
+// A photo in the editor, saved or waiting to be attached.
+export interface EditorPhotoRef {
+  photo: string;
+  src: string;
+}
+
+// A photo tag ready to save, with the step it points at as a step number.
+export interface SavedPhotoTag {
+  photo: string;
+  role: PhotoRole;
+  stepNumber: number | null;
 }
 
 export interface PendingImage {
@@ -291,10 +326,10 @@ export interface CleanedEditorValues {
   values: RecipeEditorValues;
   ingredientRows: number[];
   instructionRows: number[];
+  photoTags: SavedPhotoTag[];
 }
 
 export type EditorIngredient = RecipeEditorValues["ingredients"][number];
-export type EditorInstruction = RecipeEditorValues["instructions"][number];
 
 export interface TagTileData {
   id: string;

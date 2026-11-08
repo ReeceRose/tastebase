@@ -13,6 +13,11 @@ import type {
   RecipeFormData,
   RecipeWithRelations,
 } from "@/lib/types/recipe-types";
+import {
+  newStepKey,
+  photoTagsForSave,
+  photoTagsFromRecipe,
+} from "@/lib/utils/photo-tags";
 import { RECIPE_CONSTANTS } from "@/lib/utils/recipe-constants";
 
 export function emptyIngredient(): EditorIngredient {
@@ -28,6 +33,7 @@ export function emptyIngredient(): EditorIngredient {
 
 export function emptyInstruction(): EditorInstruction {
   return {
+    key: newStepKey(),
     instruction: "",
     timeMinutes: undefined,
     temperature: "",
@@ -52,6 +58,7 @@ export function emptyEditorValues(isPublic: boolean): RecipeEditorValues {
     ingredients: [emptyIngredient(), emptyIngredient(), emptyIngredient()],
     instructions: [emptyInstruction(), emptyInstruction()],
     tags: [],
+    photoTags: [],
     swatch: null,
   };
 }
@@ -79,9 +86,13 @@ export function editorValuesFromImport(
         : base.ingredients,
     instructions:
       data.instructions && data.instructions.length > 0
-        ? data.instructions
+        ? data.instructions.map((instruction) => ({
+            ...instruction,
+            key: newStepKey(),
+          }))
         : base.instructions,
     tags: data.tags ?? [],
+    photoTags: [],
     swatch: null,
   };
 }
@@ -114,6 +125,7 @@ export function editorValuesFromRecipe(
     instructions: [...recipe.instructions]
       .sort((a, b) => a.stepNumber - b.stepNumber)
       .map((instruction) => ({
+        key: instruction.id,
         instruction: instruction.instruction,
         timeMinutes: instruction.timeMinutes ?? undefined,
         temperature: instruction.temperature ?? "",
@@ -121,6 +133,7 @@ export function editorValuesFromRecipe(
         groupName: instruction.groupName ?? "",
       })),
     tags: recipe.tags.map((tag) => tag.name),
+    photoTags: photoTagsFromRecipe(recipe.images, recipe.instructions),
     swatch: (recipe.swatch as RecipeSwatch | null) ?? null,
   };
 }
@@ -165,6 +178,7 @@ export function cleanEditorValues(
     instructionRows.push(index);
     return [
       {
+        key: instruction.key,
         instruction: text,
         timeMinutes: finiteOrUndefined(instruction.timeMinutes),
         temperature: trimOrUndefined(instruction.temperature),
@@ -192,6 +206,7 @@ export function cleanEditorValues(
     },
     ingredientRows,
     instructionRows,
+    photoTags: photoTagsForSave(values.photoTags, instructions),
   };
 }
 

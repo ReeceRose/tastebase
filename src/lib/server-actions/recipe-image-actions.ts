@@ -8,6 +8,7 @@ import { recipeImages, recipes } from "@/db/schema.recipes";
 import { auth } from "@/lib/auth/auth";
 import { type FileValidationError, saveRecipeImage } from "@/lib/file-storage";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
+import { PhotoRole } from "@/lib/types";
 import {
   type UpdateRecipeImageInput,
   type UploadRecipeImageInput,
@@ -149,6 +150,11 @@ export async function attachImageToRecipe(
         altText: validatedData.altText,
         isHero: validatedData.isHero,
         sortOrder,
+        photoRole: validatedData.photoRole ?? null,
+        stepNumber:
+          validatedData.photoRole === PhotoRole.STEP
+            ? (validatedData.stepNumber ?? null)
+            : null,
         uploadedAt: new Date(),
       })
       .returning();

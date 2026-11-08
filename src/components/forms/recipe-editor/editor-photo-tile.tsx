@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowRight, Star, Trash2 } from "lucide-react";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface EditorPhotoTileProps {
@@ -17,6 +18,7 @@ interface EditorPhotoTileProps {
   onDragEnter: () => void;
   onDragEnd: () => void;
   onDrop: () => void;
+  footer: ReactNode;
 }
 
 const tileButton =
@@ -35,6 +37,7 @@ export function EditorPhotoTile({
   onDragEnter,
   onDragEnd,
   onDrop,
+  footer,
 }: EditorPhotoTileProps) {
   const isMain = index === 0;
 
@@ -52,71 +55,75 @@ export function EditorPhotoTile({
         onDrop();
       }}
       onDragEnd={onDragEnd}
-      className={cn(
-        "relative aspect-[4/3] overflow-hidden rounded-control bg-muted",
-        count > 1 && "cursor-grab active:cursor-grabbing",
-        isDragging && "opacity-40",
-        isDropTarget && "ring-[3px] ring-ring",
-      )}
+      className={cn("space-y-2", isDragging && "opacity-40")}
     >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes="240px"
-        className="pointer-events-none object-cover"
-        draggable={false}
-        unoptimized
-      />
-      {isMain && (
-        <span className="absolute top-2 left-2 rounded-full bg-accent px-2.5 py-0.5 text-caption text-accent-foreground">
-          Main photo
-        </span>
-      )}
-      {count > 1 && (
-        <div className="absolute bottom-2 left-2 flex gap-1.5">
-          {index > 0 && (
+      <div
+        className={cn(
+          "relative aspect-[4/3] overflow-hidden rounded-control bg-muted",
+          count > 1 && "cursor-grab active:cursor-grabbing",
+          isDropTarget && "ring-[3px] ring-ring",
+        )}
+      >
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="240px"
+          className="pointer-events-none object-cover"
+          draggable={false}
+          unoptimized
+        />
+        {isMain && (
+          <span className="absolute top-2 left-2 rounded-full bg-accent px-2.5 py-0.5 text-caption text-accent-foreground">
+            Main photo
+          </span>
+        )}
+        {count > 1 && (
+          <div className="absolute bottom-2 left-2 flex gap-1.5">
+            {index > 0 && (
+              <button
+                type="button"
+                className={tileButton}
+                onClick={() => onMove(index - 1)}
+                aria-label={`Move photo ${index + 1} earlier`}
+              >
+                <ArrowLeft className="size-4" />
+              </button>
+            )}
+            {index < count - 1 && (
+              <button
+                type="button"
+                className={tileButton}
+                onClick={() => onMove(index + 1)}
+                aria-label={`Move photo ${index + 1} later`}
+              >
+                <ArrowRight className="size-4" />
+              </button>
+            )}
+          </div>
+        )}
+        <div className="absolute right-2 bottom-2 flex gap-1.5">
+          {!isMain && (
             <button
               type="button"
               className={tileButton}
-              onClick={() => onMove(index - 1)}
-              aria-label={`Move photo ${index + 1} earlier`}
+              onClick={() => onMove(0)}
+              aria-label="Make this the main photo"
             >
-              <ArrowLeft className="size-4" />
+              <Star className="size-4" />
             </button>
           )}
-          {index < count - 1 && (
-            <button
-              type="button"
-              className={tileButton}
-              onClick={() => onMove(index + 1)}
-              aria-label={`Move photo ${index + 1} later`}
-            >
-              <ArrowRight className="size-4" />
-            </button>
-          )}
-        </div>
-      )}
-      <div className="absolute right-2 bottom-2 flex gap-1.5">
-        {!isMain && (
           <button
             type="button"
             className={tileButton}
-            onClick={() => onMove(0)}
-            aria-label="Make this the main photo"
+            onClick={onRemove}
+            aria-label="Delete photo"
           >
-            <Star className="size-4" />
+            <Trash2 className="size-4" />
           </button>
-        )}
-        <button
-          type="button"
-          className={tileButton}
-          onClick={onRemove}
-          aria-label="Delete photo"
-        >
-          <Trash2 className="size-4" />
-        </button>
+        </div>
       </div>
+      {footer}
     </li>
   );
 }
