@@ -4,6 +4,29 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.9 — 2026-11-08
+
+You can now tag each photo with what it shows: a step, an ingredient or the finished dish.
+
+### What's Changed
+
+#### Features
+- **Photo tags:** in the recipe editor, mark a photo as showing a method step, an ingredient or the finished dish. Tag photos one at a time, or accept the suggested tags.
+- **Step photos in recipes:** a photo tagged to a step appears next to that step on the recipe page and in cook mode.
+- **Photo lightbox:** click a photo in the recipe's photo strip to see it full size.
+- **Step photos on import:** if a site's recipe data includes photos for its steps, imported recipes now keep them with the right steps.
+
+#### Improvements
+- Updated the GitHub Actions used in CI.
+
+Your database is updated with the new photo tag fields automatically. Existing photos keep their place and start out untagged.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.9
+```
+
 ## v0.1.8 — 2026-11-07
 
 A small release that lets you choose the order of a recipe's photos.
