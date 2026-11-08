@@ -179,7 +179,9 @@ export function RecipeHero({
             )}
             <RecipeActionsMenu
               recipeId={recipe.id}
+              slug={recipe.slug}
               title={recipe.title}
+              hasPhotos={recipe.images.length > 0}
               canDelete={own}
               cooks={cooks}
               currentUserId={currentUserId}

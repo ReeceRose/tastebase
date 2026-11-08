@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     "better-sqlite3",
     "drizzle-orm",
     "tesseract.js",
+    "@react-pdf/renderer",
   ],
   images: {
     remotePatterns: [],

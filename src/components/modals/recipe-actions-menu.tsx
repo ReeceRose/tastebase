@@ -3,6 +3,7 @@
 import {
   Check,
   CookingPot,
+  FileDown,
   MoreHorizontal,
   Share2,
   Trash2,
@@ -11,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DeleteRecipeDialog } from "@/components/modals/delete-recipe-dialog";
+import { RecipeExportDialog } from "@/components/modals/recipe-export-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +27,9 @@ import { COOK_REPEAT_WINDOW_MS } from "@/lib/utils/recipe-constants";
 
 interface RecipeActionsMenuProps {
   recipeId: string;
+  slug: string;
   title: string;
+  hasPhotos: boolean;
   canDelete: boolean;
   cooks: RecipeCookSummary;
   currentUserId: string;
@@ -43,7 +47,9 @@ function justCookedByUser(cooks: RecipeCookSummary, currentUserId: string) {
 
 export function RecipeActionsMenu({
   recipeId,
+  slug,
   title,
+  hasPhotos,
   canDelete,
   cooks,
   currentUserId,
@@ -51,6 +57,7 @@ export function RecipeActionsMenu({
 }: RecipeActionsMenuProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const justCooked = justCookedByUser(cooks, currentUserId);
 
   const share = async () => {
@@ -107,6 +114,10 @@ export function RecipeActionsMenu({
             <Share2 />
             Share link
           </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setExportOpen(true)}>
+            <FileDown />
+            Export as PDF
+          </DropdownMenuItem>
           {canDelete && (
             <>
               <DropdownMenuSeparator />
@@ -121,6 +132,13 @@ export function RecipeActionsMenu({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      <RecipeExportDialog
+        slug={slug}
+        title={title}
+        hasPhotos={hasPhotos}
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+      />
       {canDelete && (
         <DeleteRecipeDialog
           recipeId={recipeId}

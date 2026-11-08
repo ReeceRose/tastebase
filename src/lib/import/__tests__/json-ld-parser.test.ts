@@ -129,6 +129,44 @@ describe("extractJsonLdRecipe", () => {
     expect(recipe.tags).toEqual(["dip"]);
   });
 
+  it("ignores keywords that hold publisher metadata", () => {
+    const { recipe } = extractJsonLdRecipe(
+      page({
+        "@type": "Recipe",
+        name: "Smashed Potatoes",
+        recipeCategory: ["dinner party", "side dish"],
+        keywords: [
+          "locale: US",
+          "shortTitle: Smashed Potatoes",
+          "collection: Side Dishes",
+          "sponsored: false",
+          "garlic mashed potatoes, loaded mashed potatoes",
+          "OCCASION: dinner party",
+          "TOTALTIME: 00:55:00",
+          "FILTERTIME: <1HR",
+        ],
+        recipeIngredient: ["2 lb potatoes"],
+        recipeInstructions: ["Smash."],
+      }),
+    ) as JsonLdRecipe;
+
+    expect(recipe.tags).toEqual(["dinner party", "side dish"]);
+  });
+
+  it("keeps keywords with a colon inside a phrase", () => {
+    const { recipe } = extractJsonLdRecipe(
+      page({
+        "@type": "Recipe",
+        name: "Stew",
+        keywords: "Instant Pot: pressure cooker, stew",
+        recipeIngredient: ["1 onion"],
+        recipeInstructions: ["Cook."],
+      }),
+    ) as JsonLdRecipe;
+
+    expect(recipe.tags).toEqual(["instant pot: pressure cooker", "stew"]);
+  });
+
   it("finds a recipe inside @graph", () => {
     const result = extractJsonLdRecipe(page(WPRM_GRAPH));
     expect(result).not.toBeNull();

@@ -44,6 +44,8 @@ const MAX_TAG_LENGTH = 30;
 const MAX_SEARCH_DEPTH = 6;
 // Keywords written for search engines: "salsa recipe", "easy pasta recipes".
 const SEARCH_PHRASE = /\brecipes?$/i;
+// Publisher metadata stored as keywords: "locale: US", "sponsored: false".
+const CMS_FIELD = /^[\w-]+:\s*\S/;
 
 function isObject(value: JsonValue | undefined): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -220,18 +222,33 @@ function comparableWords(text: string): string {
 
 // Sites often list a recipe's ingredients as keywords. Search already finds
 // those, so as tags they only bury the useful ones. Categories always stay.
-function toTags(node: JsonObject, ingredients: ParsedIngredient[]): string[] {
+function usefulKeywords(
+  node: JsonObject,
+  ingredients: ParsedIngredient[],
+): string[] {
+  const keywords = readTextList(node.keywords);
+  // Sites that dump metadata here mix it with search terms, so none of the
+  // field was written as tags.
+  if (keywords.some((keyword) => CMS_FIELD.test(keyword))) {
+    return [];
+  }
   const ingredientWords = ingredients.map((ingredient) =>
     comparableWords(ingredient.name),
   );
-  const keywords = readTextList(node.keywords).filter((keyword) => {
+  return keywords.filter((keyword) => {
     const words = comparableWords(keyword);
     return (
       !SEARCH_PHRASE.test(keyword) &&
       !ingredientWords.some((ingredient) => ingredient.includes(words))
     );
   });
-  const tags = [...readTextList(node.recipeCategory), ...keywords]
+}
+
+function toTags(node: JsonObject, ingredients: ParsedIngredient[]): string[] {
+  const tags = [
+    ...readTextList(node.recipeCategory),
+    ...usefulKeywords(node, ingredients),
+  ]
     .map((tag) => tag.toLowerCase())
     .filter((tag) => tag.length <= MAX_TAG_LENGTH);
   return [...new Set(tags)].slice(0, MAX_TAGS);

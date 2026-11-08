@@ -96,6 +96,17 @@ export enum ExportFormat {
   RECIPE_CARD = "recipe-card",
 }
 
+export enum RecipePdfStyle {
+  PRINTER = "printer",
+  DEVICE = "device",
+}
+
+export enum RecipePdfScreen {
+  PHONE = "phone",
+  TABLET = "tablet",
+  LAPTOP = "laptop",
+}
+
 // Permission levels
 export enum PermissionLevel {
   VIEW = "view",
