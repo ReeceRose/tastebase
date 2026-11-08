@@ -1,6 +1,5 @@
 import "@testing-library/jest-dom";
 import "vitest-canvas-mock";
-import { cleanup } from "@testing-library/react";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 
@@ -54,7 +53,6 @@ beforeAll(() => {
 
 // Clean up after each test
 afterEach(() => {
-  cleanup();
   server.resetHandlers();
   vi.clearAllMocks();
 });
