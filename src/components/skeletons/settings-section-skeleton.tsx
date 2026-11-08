@@ -89,3 +89,22 @@ export function StorageSectionSkeleton() {
     </div>
   );
 }
+
+export function ShortcutsSectionSkeleton() {
+  return (
+    <div className="space-y-5" aria-busy="true">
+      <Skeleton className="h-16 w-full rounded-tile" />
+      <div className="divide-y-2 divide-background overflow-hidden rounded-tile bg-card">
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
+          <div
+            key={`shortcut-row-skeleton-${index}`}
+            className="flex items-center justify-between gap-3 px-5 py-3"
+          >
+            <Skeleton className="h-4 w-32 rounded-full" />
+            <Skeleton className="h-9 w-20 rounded-control" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

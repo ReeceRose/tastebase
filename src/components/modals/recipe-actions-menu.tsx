@@ -20,7 +20,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useShortcutAction } from "@/hooks/use-shortcut-action";
 import { recordRecipeCook } from "@/lib/server-actions/recipe-cook-actions";
+import { KeyboardShortcutAction } from "@/lib/types";
 import type { RecipeCookSummary } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
 import { COOK_REPEAT_WINDOW_MS } from "@/lib/utils/recipe-constants";
@@ -61,6 +63,10 @@ export function RecipeActionsMenu({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const justCooked = justCookedByUser(cooks, currentUserId);
+
+  useShortcutAction(KeyboardShortcutAction.EXPORT_RECIPE, () =>
+    setExportOpen(true),
+  );
 
   const share = async () => {
     const url = window.location.href.replace(/\/cook$/, "");

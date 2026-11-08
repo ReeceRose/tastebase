@@ -17,12 +17,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useShortcutAction } from "@/hooks/use-shortcut-action";
 import { setFavourite } from "@/lib/server-actions/recipe-favorites-actions";
 import {
   createRecipeList,
   setRecipeInList,
 } from "@/lib/server-actions/recipe-list-actions";
-import { ButtonVariant, NavCountKey } from "@/lib/types";
+import {
+  ButtonVariant,
+  KeyboardShortcutAction,
+  NavCountKey,
+} from "@/lib/types";
 import type {
   RecipeListInput,
   RecipeListOption,
@@ -76,6 +81,10 @@ export function RecipeSaveMenu({
     showFavourite(!next);
     toast.error(result?.error || "Couldn't update your favourites");
   };
+
+  useShortcutAction(KeyboardShortcutAction.FAVOURITE_RECIPE, () =>
+    toggleFavourite(!isFavourite),
+  );
 
   const setIncluded = (listId: string, included: boolean) => {
     setLists((current) =>

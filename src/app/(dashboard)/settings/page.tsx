@@ -11,6 +11,7 @@ import { UnitPreferencesSection } from "@/components/forms/unit-preferences-sect
 import {
   HouseholdSection,
   SharingSection,
+  ShortcutsSection,
   StorageSection,
 } from "@/components/layout/settings-sections";
 import { TemplateList } from "@/components/lists/template-list";
@@ -22,6 +23,7 @@ import { SettingsNav } from "@/components/navigation/settings-nav";
 import {
   HouseholdSectionSkeleton,
   SharingSectionSkeleton,
+  ShortcutsSectionSkeleton,
   StorageSectionSkeleton,
 } from "@/components/skeletons/settings-section-skeleton";
 import { MemberAvatar } from "@/components/ui/member-avatar";
@@ -113,6 +115,12 @@ export default async function SettingsPage({
           {section === SettingsSection.SAVING && <SaveAnywherePanel />}
 
           {section === SettingsSection.TEMPLATES && <TemplateList />}
+
+          {section === SettingsSection.SHORTCUTS && (
+            <Suspense fallback={<ShortcutsSectionSkeleton />}>
+              <ShortcutsSection />
+            </Suspense>
+          )}
 
           {section === SettingsSection.STORAGE && (
             <Suspense fallback={<StorageSectionSkeleton />}>

@@ -176,8 +176,36 @@ export enum SettingsSection {
   SHARING = "sharing",
   SAVING = "saving",
   TEMPLATES = "templates",
+  SHORTCUTS = "shortcuts",
   STORAGE = "storage",
   SECURITY = "security",
+}
+
+export enum KeyboardShortcutAction {
+  OPEN_SEARCH = "open-search",
+  NEW_RECIPE = "new-recipe",
+  GO_HOME = "go-home",
+  GO_RECIPES = "go-recipes",
+  EDIT_RECIPE = "edit-recipe",
+  COOK_RECIPE = "cook-recipe",
+  FAVOURITE_RECIPE = "favourite-recipe",
+  EXPORT_RECIPE = "export-recipe",
+}
+
+export enum KeyboardShortcutScope {
+  ANYWHERE = "anywhere",
+  RECIPE = "recipe",
+}
+
+export type KeyboardShortcutBindings = Record<
+  KeyboardShortcutAction,
+  string | null
+>;
+export type KeyboardShortcutOverrides = Partial<KeyboardShortcutBindings>;
+
+export interface KeyboardShortcutSettings {
+  enabled: boolean;
+  bindings: KeyboardShortcutOverrides;
 }
 
 export interface SegmentedOption {

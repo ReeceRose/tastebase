@@ -1,7 +1,9 @@
 import { StoragePanel } from "@/components/cards/storage-panel";
+import { KeyboardShortcutsForm } from "@/components/forms/keyboard-shortcuts-form";
 import { SharingPreferenceForm } from "@/components/forms/sharing-preference-form";
 import { MemberAvatar } from "@/components/ui/member-avatar";
 import { getHouseholdOverview } from "@/lib/server-actions/household-actions";
+import { getKeyboardShortcutSettings } from "@/lib/server-actions/keyboard-shortcut-actions";
 import { getDefaultRecipeIsPublic } from "@/lib/server-actions/sharing-preference-actions";
 import { getStorageStats } from "@/lib/server-actions/storage-actions";
 import { AvatarSize } from "@/lib/types";
@@ -67,6 +69,21 @@ export async function SharingSection() {
         recipe, and recipes you've already added stay as they are.
       </p>
       <SharingPreferenceForm initialIsPublic={isPublic} />
+    </div>
+  );
+}
+
+export async function ShortcutsSection() {
+  const settings = await getKeyboardShortcutSettings();
+
+  return (
+    <div className="space-y-4">
+      <p className="max-w-[60ch] text-muted-foreground">
+        Pick a shortcut, then press the key you want. They pause while you're
+        typing, cooking or in a dialog. Export as PDF starts on your browser's
+        print keys, for recipe pages only. Ctrl or ⌘ K always opens search.
+      </p>
+      <KeyboardShortcutsForm initialSettings={settings} />
     </div>
   );
 }

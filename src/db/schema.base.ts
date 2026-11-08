@@ -1,4 +1,5 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import type { KeyboardShortcutSettings } from "@/lib/types";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -22,6 +23,9 @@ export const users = sqliteTable("users", {
   })
     .default(true)
     .notNull(),
+  keyboardShortcuts: text("keyboard_shortcuts", {
+    mode: "json",
+  }).$type<KeyboardShortcutSettings>(),
   createdAt: integer("created_at", { mode: "timestamp" })
     .defaultNow()
     .notNull(),

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { RecipeActionsMenu } from "@/components/modals/recipe-actions-menu";
 import { RecipeSaveMenu } from "@/components/modals/recipe-save-menu";
+import { RecipeShortcuts } from "@/components/navigation/shortcut-actions";
 import { Button } from "@/components/ui/button";
 import { CircleMotif } from "@/components/ui/circle-motif";
 import { MemberAvatar } from "@/components/ui/member-avatar";
@@ -101,6 +102,7 @@ export function RecipeHero({
         classes.fg,
       )}
     >
+      <RecipeShortcuts slug={recipe.slug} canEdit={own} />
       {hero && (
         <div className="relative aspect-[16/9] w-full lg:hidden">
           <Image

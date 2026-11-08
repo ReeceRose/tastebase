@@ -39,6 +39,11 @@ export const SETTINGS_SECTIONS: SettingsItem[] = [
     description: "Starting points for the notes you leave on recipes.",
   },
   {
+    id: SettingsSection.SHORTCUTS,
+    label: "Keyboard shortcuts",
+    description: "Keys for the things you do most. Off until you turn them on.",
+  },
+  {
     id: SettingsSection.STORAGE,
     label: "Storage",
     description: "How much space recipes and photos use on this server.",

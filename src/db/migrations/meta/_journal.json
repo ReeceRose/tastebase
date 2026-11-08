@@ -183,6 +183,13 @@
       "when": 1794158952745,
       "tag": "0025_index_ingredient_recipe_links",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1794160122747,
+      "tag": "0026_add_keyboard_shortcuts",
+      "breakpoints": true
     }
   ]
 }
