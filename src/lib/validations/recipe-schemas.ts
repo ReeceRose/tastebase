@@ -180,7 +180,7 @@ export const createRecipeWithSlugSchema = createRecipeSchema.extend({
 export const photoTagSchema = z.object({
   imageId: z.string().min(1),
   role: z.nativeEnum(PhotoRole),
-  stepNumber: z.number().int().min(1).nullable(),
+  stepNumbers: z.array(z.number().int().min(1)),
 });
 
 export const updateRecipeSchema = createRecipeSchema.partial().extend({
@@ -268,7 +268,7 @@ export const uploadRecipeImageSchema = z.object({
     .optional(),
   isHero: z.boolean().default(false),
   photoRole: z.nativeEnum(PhotoRole).nullable().optional(),
-  stepNumber: z.number().int().min(1).nullable().optional(),
+  stepNumbers: z.array(z.number().int().min(1)).optional(),
 });
 
 export const attachRecipeImagesSchema = z.object({
@@ -287,7 +287,7 @@ export const attachRecipeImagesSchema = z.object({
         width: z.number().int().nullable(),
         height: z.number().int().nullable(),
         photoRole: z.nativeEnum(PhotoRole).nullable(),
-        stepNumber: z.number().int().min(1).nullable(),
+        stepNumbers: z.array(z.number().int().min(1)),
       }),
     )
     .min(1),

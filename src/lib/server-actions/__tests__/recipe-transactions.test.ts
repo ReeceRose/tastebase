@@ -419,8 +419,8 @@ describe("recipe transactions", () => {
         { instruction: "Toss with lime." },
       ],
       photoTags: [
-        { imageId: "image-a", role: PhotoRole.STEP, stepNumber: 2 },
-        { imageId: "image-b", role: PhotoRole.STEP, stepNumber: 3 },
+        { imageId: "image-a", role: PhotoRole.STEP, stepNumbers: [1, 2, 3] },
+        { imageId: "image-b", role: PhotoRole.STEP, stepNumbers: [3] },
       ],
     });
 
@@ -430,11 +430,11 @@ describe("recipe transactions", () => {
       .from(recipeImages)
       .orderBy(recipeImages.sortOrder);
     expect(
-      images.map((image) => [image.id, image.photoRole, image.stepNumber]),
+      images.map((image) => [image.id, image.photoRole, image.stepNumbers]),
     ).toEqual([
-      ["image-a", PhotoRole.STEP, 2],
-      ["image-b", null, null],
-      ["image-c", null, null],
+      ["image-a", PhotoRole.STEP, [1, 2]],
+      ["image-b", null, []],
+      ["image-c", null, []],
     ]);
   });
 

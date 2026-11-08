@@ -286,7 +286,8 @@ export interface EditorInstruction extends RecipeFormInstruction {
 }
 
 // A tagged photo in the editor. `photo` is a saved image's id, or the
-// filename of a photo that isn't attached yet.
+// filename of a photo that isn't attached yet. A photo on several steps has
+// one tag per step.
 export interface EditorPhotoTag {
   photo: string;
   role: PhotoRole;
@@ -312,11 +313,11 @@ export interface EditorPhotoRef {
   src: string;
 }
 
-// A photo tag ready to save, with the step it points at as a step number.
+// A photo tag ready to save, with the steps it points at as step numbers.
 export interface SavedPhotoTag {
   photo: string;
   role: PhotoRole;
-  stepNumber: number | null;
+  stepNumbers: number[];
 }
 
 export interface PendingImage {

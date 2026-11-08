@@ -29,7 +29,7 @@ import type {
   RecipeImage,
 } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
-import { withPhotoTag } from "@/lib/utils/photo-tags";
+import { withPhotoTags } from "@/lib/utils/photo-tags";
 import { mimeTypeFor } from "@/lib/utils/recipe-editor-values";
 
 interface EditorPhotosProps {
@@ -102,13 +102,13 @@ export function EditorPhotos({
     },
   );
 
-  const tagFor = (photo: string) =>
-    photoTags.find((tag) => tag.photo === photo) ?? null;
+  const tagsFor = (photo: string) =>
+    photoTags.filter((tag) => tag.photo === photo);
 
-  const setTag = (photo: string, tag: EditorPhotoTag | null) =>
+  const setTags = (photo: string, tags: EditorPhotoTag[]) =>
     setValue(
       "photoTags",
-      withPhotoTag(getValues("photoTags") ?? [], photo, tag),
+      withPhotoTags(getValues("photoTags") ?? [], photo, tags),
       { shouldDirty: true },
     );
 
@@ -236,10 +236,10 @@ export function EditorPhotos({
               footer={
                 <EditorPhotoTagPicker
                   photo={tile.key}
-                  tag={tagFor(tile.key)}
+                  tags={tagsFor(tile.key)}
                   steps={steps}
                   photoNumber={index + 1}
-                  onChange={(tag) => setTag(tile.key, tag)}
+                  onChange={(tags) => setTags(tile.key, tags)}
                 />
               }
               onDrop={() => {

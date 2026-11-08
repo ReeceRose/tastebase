@@ -139,8 +139,8 @@ export function buildRecipePdfContent(
       .filter(
         (image) =>
           image.photoRole === PhotoRole.STEP &&
-          recipe.instructions.some(
-            (step) => step.stepNumber === image.stepNumber,
+          recipe.instructions.some((step) =>
+            image.stepNumbers.includes(step.stepNumber),
           ),
       )
       .map((image) => image.id),

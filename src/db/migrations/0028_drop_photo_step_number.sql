@@ -1,0 +1,1 @@
+ALTER TABLE `recipe_images` DROP COLUMN `step_number`;

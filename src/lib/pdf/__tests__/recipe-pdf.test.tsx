@@ -54,7 +54,7 @@ const metric: RecipePdfUnits = {
 function image(
   id: string,
   role: PhotoRole | null,
-  stepNumber: number | null,
+  stepNumbers: number[],
   isHero = false,
 ): RecipeImage {
   return {
@@ -70,7 +70,7 @@ function image(
     isHero,
     sortOrder: 0,
     photoRole: role,
-    stepNumber,
+    stepNumbers,
     metadata: null,
     uploadedAt: new Date(),
   };
@@ -145,11 +145,11 @@ const recipe: RecipeWithRelations = {
     step(1, "Season the bird."),
   ],
   images: [
-    image("step", PhotoRole.STEP, 2),
-    image("main", null, null, true),
-    image("ingredients", PhotoRole.INGREDIENTS, null),
-    image("finished", PhotoRole.FINISHED, null),
-    image("orphan-step", PhotoRole.STEP, 9),
+    image("step", PhotoRole.STEP, [2]),
+    image("main", null, [], true),
+    image("ingredients", PhotoRole.INGREDIENTS, []),
+    image("finished", PhotoRole.FINISHED, []),
+    image("orphan-step", PhotoRole.STEP, [9]),
   ],
   notes: [],
   tags: [],

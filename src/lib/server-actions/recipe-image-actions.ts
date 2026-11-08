@@ -136,8 +136,8 @@ export async function attachImagesToRecipe(rawData: AttachRecipeImagesInput) {
             isHero: index === 0,
             sortOrder: existingCount + index,
             photoRole: image.photoRole,
-            stepNumber:
-              image.photoRole === PhotoRole.STEP ? image.stepNumber : null,
+            stepNumbers:
+              image.photoRole === PhotoRole.STEP ? image.stepNumbers : [],
             uploadedAt,
           })),
         )
@@ -222,10 +222,10 @@ export async function attachImageToRecipe(
         isHero: validatedData.isHero,
         sortOrder,
         photoRole: validatedData.photoRole ?? null,
-        stepNumber:
+        stepNumbers:
           validatedData.photoRole === PhotoRole.STEP
-            ? (validatedData.stepNumber ?? null)
-            : null,
+            ? (validatedData.stepNumbers ?? [])
+            : [],
         uploadedAt: new Date(),
       })
       .returning();

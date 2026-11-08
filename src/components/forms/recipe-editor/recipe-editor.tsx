@@ -166,7 +166,7 @@ export function RecipeEditor({
           width: image.width,
           height: image.height,
           photoRole: tag?.role ?? null,
-          stepNumber: tag?.stepNumber ?? null,
+          stepNumbers: tag?.stepNumbers ?? [],
         };
       }),
     }).catch(() => ({ success: false }));
@@ -225,7 +225,7 @@ export function RecipeEditor({
         photoTags: cleaned.photoTags.map((tag) => ({
           imageId: tag.photo,
           role: tag.role,
-          stepNumber: tag.stepNumber,
+          stepNumbers: tag.stepNumbers,
         })),
       });
       if (!result.success || !result.data) {

@@ -13,6 +13,10 @@ export function newStepKey(): string {
   return nanoid(10);
 }
 
+function sortedSteps(stepNumbers: number[]): number[] {
+  return [...new Set(stepNumbers)].sort((a, b) => a - b);
+}
+
 export function toPhotoRole(value: string | null): PhotoRole | null {
   return Object.values(PhotoRole).find((role) => role === value) ?? null;
 }
@@ -30,14 +34,15 @@ export function photoTagsFromRecipe(
     if (role !== PhotoRole.STEP) {
       return [{ photo: image.id, role, stepKey: null }];
     }
-    const stepKey =
-      image.stepNumber === null ? null : keyByStep.get(image.stepNumber);
-    return stepKey ? [{ photo: image.id, role, stepKey }] : [];
+    return image.stepNumbers.flatMap((stepNumber): EditorPhotoTag[] => {
+      const stepKey = keyByStep.get(stepNumber);
+      return stepKey ? [{ photo: image.id, role, stepKey }] : [];
+    });
   });
 }
 
-// Turns step keys into step numbers once blank steps are dropped. Tags on
-// steps that no longer exist are dropped too.
+// Turns step keys into step numbers once blank steps are dropped, with one
+// entry per photo. Tags on steps that no longer exist are dropped too.
 export function photoTagsForSave(
   tags: EditorPhotoTag[],
   instructions: EditorInstruction[],
@@ -45,22 +50,35 @@ export function photoTagsForSave(
   const stepByKey = new Map(
     instructions.map((instruction, index) => [instruction.key, index + 1]),
   );
-  return tags.flatMap((tag): SavedPhotoTag[] => {
+  const saved = new Map<string, SavedPhotoTag>();
+  for (const tag of tags) {
     if (tag.role !== PhotoRole.STEP) {
-      return [{ photo: tag.photo, role: tag.role, stepNumber: null }];
+      saved.set(tag.photo, {
+        photo: tag.photo,
+        role: tag.role,
+        stepNumbers: [],
+      });
+      continue;
     }
     const stepNumber = tag.stepKey ? stepByKey.get(tag.stepKey) : null;
-    return stepNumber ? [{ photo: tag.photo, role: tag.role, stepNumber }] : [];
-  });
+    if (!stepNumber) continue;
+    const stepNumbers = saved.get(tag.photo)?.stepNumbers ?? [];
+    saved.set(tag.photo, {
+      photo: tag.photo,
+      role: tag.role,
+      stepNumbers: sortedSteps([...stepNumbers, stepNumber]),
+    });
+  }
+  return [...saved.values()];
 }
 
-export function withPhotoTag(
+// A photo has one tag, or one step tag for each step it shows.
+export function withPhotoTags(
   tags: EditorPhotoTag[],
   photo: string,
-  tag: EditorPhotoTag | null,
+  photoTags: EditorPhotoTag[],
 ): EditorPhotoTag[] {
-  const others = tags.filter((item) => item.photo !== photo);
-  return tag ? [...others, tag] : others;
+  return [...tags.filter((item) => item.photo !== photo), ...photoTags];
 }
 
 // Drafts saved before steps had keys need them before tags can point at steps.
@@ -80,7 +98,8 @@ export function photosForStep(
 ): RecipeImage[] {
   return images.filter(
     (image) =>
-      image.photoRole === PhotoRole.STEP && image.stepNumber === stepNumber,
+      image.photoRole === PhotoRole.STEP &&
+      image.stepNumbers.includes(stepNumber),
   );
 }
 
@@ -95,8 +114,23 @@ export function photoRoleLabel(image: RecipeImage): string | null {
   const role = toPhotoRole(image.photoRole);
   if (role === PhotoRole.INGREDIENTS) return "Ingredients";
   if (role === PhotoRole.FINISHED) return "Finished dish";
-  if (role === PhotoRole.STEP && image.stepNumber !== null) {
-    return `Step ${image.stepNumber}`;
-  }
+  if (role === PhotoRole.STEP) return stepNumbersLabel(image.stepNumbers);
   return null;
+}
+
+// "Step 4", or runs of steps like "Steps 1–4, 7".
+export function stepNumbersLabel(stepNumbers: number[]): string | null {
+  const sorted = sortedSteps(stepNumbers);
+  if (sorted.length === 0) return null;
+  if (sorted.length === 1) return `Step ${sorted[0]}`;
+  const runs: number[][] = [];
+  for (const stepNumber of sorted) {
+    const run = runs.at(-1);
+    if (run?.at(-1) === stepNumber - 1) run.push(stepNumber);
+    else runs.push([stepNumber]);
+  }
+  const parts = runs.map((run) =>
+    run.length === 1 ? `${run[0]}` : `${run[0]}–${run[run.length - 1]}`,
+  );
+  return `Steps ${parts.join(", ")}`;
 }

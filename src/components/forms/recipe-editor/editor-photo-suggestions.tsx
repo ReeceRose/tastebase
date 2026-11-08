@@ -15,7 +15,7 @@ import type {
 } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
 import { batchPhotoSuggestions } from "@/lib/utils/photo-suggestions";
-import { withPhotoTag } from "@/lib/utils/photo-tags";
+import { withPhotoTags } from "@/lib/utils/photo-tags";
 
 const PHOTOS_PER_BATCH = 4;
 const CAPTURED_BYTES_PER_BATCH = 6 * 1024 * 1024;
@@ -50,11 +50,9 @@ export function EditorPhotoSuggestions({
     if (!stepKey) return;
     setValue(
       "photoTags",
-      withPhotoTag(getValues("photoTags") ?? [], filename, {
-        photo: filename,
-        role: PhotoRole.STEP,
-        stepKey,
-      }),
+      withPhotoTags(getValues("photoTags") ?? [], filename, [
+        { photo: filename, role: PhotoRole.STEP, stepKey },
+      ]),
       { shouldDirty: true },
     );
   };

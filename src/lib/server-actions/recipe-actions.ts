@@ -103,20 +103,19 @@ function savePhotoTags(
   stepCount: number | null,
 ) {
   tx.update(recipeImages)
-    .set({ photoRole: null, stepNumber: null })
+    .set({ photoRole: null, stepNumbers: [] })
     .where(eq(recipeImages.recipeId, recipeId))
     .run();
   for (const tag of photoTags) {
     const isStep = tag.role === PhotoRole.STEP;
-    if (
-      isStep &&
-      (tag.stepNumber === null ||
-        (stepCount !== null && tag.stepNumber > stepCount))
-    ) {
-      continue;
-    }
+    const stepNumbers = isStep
+      ? tag.stepNumbers.filter(
+          (stepNumber) => stepCount === null || stepNumber <= stepCount,
+        )
+      : [];
+    if (isStep && stepNumbers.length === 0) continue;
     tx.update(recipeImages)
-      .set({ photoRole: tag.role, stepNumber: isStep ? tag.stepNumber : null })
+      .set({ photoRole: tag.role, stepNumbers })
       .where(
         and(
           eq(recipeImages.id, tag.imageId),
