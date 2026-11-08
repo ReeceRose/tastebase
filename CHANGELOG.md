@@ -4,6 +4,22 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.13 — 2026-11-08
+
+A small polish release for tagging photos in the recipe editor.
+
+### What's Changed
+
+#### Improvements
+
+- The photo tag picker in the recipe editor now shows a step's full text in a tooltip, so you can tell similar or long steps apart when matching a photo to a step.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.13
+```
+
 ## v0.1.12 — 2026-11-08
 
 Saving recipes with photos is now quicker and more reliable.
