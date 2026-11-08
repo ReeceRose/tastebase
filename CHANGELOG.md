@@ -4,6 +4,26 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.11 — 2026-11-08
+
+A small maintenance release with no changes to how Tastebase works for you.
+
+### What's Changed
+
+#### Fixes
+- Fixed a type error in the photo upload code. Uploads, resizing and saved formats work exactly as before.
+
+#### Improvements
+- Stricter checks before code is committed: every commit now type-checks the whole project, not only the changed files, so this kind of error is caught earlier.
+- Tests now run before every push.
+- Removed a development dependency that's no longer needed.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.11
+```
+
 ## v0.1.10 — 2026-11-08
 
 Adding several photos from an imported recipe is now faster, and each photo in the full-size viewer shows its label.
