@@ -90,3 +90,13 @@ export function photosWithRole(
 ): RecipeImage[] {
   return images.filter((image) => image.photoRole === role);
 }
+
+export function photoRoleLabel(image: RecipeImage): string | null {
+  const role = toPhotoRole(image.photoRole);
+  if (role === PhotoRole.INGREDIENTS) return "Ingredients";
+  if (role === PhotoRole.FINISHED) return "Finished dish";
+  if (role === PhotoRole.STEP && image.stepNumber !== null) {
+    return `Step ${image.stepNumber}`;
+  }
+  return null;
+}

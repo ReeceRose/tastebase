@@ -103,6 +103,14 @@ export interface PhotoSuggestion {
   stepNumber: number | null;
 }
 
+// What happened to one photo in a batch: the saved image, or why it wasn't
+// added.
+export interface SuggestedPhotoOutcome {
+  url: string;
+  image: PendingImage | null;
+  error: string | null;
+}
+
 export interface CapturedPage extends FetchedPage {
   image: CapturedImage | null;
   photos: PhotoSuggestion[];

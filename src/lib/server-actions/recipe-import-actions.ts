@@ -21,14 +21,17 @@ import type {
   PhotoSuggestion,
   RecipeImportResult,
   SavedRecipeMatch,
+  SuggestedPhotoOutcome,
 } from "@/lib/types/import-types";
-import type { PendingImage } from "@/lib/types/recipe-types";
+import { mapWithLimit } from "@/lib/utils/map-with-limit";
 
 const logger = createOperationLogger("recipe-import-actions");
 
 const MAX_TEXT_LENGTH = 100000;
 const MAX_PAGE_HTML_LENGTH = 5 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 9.5 * 1024 * 1024;
+const MAX_SUGGESTED_PHOTOS_PER_REQUEST = 12;
+const SUGGESTED_PHOTO_CONCURRENCY = 4;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 async function requireUserId(): Promise<string | null> {
@@ -145,28 +148,45 @@ export async function importRecipeFromImageAction(
   }
 }
 
-export async function importSuggestedPhotoAction(
+async function importSuggestedPhoto(
   photo: PhotoSuggestion,
-): Promise<ServerActionResult<PendingImage>> {
+  userId: string,
+): Promise<SuggestedPhotoOutcome> {
+  const failed = (error: string) => ({ url: photo.url, image: null, error });
+  try {
+    parseImportUrl(photo.url);
+    const image = await saveSuggestedPhoto(photo);
+    return image
+      ? { url: photo.url, image, error: null }
+      : failed("That image is too small to use");
+  } catch (error) {
+    if (error instanceof PageFetchError) {
+      return failed("That photo couldn't be downloaded");
+    }
+    logError(logger, "Suggested photo import failed", error, { userId });
+    return failed("That photo couldn't be added");
+  }
+}
+
+// Next.js runs a client's server actions one after another, so photos are
+// sent in batches and processed in parallel here.
+export async function importSuggestedPhotosAction(
+  photos: PhotoSuggestion[],
+): Promise<ServerActionResult<SuggestedPhotoOutcome[]>> {
   const userId = await requireUserId();
   if (!userId) {
     return { success: false, error: "Authentication required" };
   }
-
-  try {
-    parseImportUrl(photo.url);
-    const image = await saveSuggestedPhoto(photo);
-    if (!image) {
-      return { success: false, error: "That image is too small to use" };
-    }
-    return { success: true, data: image };
-  } catch (error) {
-    if (error instanceof PageFetchError) {
-      return { success: false, error: "That photo couldn't be downloaded" };
-    }
-    logError(logger, "Suggested photo import failed", error, { userId });
-    return { success: false, error: "That photo couldn't be added" };
+  if (photos.length > MAX_SUGGESTED_PHOTOS_PER_REQUEST) {
+    return { success: false, error: "Too many photos at once" };
   }
+
+  const outcomes = await mapWithLimit(
+    photos,
+    SUGGESTED_PHOTO_CONCURRENCY,
+    (photo) => importSuggestedPhoto(photo, userId),
+  );
+  return { success: true, data: outcomes };
 }
 
 export async function findSavedRecipeAction(

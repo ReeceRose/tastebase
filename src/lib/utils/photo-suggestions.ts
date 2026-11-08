@@ -61,3 +61,30 @@ export function mergePhotoSuggestions(
     return [{ ...photo, stepNumber: stepByKey.get(key) ?? null }];
   });
 }
+
+// Splits photos into groups small enough for one server action request:
+// a few photos at a time, and captured image data well under the body limit.
+export function batchPhotoSuggestions(
+  photos: PhotoSuggestion[],
+  maxPhotos: number,
+  maxBytes: number,
+): PhotoSuggestion[][] {
+  const batches: PhotoSuggestion[][] = [];
+  let current: PhotoSuggestion[] = [];
+  let currentBytes = 0;
+  for (const photo of photos) {
+    const bytes = photo.image?.data.length ?? 0;
+    if (
+      current.length > 0 &&
+      (current.length >= maxPhotos || currentBytes + bytes > maxBytes)
+    ) {
+      batches.push(current);
+      current = [];
+      currentBytes = 0;
+    }
+    current.push(photo);
+    currentBytes += bytes;
+  }
+  if (current.length > 0) batches.push(current);
+  return batches;
+}

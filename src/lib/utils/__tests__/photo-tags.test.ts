@@ -6,6 +6,7 @@ import type {
   RecipeInstruction,
 } from "@/lib/types/recipe-types";
 import {
+  photoRoleLabel,
   photosForStep,
   photoTagsForSave,
   photoTagsFromRecipe,
@@ -111,5 +112,18 @@ describe("photosForStep", () => {
       image("c", PhotoRole.FINISHED, null),
     ];
     expect(photosForStep(images, 2).map((item) => item.id)).toEqual(["b"]);
+  });
+});
+
+describe("photoRoleLabel", () => {
+  it("names the role, with the step number for step photos", () => {
+    expect(photoRoleLabel(image("a", PhotoRole.STEP, 4))).toBe("Step 4");
+    expect(photoRoleLabel(image("b", PhotoRole.INGREDIENTS, null))).toBe(
+      "Ingredients",
+    );
+    expect(photoRoleLabel(image("c", PhotoRole.FINISHED, null))).toBe(
+      "Finished dish",
+    );
+    expect(photoRoleLabel(image("d", null, null))).toBeNull();
   });
 });

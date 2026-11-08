@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync } from "node:fs";
-import { unlink } from "node:fs/promises";
+import { unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
@@ -43,6 +43,12 @@ enum FileValidationErrorCode {
   INVALID_TYPE = "INVALID_TYPE",
   INVALID_FILE = "INVALID_FILE",
   STORAGE_ERROR = "STORAGE_ERROR",
+}
+
+export interface SaveRecipeImageOptions {
+  // The bytes are already a web-ready file in the extension's format, so the
+  // original is written as-is instead of being encoded again.
+  alreadyEncoded: boolean;
 }
 
 export interface FileValidationError {
@@ -101,6 +107,23 @@ function validateFile(file: File): FileValidationError | null {
   return null;
 }
 
+// Encodes in the format the filename's extension names, so the served
+// Content-Type matches the bytes.
+function encodeAs(
+  image: sharp.Sharp,
+  extension: string,
+  quality: number,
+): sharp.Sharp {
+  switch (extension) {
+    case ".png":
+      return image.png({ compressionLevel: 6 });
+    case ".webp":
+      return image.webp({ quality });
+    default:
+      return image.jpeg({ quality, progressive: true });
+  }
+}
+
 // Generate unique filename with extension
 function generateFilename(originalName: string): string {
   const extension = path.extname(originalName).toLowerCase();
@@ -111,6 +134,7 @@ function generateFilename(originalName: string): string {
 // Save uploaded file and create optimized variants
 export async function saveRecipeImage(
   file: File,
+  options: SaveRecipeImageOptions = { alreadyEncoded: false },
 ): Promise<FileUploadResult | FileValidationError> {
   const validation = validateFile(file);
   if (validation) {
@@ -128,8 +152,8 @@ export async function saveRecipeImage(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Get image metadata
-    const metadata = await sharp(buffer).metadata();
+    const image = sharp(buffer);
+    const metadata = await image.metadata();
 
     logger.info(
       {
@@ -141,37 +165,38 @@ export async function saveRecipeImage(
       "Processing recipe image upload",
     );
 
-    // Save original image optimized for web
-    await sharp(buffer)
-      .jpeg({ quality: 85, progressive: true })
-      .png({ compressionLevel: 6 })
-      .webp({ quality: 85 })
-      .toFile(filePath);
+    const extension = path.extname(filename);
+    const variantEntries = Object.entries(STORAGE_CONFIG.imageSizes).map(
+      ([sizeName, dimensions]) => ({
+        sizeName: sizeName as ImageSize,
+        dimensions,
+        variantFilename: `${path.parse(filename).name}_${sizeName}${extension}`,
+      }),
+    );
 
-    // Create image variants
-    const variants: Record<ImageSize, string> = {} as Record<ImageSize, string>;
+    // One input, every output written in parallel on libvips threads.
+    await Promise.all([
+      options.alreadyEncoded
+        ? writeFile(filePath, buffer)
+        : encodeAs(image.clone(), extension, 85).toFile(filePath),
+      ...variantEntries.map(({ dimensions, variantFilename }) =>
+        encodeAs(
+          image.clone().resize(dimensions.width, dimensions.height, {
+            fit: "cover",
+            position: "center",
+          }),
+          extension,
+          80,
+        ).toFile(path.join(STORAGE_CONFIG.recipeImagesDir, variantFilename)),
+      ),
+    ]);
 
-    for (const [sizeName, dimensions] of Object.entries(
-      STORAGE_CONFIG.imageSizes,
-    )) {
-      const variantFilename = `${path.parse(filename).name}_${sizeName}${path.extname(filename)}`;
-      const variantPath = path.join(
-        STORAGE_CONFIG.recipeImagesDir,
+    const variants = Object.fromEntries(
+      variantEntries.map(({ sizeName, variantFilename }) => [
+        sizeName,
         variantFilename,
-      );
-
-      await sharp(buffer)
-        .resize(dimensions.width, dimensions.height, {
-          fit: "cover",
-          position: "center",
-        })
-        .jpeg({ quality: 80 })
-        .png({ compressionLevel: 6 })
-        .webp({ quality: 80 })
-        .toFile(variantPath);
-
-      variants[sizeName as ImageSize] = variantFilename;
-    }
+      ]),
+    ) as Record<ImageSize, string>;
 
     const result: FileUploadResult = {
       filename,
@@ -194,12 +219,7 @@ export async function saveRecipeImage(
       originalName: file.name,
     });
 
-    // Cleanup on error
-    try {
-      await unlink(filePath);
-    } catch {
-      // Ignore cleanup errors
-    }
+    await deleteRecipeImage(filename);
 
     return {
       error: "Failed to process image. Please try again.",

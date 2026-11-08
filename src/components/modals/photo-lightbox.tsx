@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { RecipeImage } from "@/lib/types/recipe-types";
+import { photoRoleLabel } from "@/lib/utils/photo-tags";
 
 interface PhotoLightboxProps {
   images: RecipeImage[];
@@ -25,6 +26,7 @@ export function PhotoLightbox({
 }: PhotoLightboxProps) {
   const current = openIndex === null ? null : (images[openIndex] ?? null);
   const several = images.length > 1;
+  const caption = current ? photoRoleLabel(current) : null;
   const move = (step: number) => {
     if (openIndex === null) return;
     onOpenIndexChange((openIndex + step + images.length) % images.length);
@@ -59,27 +61,43 @@ export function PhotoLightbox({
             />
           </div>
         )}
-        {several && (
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => move(-1)}
-              aria-label="Previous photo"
-              className="grid size-11 place-items-center rounded-full outline-none hover:bg-foreground/5 focus-visible:ring-[3px] focus-visible:ring-ring"
-            >
-              <ChevronLeft className="size-5" />
-            </button>
-            <span className="text-meta tabular">
-              {(openIndex ?? 0) + 1} / {images.length}
-            </span>
-            <button
-              type="button"
-              onClick={() => move(1)}
-              aria-label="Next photo"
-              className="grid size-11 place-items-center rounded-full outline-none hover:bg-foreground/5 focus-visible:ring-[3px] focus-visible:ring-ring"
-            >
-              <ChevronRight className="size-5" />
-            </button>
+        {(several || caption) && (
+          <div className="flex items-center justify-between gap-3">
+            {several ? (
+              <button
+                type="button"
+                onClick={() => move(-1)}
+                aria-label="Previous photo"
+                className="grid size-11 shrink-0 place-items-center rounded-full outline-none hover:bg-foreground/5 focus-visible:ring-[3px] focus-visible:ring-ring"
+              >
+                <ChevronLeft className="size-5" />
+              </button>
+            ) : (
+              <span className="size-11 shrink-0" />
+            )}
+            <p className="min-w-0 truncate text-center text-meta">
+              {caption && <span className="font-semibold">{caption}</span>}
+              {caption && several && (
+                <span className="text-muted-foreground"> · </span>
+              )}
+              {several && (
+                <span className="tabular text-muted-foreground">
+                  {(openIndex ?? 0) + 1} / {images.length}
+                </span>
+              )}
+            </p>
+            {several ? (
+              <button
+                type="button"
+                onClick={() => move(1)}
+                aria-label="Next photo"
+                className="grid size-11 shrink-0 place-items-center rounded-full outline-none hover:bg-foreground/5 focus-visible:ring-[3px] focus-visible:ring-ring"
+              >
+                <ChevronRight className="size-5" />
+              </button>
+            ) : (
+              <span className="size-11 shrink-0" />
+            )}
           </div>
         )}
       </DialogContent>

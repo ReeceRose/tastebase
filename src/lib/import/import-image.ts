@@ -55,7 +55,7 @@ async function storePhoto(
   const file = new File([new Uint8Array(jpeg)], originalNameFor(imageUrl), {
     type: "image/jpeg",
   });
-  const saved = await saveRecipeImage(file);
+  const saved = await saveRecipeImage(file, { alreadyEncoded: true });
   if ("error" in saved) {
     logger.warn({ error: saved.code }, saved.error);
     return null;

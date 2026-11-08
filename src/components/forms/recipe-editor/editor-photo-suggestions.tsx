@@ -6,7 +6,7 @@ import { type Dispatch, type SetStateAction, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { importSuggestedPhotoAction } from "@/lib/server-actions/recipe-import-actions";
+import { importSuggestedPhotosAction } from "@/lib/server-actions/recipe-import-actions";
 import { ButtonVariant, PhotoRole } from "@/lib/types";
 import type { PhotoSuggestion } from "@/lib/types/import-types";
 import type {
@@ -14,7 +14,11 @@ import type {
   RecipeEditorValues,
 } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
+import { batchPhotoSuggestions } from "@/lib/utils/photo-suggestions";
 import { withPhotoTag } from "@/lib/utils/photo-tags";
+
+const PHOTOS_PER_BATCH = 4;
+const CAPTURED_BYTES_PER_BATCH = 6 * 1024 * 1024;
 
 interface EditorPhotoSuggestionsProps {
   suggestions: PhotoSuggestion[];
@@ -66,30 +70,69 @@ export function EditorPhotoSuggestions({
   const hide = (url: string) =>
     setHidden((current) => new Set(current).add(url));
 
-  const add = async (photo: PhotoSuggestion) => {
-    setAdding((current) => new Set(current).add(photo.url));
-    const result = await importSuggestedPhotoAction(photo).catch(() => null);
+  const setBusy = (urls: string[], busy: boolean) =>
     setAdding((current) => {
       const next = new Set(current);
-      next.delete(photo.url);
+      for (const url of urls) {
+        if (busy) next.add(url);
+        else next.delete(url);
+      }
       return next;
     });
+
+  const addBatch = async (photos: PhotoSuggestion[]) => {
+    const urls = photos.map((photo) => photo.url);
+    setBusy(urls, true);
+    const result = await importSuggestedPhotosAction(photos).catch(() => null);
+    setBusy(urls, false);
     if (!result?.success) {
-      if (result) toast.error(result.error);
-      hide(photo.url);
+      toast.error(result?.error ?? "Those photos couldn't be added");
       return;
     }
+
+    const added = result.data.flatMap((outcome) =>
+      outcome.image ? [{ url: outcome.url, image: outcome.image }] : [],
+    );
+    const failed = result.data.filter((outcome) => !outcome.image);
+    if (failed.length === 1) toast.error(failed[0].error);
+    if (failed.length > 1) {
+      toast.error(`${failed.length} photos couldn't be added`);
+    }
+    setHidden((current) => {
+      const next = new Set(current);
+      for (const outcome of failed) next.add(outcome.url);
+      return next;
+    });
     setAddedByUrl((current) => ({
       ...current,
-      [photo.url]: result.data.filename,
+      ...Object.fromEntries(
+        added.map(({ url, image }) => [url, image.filename]),
+      ),
     }));
-    onPendingChange((current) => [...current, result.data]);
-    tagStep(result.data.filename, photo.stepNumber);
+    onPendingChange((current) => [
+      ...current,
+      ...added.map(({ image }) => image),
+    ]);
+    const stepByUrl = new Map(
+      photos.map((photo) => [photo.url, photo.stepNumber]),
+    );
+    for (const { url, image } of added) {
+      tagStep(image.filename, stepByUrl.get(url) ?? null);
+    }
   };
 
   const addAll = async () => {
-    for (const photo of remaining) {
-      await add(photo);
+    const photos = remaining;
+    setBusy(
+      photos.map((photo) => photo.url),
+      true,
+    );
+    for (const batch of batchPhotoSuggestions(
+      photos,
+      PHOTOS_PER_BATCH,
+      CAPTURED_BYTES_PER_BATCH,
+    )) {
+      await addBatch(batch);
     }
   };
 
@@ -127,7 +170,7 @@ export function EditorPhotoSuggestions({
                 aria-label="Add this photo"
                 aria-busy={busy}
                 disabled={busy}
-                onClick={() => add(photo)}
+                onClick={() => addBatch([photo])}
                 className="group relative block aspect-[4/3] w-full overflow-hidden rounded-control bg-muted outline-none focus-visible:ring-[3px] focus-visible:ring-ring"
               >
                 <Image
