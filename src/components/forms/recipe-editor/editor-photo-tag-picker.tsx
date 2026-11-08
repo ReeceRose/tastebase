@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -10,6 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { PhotoRole } from "@/lib/types";
 import type {
   EditorPhotoTag,
@@ -27,6 +33,7 @@ interface EditorPhotoTagPickerProps {
 
 const NO_TAG = "none";
 const STEP_PREFIX = "step:";
+const STEP_TOOLTIP_CLASS = "max-w-[min(20rem,calc(100vw-2rem))] text-pretty";
 
 function valueFor(tag: EditorPhotoTag | null): string {
   if (!tag) return NO_TAG;
@@ -41,11 +48,14 @@ export function EditorPhotoTagPicker({
   photoNumber,
   onChange,
 }: EditorPhotoTagPickerProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [triggerHovered, setTriggerHovered] = useState(false);
   const value = valueFor(tag);
-  const hasStep =
-    !tag ||
-    tag.role !== PhotoRole.STEP ||
-    steps.some((step) => step.key === tag.stepKey);
+  const taggedStep =
+    tag?.role === PhotoRole.STEP
+      ? (steps.find((step) => step.key === tag.stepKey) ?? null)
+      : null;
+  const hasStep = !tag || tag.role !== PhotoRole.STEP || taggedStep !== null;
 
   const choose = (next: string) => {
     if (next === NO_TAG) {
@@ -63,14 +73,33 @@ export function EditorPhotoTagPicker({
   };
 
   return (
-    <Select value={hasStep ? value : NO_TAG} onValueChange={choose}>
-      <SelectTrigger
-        size="sm"
-        aria-label={`What photo ${photoNumber} shows`}
-        className="w-full min-w-0 text-meta"
+    <Select
+      open={menuOpen}
+      onOpenChange={setMenuOpen}
+      value={hasStep ? value : NO_TAG}
+      onValueChange={choose}
+    >
+      <Tooltip
+        open={taggedStep !== null && triggerHovered && !menuOpen}
+        disableHoverableContent
       >
-        <SelectValue />
-      </SelectTrigger>
+        <TooltipTrigger asChild>
+          <SelectTrigger
+            size="sm"
+            aria-label={`What photo ${photoNumber} shows`}
+            className="w-full min-w-0 text-meta"
+            onPointerEnter={() => setTriggerHovered(true)}
+            onPointerLeave={() => setTriggerHovered(false)}
+          >
+            <SelectValue />
+          </SelectTrigger>
+        </TooltipTrigger>
+        {taggedStep && (
+          <TooltipContent sideOffset={8} className={STEP_TOOLTIP_CLASS}>
+            {taggedStep.text}
+          </TooltipContent>
+        )}
+      </Tooltip>
       <SelectContent className="max-w-[min(24rem,calc(100vw-2rem))]">
         <SelectItem value={NO_TAG}>Not tagged</SelectItem>
         <SelectItem value={PhotoRole.INGREDIENTS}>Ingredients</SelectItem>
@@ -81,17 +110,30 @@ export function EditorPhotoTagPicker({
             <SelectGroup>
               <SelectLabel>Method</SelectLabel>
               {steps.map((step) => (
-                <SelectItem key={step.key} value={`${STEP_PREFIX}${step.key}`}>
-                  <span className="truncate">
-                    Step {step.number}
-                    {step.preview && (
-                      <span className="text-muted-foreground">
-                        {" "}
-                        · {step.preview}
+                <Tooltip key={step.key} disableHoverableContent>
+                  <TooltipTrigger asChild>
+                    <SelectItem value={`${STEP_PREFIX}${step.key}`}>
+                      <span className="truncate">
+                        Step {step.number}
+                        {step.preview && (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            · {step.preview}
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </span>
-                </SelectItem>
+                    </SelectItem>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    collisionPadding={16}
+                    className={STEP_TOOLTIP_CLASS}
+                    onEscapeKeyDown={() => setMenuOpen(false)}
+                  >
+                    {step.text}
+                  </TooltipContent>
+                </Tooltip>
               ))}
             </SelectGroup>
           </>

@@ -96,6 +96,7 @@ export function EditorPhotos({
             text.length > STEP_PREVIEW_LENGTH
               ? `${text.slice(0, STEP_PREVIEW_LENGTH).trimEnd()}…`
               : text,
+          text,
         },
       ];
     },

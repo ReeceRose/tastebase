@@ -293,6 +293,7 @@ export interface EditorStepOption {
   key: string;
   number: number;
   preview: string;
+  text: string;
 }
 
 // A photo in the editor, saved or waiting to be attached.
