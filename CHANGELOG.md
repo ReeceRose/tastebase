@@ -4,6 +4,28 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.17 — 2026-11-08
+
+A single photo can now illustrate more than one step of a recipe.
+
+### What's Changed
+
+#### Features
+
+- Link a photo to several steps in the recipe editor, for when one shot covers more than one part of the method.
+- The photo appears on each step it's linked to, and in exported PDFs.
+- Photo labels now show every linked step, such as "Steps 1–4, 7".
+
+#### Improvements
+
+- Existing step photos keep their links when you upgrade. The database update runs automatically.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.17
+```
+
 ## v0.1.16 — 2026-11-08
 
 This release adds keyboard shortcuts you can set up to suit the way you work.
