@@ -4,6 +4,25 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.15 — 2026-11-08
+
+Ingredients can now point to other recipes, so a sauce, dough or spice mix stays connected to the dishes that use it.
+
+### What's Changed
+
+#### Features
+
+- **Linked ingredients:** Link any ingredient to another recipe from the recipe editor. Search finds your own recipes and anything shared on your instance.
+- **Clickable ingredients:** Linked ingredients appear as links on the recipe page. In cook mode they open in a new tab, so you keep your place.
+- **"Used in" panel:** A recipe now lists the other recipes that call for it.
+- **Linked recipes in PDFs:** The PDF export has a new "Include linked recipes" switch, on by default, that adds those recipes to the same PDF. It follows direct links only and leaves out any recipe the reader can't access.
+
+### Docker
+
+```
+docker pull ghcr.io/reecerose/tastebase:0.1.15
+```
+
 ## v0.1.14 — 2026-11-08
 
 Recipes can now leave Tastebase as PDFs, formatted for paper or for reading on a screen.
