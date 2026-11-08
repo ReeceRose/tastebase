@@ -164,6 +164,7 @@ export function buildRecipePdfContent(
         .join(" · ") || null,
     ingredientGroups: buildIngredientGroups(recipe, units, includedRecipeIds),
     stepGroups: buildStepGroups(recipe, units),
+    extraNotes: recipe.extraNotes ? pdfText(recipe.extraNotes) : null,
     sourceName: recipe.sourceName ? pdfText(recipe.sourceName) : null,
     sourceUrl:
       recipe.sourceUrl && WEB_URL.test(recipe.sourceUrl)

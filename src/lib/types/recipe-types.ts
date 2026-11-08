@@ -92,6 +92,7 @@ export interface RecipeFormData {
   sourceUrl?: string;
   sourceName?: string;
   videoUrl?: string;
+  extraNotes?: string;
   isPublic: boolean;
   ingredients: RecipeFormIngredient[];
   instructions: RecipeFormInstruction[];
@@ -109,6 +110,7 @@ export interface CreateRecipeData {
   sourceUrl?: string;
   sourceName?: string;
   videoUrl?: string;
+  extraNotes?: string;
   isPublic?: boolean;
   ingredients: RecipeIngredient[];
   instructions: RecipeInstruction[];
@@ -413,6 +415,7 @@ export interface ComparableRecipeFields {
   sourceUrl?: string | null;
   sourceName?: string | null;
   videoUrl?: string | null;
+  extraNotes?: string | null;
   swatch?: string | null;
   isPublic?: boolean;
 }

@@ -138,6 +138,13 @@ export const createRecipeSchema = z.object({
       "Source name must be 100 characters or less",
     )
     .optional(),
+  extraNotes: z
+    .string()
+    .max(
+      RECIPE_CONSTANTS.VALIDATION_LIMITS.EXTRA_NOTES.MAX_LENGTH,
+      "Recipe notes must be 5000 characters or less",
+    )
+    .optional(),
   videoUrl: z
     .string()
     .max(

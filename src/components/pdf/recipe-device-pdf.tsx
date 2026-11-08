@@ -137,6 +137,8 @@ const styles = StyleSheet.create({
     color: PDF_INK_MUTED,
   },
   sourceLink: { color: PDF_INK_MUTED },
+  extraNotes: { marginTop: 18 },
+  extraNotesText: { paddingHorizontal: 6 },
   pageNumber: {
     position: "absolute",
     bottom: 18,
@@ -290,6 +292,14 @@ function Extras({ content, photos, layout }: SectionProps) {
   const sourceLabel = content.sourceName ?? content.sourceUrl;
   return (
     <>
+      {content.extraNotes && (
+        <View style={styles.extraNotes}>
+          <View style={styles.headingRow} minPresenceAhead={40}>
+            <Text style={styles.heading}>Notes</Text>
+          </View>
+          <Text style={styles.extraNotesText}>{content.extraNotes}</Text>
+        </View>
+      )}
       {gallery.length > 0 && (
         <View style={styles.gallery}>
           {gallery.map((filename) => (

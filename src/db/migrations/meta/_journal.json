@@ -204,6 +204,13 @@
       "when": 1794161125418,
       "tag": "0028_drop_photo_step_number",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "6",
+      "when": 1794175601035,
+      "tag": "0029_add_recipe_extra_notes",
+      "breakpoints": true
     }
   ]
 }

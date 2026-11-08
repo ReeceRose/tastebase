@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useDebouncedValue } from "@/hooks/use-debounced-search";
 import { performGlobalSearch } from "@/lib/server-actions/global-search-actions";
 import {
+  clearSearchHistory,
   getSearchHistory,
   recordSearchQuery,
 } from "@/lib/server-actions/search-history-actions";
@@ -84,6 +86,15 @@ export function useGlobalSearch({ isOpen }: UseGlobalSearchProps) {
     setLastCompletedQuery(null);
   }, [isOpen]);
 
+  const clearRecentSearches = useCallback(async () => {
+    const result = await clearSearchHistory().catch(() => null);
+    if (result?.success) {
+      setRecentSearches([]);
+      return;
+    }
+    toast.error(result?.error ?? "That didn't clear. Please try again.");
+  }, []);
+
   const remember = useCallback(() => {
     if (trimmed) void recordSearchQuery(trimmed, total);
   }, [trimmed, total]);
@@ -109,6 +120,7 @@ export function useGlobalSearch({ isOpen }: UseGlobalSearchProps) {
     results,
     total,
     recentSearches,
+    clearRecentSearches,
     selectedIndex,
     setSelectedIndex,
     openRecipe,

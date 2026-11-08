@@ -48,6 +48,7 @@ export interface RecipePdfContent {
   ingredientGroups: RecipePdfIngredientGroup[];
   stepGroups: RecipePdfStepGroup[];
   sourceName: string | null;
+  extraNotes: string | null;
   sourceUrl: string | null;
   mainPhoto: string | null;
   ingredientPhotos: string[];

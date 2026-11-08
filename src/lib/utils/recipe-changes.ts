@@ -17,6 +17,7 @@ const DETAIL_FIELDS: (keyof ComparableRecipeFields)[] = [
   "sourceUrl",
   "sourceName",
   "videoUrl",
+  "extraNotes",
   "swatch",
   "isPublic",
 ];

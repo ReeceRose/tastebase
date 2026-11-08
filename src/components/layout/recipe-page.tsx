@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { IngredientPanel } from "@/components/cards/ingredient-panel";
 import { RecipeDetailsPanel } from "@/components/cards/recipe-details-panel";
+import { RecipeExtraNotesPanel } from "@/components/cards/recipe-extra-notes-panel";
 import { RecipeHero } from "@/components/cards/recipe-hero";
 import { RecipeHouseNotes } from "@/components/cards/recipe-house-notes";
 import { RecipeUsedInPanel } from "@/components/cards/recipe-used-in-panel";
@@ -125,6 +126,7 @@ export function RecipePage({
             swatch={swatch}
             temperatureUnit={temperatureUnit}
           />
+          <RecipeExtraNotesPanel notes={recipe.extraNotes} />
           <RecipeVideoPanel title={recipe.title} videoUrl={recipe.videoUrl} />
         </section>
 

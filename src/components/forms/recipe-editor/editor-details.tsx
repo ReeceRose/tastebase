@@ -10,6 +10,7 @@ import {
 import { CircleMotif } from "@/components/ui/circle-motif";
 import { Input } from "@/components/ui/input";
 import { SwatchPicker } from "@/components/ui/swatch-picker";
+import { Textarea } from "@/components/ui/textarea";
 import { EditorSection, type RecipeSwatch } from "@/lib/types";
 import type { RecipeEditorValues } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ export function EditorDetails({ automaticSwatch }: EditorDetailsProps) {
     url: useId(),
     name: useId(),
     video: useId(),
+    extraNotes: useId(),
   };
   const [tagText, setTagText] = useState("");
   const {
@@ -148,6 +150,20 @@ export function EditorDetails({ automaticSwatch }: EditorDetailsProps) {
               type="url"
               {...register("videoUrl")}
               placeholder="https://www.youtube.com/watch?v=…"
+            />
+          </EditorField>
+
+          <EditorField
+            id={ids.extraNotes}
+            label="Recipe notes"
+            hint="How to store it, how long it keeps, make-ahead tips. Anything that belongs with the recipe."
+            error={errors.extraNotes?.message}
+          >
+            <Textarea
+              id={ids.extraNotes}
+              {...register("extraNotes")}
+              rows={5}
+              placeholder="Keeps in the fridge for up to 4 days."
             />
           </EditorField>
 

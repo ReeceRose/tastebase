@@ -2,7 +2,7 @@
 
 import { Clock, Loader2, Plus, Search, Settings, Tags, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId } from "react";
+import { useId, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ export function GlobalSearchModal({
 }: GlobalSearchModalProps) {
   const router = useRouter();
   const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const search = useGlobalSearch({ isOpen });
   const yours = search.results.filter((recipe) => recipe.author.id === userId);
   const fromHouse = search.results.filter(
@@ -56,6 +57,11 @@ export function GlobalSearchModal({
   const open = (recipe: RecipeSummary) => {
     onClose();
     search.openRecipe(recipe);
+  };
+
+  const clearRecent = async () => {
+    await search.clearRecentSearches();
+    inputRef.current?.focus();
   };
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -142,6 +148,7 @@ export function GlobalSearchModal({
             </label>
             <input
               id={inputId}
+              ref={inputRef}
               value={search.query}
               onChange={(event) => search.setQuery(event.target.value)}
               onKeyDown={onKeyDown}
@@ -174,9 +181,19 @@ export function GlobalSearchModal({
             <div className="space-y-4 pt-1">
               {search.recentSearches.length > 0 && (
                 <div>
-                  <p className="px-3 pb-1 text-caption text-muted-foreground">
-                    Recent searches
-                  </p>
+                  <div className="flex items-center justify-between px-3 pb-1">
+                    <p className="text-caption text-muted-foreground">
+                      Recent searches
+                    </p>
+                    <button
+                      type="button"
+                      onClick={clearRecent}
+                      aria-label="Clear recent searches"
+                      className="rounded-full text-caption text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring"
+                    >
+                      Clear
+                    </button>
+                  </div>
                   <ul>
                     {search.recentSearches.map((recent) => (
                       <li key={recent}>

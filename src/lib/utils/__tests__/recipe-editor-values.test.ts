@@ -98,6 +98,15 @@ describe("cleanEditorValues", () => {
     expect(cleaned.values.tags).toEqual(["soup"]);
   });
 
+  it("trims recipe notes and keeps their line breaks", () => {
+    const { values } = cleanEditorValues({
+      ...emptyEditorValues(true),
+      title: "Pasta e ceci",
+      extraNotes: "  Fridge: 4 days.\nFreezer: 3 months.  ",
+    });
+    expect(values.extraNotes).toBe("Fridge: 4 days.\nFreezer: 3 months.");
+  });
+
   it("turns NaN numbers from empty inputs into undefined", () => {
     const cleaned = cleanEditorValues({
       ...emptyEditorValues(true),

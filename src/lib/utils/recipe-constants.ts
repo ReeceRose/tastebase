@@ -174,6 +174,9 @@ export const RECIPE_CONSTANTS = {
     DESCRIPTION: {
       MAX_LENGTH: 2000,
     },
+    EXTRA_NOTES: {
+      MAX_LENGTH: 5000,
+    },
     INGREDIENT_NAME: {
       MIN_LENGTH: 1,
       MAX_LENGTH: 200,

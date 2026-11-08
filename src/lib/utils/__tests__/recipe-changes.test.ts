@@ -50,6 +50,18 @@ describe("describeRecipeChanges", () => {
     ).toBeNull();
   });
 
+  it("counts recipe notes as a change to the details", () => {
+    const result = describeRecipeChanges({
+      before,
+      after: { ...before, extraNotes: "Keeps for 4 days." },
+      ingredientsBefore: ingredients,
+      ingredientsAfter: ingredients,
+      instructionsBefore: steps,
+      instructionsAfter: steps,
+    });
+    expect(result?.type).toBe(RecipeChangeType.METADATA);
+  });
+
   it("names a single kind of change", () => {
     const result = describeRecipeChanges({
       before,

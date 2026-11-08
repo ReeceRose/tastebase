@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
   stepBody: { flex: 1 },
   stepFacts: { marginTop: 2, fontSize: 10, fontWeight: 700 },
   stepNotes: { marginTop: 2, fontSize: 10 },
+  extraNotes: { marginTop: 10 },
   photoRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
   photo: { width: 120, height: 90, objectFit: "cover" },
   source: {
@@ -222,6 +223,15 @@ function RecipePrinterRecipe({ content, photos }: RecipePdfRecipeProps) {
             ))}
           </View>
         ))}
+
+        {content.extraNotes && (
+          <View style={styles.extraNotes}>
+            <Text style={styles.heading} minPresenceAhead={30}>
+              Notes
+            </Text>
+            <Text>{content.extraNotes}</Text>
+          </View>
+        )}
 
         <PhotoRow filenames={content.otherPhotos} photos={photos} />
       </View>

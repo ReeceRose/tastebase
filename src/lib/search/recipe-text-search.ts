@@ -58,6 +58,7 @@ function recipeContainsTerm(term: string): SQL {
   const matches = or(
     contains(recipes.title, pattern),
     contains(recipes.description, pattern),
+    contains(recipes.extraNotes, pattern),
     contains(recipes.cuisine, pattern),
     contains(recipes.sourceName, pattern),
     contains(recipes.sourceUrl, pattern),

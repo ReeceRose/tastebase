@@ -132,6 +132,7 @@ const recipe: RecipeWithRelations = {
   sourceUrl: "https://example.com/chicken",
   sourceName: "The binder",
   videoUrl: null,
+  extraNotes: null,
   isPublic: true,
   isArchived: false,
   createdAt: new Date(),

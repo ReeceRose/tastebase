@@ -56,6 +56,7 @@ export function emptyEditorValues(isPublic: boolean): RecipeEditorValues {
     sourceUrl: "",
     sourceName: "",
     videoUrl: "",
+    extraNotes: "",
     isPublic,
     ingredients: [emptyIngredient(), emptyIngredient(), emptyIngredient()],
     instructions: [emptyInstruction(), emptyInstruction()],
@@ -113,6 +114,7 @@ export function editorValuesFromRecipe(
     sourceUrl: recipe.sourceUrl ?? "",
     sourceName: recipe.sourceName ?? "",
     videoUrl: recipe.videoUrl ?? "",
+    extraNotes: recipe.extraNotes ?? "",
     isPublic: recipe.isPublic,
     ingredients: [...recipe.ingredients]
       .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -205,6 +207,7 @@ export function cleanEditorValues(
       sourceUrl: trimOrUndefined(values.sourceUrl),
       sourceName: trimOrUndefined(values.sourceName),
       videoUrl: trimOrUndefined(values.videoUrl),
+      extraNotes: trimOrUndefined(values.extraNotes),
       ingredients,
       instructions,
       tags: (values.tags ?? []).map((tag) => tag.trim()).filter(Boolean),
