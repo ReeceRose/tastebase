@@ -4,6 +4,26 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.12 — 2026-11-08
+
+Saving recipes with photos is now quicker and more reliable.
+
+### What's Changed
+
+#### Fixes
+- When you save a new recipe, its photos are now attached in one step, so they either all attach or none do. You can no longer end up with only some of a recipe's photos saved. If attaching fails, the recipe still saves and you'll see a warning.
+
+#### Improvements
+- New recipes with several photos save faster, because the photos are sent in one request instead of one at a time.
+- After you save changes to a recipe, Tastebase goes straight to the recipe page without an extra reload.
+- Creating a recipe no longer refreshes every page in the app.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.12
+```
+
 ## v0.1.11 — 2026-11-08
 
 A small maintenance release with no changes to how Tastebase works for you.
