@@ -71,6 +71,8 @@ function image(filename: string, isHero: boolean): RecipeImage {
     altText: null,
     isHero,
     sortOrder: 0,
+    photoRole: null,
+    stepNumber: null,
     metadata: null,
     uploadedAt: DATE,
   };
