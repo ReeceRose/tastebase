@@ -329,9 +329,6 @@ importers:
       tailwindcss:
         specifier: 4.3.5
         version: 4.3.5
-      tsc-files:
-        specifier: 1.1.4
-        version: 1.1.4(typescript@7.0.2)
       tsx:
         specifier: 4.23.15
         version: 4.23.15
@@ -3342,12 +3339,6 @@ packages:
     resolution: {integrity: sha512-BcDSDW+SIGWVOns1Zm6Yg91q9AEj7eaID0QDY9oIqJD1A8dscNwMcl9Sms2DeuWCNov1X0/oXanHGYQBSLwZsg==}
     engines: {node: ^22.14.0 || >=24.0.0}
 
-  tsc-files@1.1.4:
-    resolution: {integrity: sha512-RePsRsOLru3BPpnf237y1Xe1oCGta8rmSYzM76kYo5tLGsv5R2r3s64yapYorGTPuuLyfS9NVbh9ydzmvNie2w==}
-    hasBin: true
-    peerDependencies:
-      typescript: '>=3'
-
   tslib@2.9.1:
     resolution: {integrity: sha512-a4Ux9VKuIMHsOS7ENbEq6hK2ZGYIT27Rtl0E4eD9KqwxhKiQeMZE/9xb3IdYwWaSOyIBQLExhQgXDTYoiCxnWA==}
 
@@ -5875,10 +5866,6 @@ snapshots:
   tr46@7.0.0:
     dependencies:
       punycode: 2.3.1
-
-  tsc-files@1.1.4(typescript@7.0.2):
-    dependencies:
-      typescript: 7.0.2
 
   tslib@2.9.1: {}
 

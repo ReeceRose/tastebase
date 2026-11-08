@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync } from "node:fs";
 import { unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
+import sharp, { type Sharp } from "sharp";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
 
 const logger = createOperationLogger("file-storage");
@@ -109,11 +109,7 @@ function validateFile(file: File): FileValidationError | null {
 
 // Encodes in the format the filename's extension names, so the served
 // Content-Type matches the bytes.
-function encodeAs(
-  image: sharp.Sharp,
-  extension: string,
-  quality: number,
-): sharp.Sharp {
+function encodeAs(image: Sharp, extension: string, quality: number): Sharp {
   switch (extension) {
     case ".png":
       return image.png({ compressionLevel: 6 });

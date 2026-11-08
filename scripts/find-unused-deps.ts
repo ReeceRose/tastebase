@@ -285,7 +285,6 @@ class DependencyAnalyzer {
       'drizzle-orm': ['drizzle.config.ts'],
       'husky': ['.husky/'],
       'lint-staged': ['package.json'],
-      'tsc-files': ['package.json'],
       'concurrently': ['package.json'],
       'tsx': ['package.json'],
       '@types/node': ['Node.js built-in types'],
