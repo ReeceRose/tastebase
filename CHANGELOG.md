@@ -4,6 +4,30 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.10 — 2026-11-08
+
+Adding several photos from an imported recipe is now faster, and each photo in the full-size viewer shows its label.
+
+### What's Changed
+
+#### Features
+- The full-size photo viewer now labels each photo with what it's tagged to, such as the finished dish, a step or an ingredient. When a recipe has more than one photo, the label sits next to the photo count.
+
+#### Improvements
+- When you add suggested photos from an imported recipe, Tastebase now downloads them several at a time instead of one by one, so adding a batch of photos takes much less time.
+- Each photo is now processed into all its sizes at once, which makes saving it faster.
+- Imported photos that are already web-ready are stored as they are, without being compressed a second time.
+
+#### Fixes
+- PNG and WebP uploads are now saved in their own format. Before, the stored file could be in a different format from the one its name and file type said.
+- If an upload fails partway through, its resized copies are now deleted along with the original.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.10
+```
+
 ## v0.1.9 — 2026-11-08
 
 You can now tag each photo with what it shows: a step, an ingredient or the finished dish.
