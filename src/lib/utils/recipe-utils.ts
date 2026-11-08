@@ -1,4 +1,5 @@
 import type {
+  LinkedRecipe,
   RecipeIngredient,
   RecipeInstruction,
 } from "@/lib/types/recipe-types";
@@ -151,4 +152,14 @@ export function addRecipeSlugSuffix(baseSlug: string, counter: number): string {
     .replace(/-$/, "");
 
   return `${base}${suffix}`;
+}
+
+export function linkedRecipesOf(
+  ingredients: RecipeIngredient[],
+): LinkedRecipe[] {
+  const linked = new Map<string, LinkedRecipe>();
+  for (const { linkedRecipe } of ingredients) {
+    if (linkedRecipe) linked.set(linkedRecipe.id, linkedRecipe);
+  }
+  return [...linked.values()];
 }

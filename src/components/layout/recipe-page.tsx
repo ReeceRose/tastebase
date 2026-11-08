@@ -4,6 +4,7 @@ import { IngredientPanel } from "@/components/cards/ingredient-panel";
 import { RecipeDetailsPanel } from "@/components/cards/recipe-details-panel";
 import { RecipeHero } from "@/components/cards/recipe-hero";
 import { RecipeHouseNotes } from "@/components/cards/recipe-house-notes";
+import { RecipeUsedInPanel } from "@/components/cards/recipe-used-in-panel";
 import { RecipeVideoPanel } from "@/components/cards/recipe-video-panel";
 import { InstructionSteps } from "@/components/recipes/instruction-steps";
 import { PhotoStrip } from "@/components/recipes/photo-strip";
@@ -13,6 +14,7 @@ import {
   type TemperatureUnit,
 } from "@/lib/types";
 import type {
+  LinkedRecipe,
   RecipeCookSummary,
   RecipeListOption,
   RecipeWithRelations,
@@ -26,6 +28,7 @@ interface RecipePageProps {
   currentUserId: string;
   isFavourite: boolean;
   lists: RecipeListOption[];
+  usedIn: LinkedRecipe[];
   cooks: RecipeCookSummary;
   measurementSystem: MeasurementUnit;
   temperatureUnit: TemperatureUnit;
@@ -44,6 +47,7 @@ export function RecipePage({
   currentUserId,
   isFavourite,
   lists,
+  usedIn,
   cooks,
   measurementSystem,
   temperatureUnit,
@@ -130,6 +134,7 @@ export function RecipePage({
             notes={recipe.notes}
             currentUserId={currentUserId}
           />
+          <RecipeUsedInPanel recipes={usedIn} />
           <RecipeDetailsPanel recipe={recipe} />
         </aside>
       </div>

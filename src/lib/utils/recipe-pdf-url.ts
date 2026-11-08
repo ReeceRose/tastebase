@@ -29,6 +29,7 @@ export function recipePdfUrl(
   const query = new URLSearchParams({ style: choices.style });
   if (choices.includePhotos) query.set("photos", "1");
   if (choices.colourPhotos) query.set("colour", "1");
+  if (choices.includeLinkedRecipes) query.set("linked", "1");
   if (choices.style === RecipePdfStyle.DEVICE) {
     query.set("screen", choices.screen);
   }

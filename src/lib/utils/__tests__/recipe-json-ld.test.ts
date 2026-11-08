@@ -37,6 +37,7 @@ function ingredient(overrides: Partial<RecipeIngredient>): RecipeIngredient {
     groupName: null,
     sortOrder: 0,
     isOptional: false,
+    linkedRecipeId: null,
     ...overrides,
   };
 }

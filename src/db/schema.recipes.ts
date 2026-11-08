@@ -94,10 +94,14 @@ export const recipeIngredients = sqliteTable(
     isOptional: integer("is_optional", { mode: "boolean" })
       .default(false)
       .notNull(),
+    linkedRecipeId: text("linked_recipe_id").references(() => recipes.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     index("recipe_ingredients_recipe_id_idx").on(table.recipeId),
     index("recipe_ingredients_name_idx").on(table.name),
+    index("recipe_ingredients_linked_recipe_id_idx").on(table.linkedRecipeId),
   ],
 );
 

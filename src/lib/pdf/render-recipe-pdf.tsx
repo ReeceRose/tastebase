@@ -13,21 +13,25 @@ import type { RecipeWithRelations } from "@/lib/types/recipe-types";
 export async function renderRecipePdf(
   recipe: RecipeWithRelations,
   options: RecipePdfOptions,
+  linkedRecipes: RecipeWithRelations[] = [],
 ): Promise<Buffer> {
-  const content = buildRecipePdfContent(recipe, options.units);
+  const includedRecipeIds = new Set(linkedRecipes.map((item) => item.id));
+  const contents = [recipe, ...linkedRecipes].map((item) =>
+    buildRecipePdfContent(item, options.units, includedRecipeIds),
+  );
   const isPrinter = options.style === RecipePdfStyle.PRINTER;
   const wantsPhotos = !isPrinter || options.includePhotos;
   const photos = await loadRecipePdfPhotos(
-    wantsPhotos ? recipePdfPhotoFilenames(content) : [],
+    wantsPhotos ? contents.flatMap(recipePdfPhotoFilenames) : [],
     isPrinter && !options.colourPhotos,
   );
 
   return renderToBuffer(
     isPrinter ? (
-      <RecipePrinterPdf content={content} photos={photos} />
+      <RecipePrinterPdf contents={contents} photos={photos} />
     ) : (
       <RecipeDevicePdf
-        content={content}
+        contents={contents}
         photos={photos}
         screen={options.screen}
       />

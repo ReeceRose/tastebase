@@ -17,6 +17,7 @@ import type {
   RecipeWithRelations,
 } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
+import { linkedRecipesOf } from "@/lib/utils/recipe-utils";
 import { isDarkSwatch, swatchClasses } from "@/lib/utils/swatches";
 import {
   formatRelativeDay,
@@ -182,6 +183,9 @@ export function RecipeHero({
               slug={recipe.slug}
               title={recipe.title}
               hasPhotos={recipe.images.length > 0}
+              linkedRecipeTitles={linkedRecipesOf(recipe.ingredients).map(
+                (linked) => linked.title,
+              )}
               canDelete={own}
               cooks={cooks}
               currentUserId={currentUserId}

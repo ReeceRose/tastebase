@@ -50,6 +50,7 @@ function buildFacts(recipe: RecipeWithRelations): RecipePdfFact[] {
 function buildIngredientGroups(
   recipe: RecipeWithRelations,
   units: RecipePdfUnits,
+  includedRecipeIds: Set<string>,
 ): RecipePdfIngredientGroup[] {
   const groups = Object.entries(
     groupIngredientsByGroup([...recipe.ingredients]),
@@ -64,9 +65,13 @@ function buildIngredientGroups(
         units.measurementSystem,
         ingredient.name,
       );
+      const linked = ingredient.linkedRecipe;
       const details = [
         ingredient.notes ? pdfText(ingredient.notes) : null,
         ingredient.isOptional ? "optional" : null,
+        linked && includedRecipeIds.has(linked.id)
+          ? `see ${pdfText(linked.title)}`
+          : null,
       ].filter(Boolean);
       return {
         id: ingredient.id,
@@ -118,6 +123,7 @@ function filenames(images: RecipeImage[]): string[] {
 export function buildRecipePdfContent(
   recipe: RecipeWithRelations,
   units: RecipePdfUnits,
+  includedRecipeIds: Set<string> = new Set(),
 ): RecipePdfContent {
   const stepCount = recipe.instructions.length;
   const total = formatTotalTime(
@@ -141,6 +147,7 @@ export function buildRecipePdfContent(
   ]);
 
   return {
+    id: recipe.id,
     title: pdfText(recipe.title),
     description: recipe.description ? pdfText(recipe.description) : null,
     author: pdfText(recipe.author.name),
@@ -155,7 +162,7 @@ export function buildRecipePdfContent(
       ]
         .filter(Boolean)
         .join(" · ") || null,
-    ingredientGroups: buildIngredientGroups(recipe, units),
+    ingredientGroups: buildIngredientGroups(recipe, units, includedRecipeIds),
     stepGroups: buildStepGroups(recipe, units),
     sourceName: recipe.sourceName ? pdfText(recipe.sourceName) : null,
     sourceUrl:

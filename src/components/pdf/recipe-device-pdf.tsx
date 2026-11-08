@@ -317,12 +317,7 @@ function Extras({ content, photos, layout }: SectionProps) {
   );
 }
 
-export function RecipeDevicePdf({
-  content,
-  photos,
-  screen,
-}: RecipeDevicePdfProps) {
-  const layout = RECIPE_PDF_SCREEN_LAYOUTS[screen];
+function RecipeDeviceRecipe({ content, photos, layout }: SectionProps) {
   const section = { content, photos, layout };
   const hasIngredients = content.ingredientGroups.length > 0;
   const hasSteps = content.stepGroups.length > 0;
@@ -334,12 +329,7 @@ export function RecipeDevicePdf({
     layout.ingredientWidth !== null && hasIngredients && hasSteps;
 
   return (
-    <Document
-      title={content.title}
-      author={content.author}
-      creator="Tastebase"
-      producer="Tastebase"
-    >
+    <>
       <RecipeDevicePdfCover content={content} photos={photos} layout={layout} />
       <Page
         size={layout.page}
@@ -379,6 +369,31 @@ export function RecipeDevicePdf({
           render={({ pageNumber }) => String(pageNumber)}
         />
       </Page>
+    </>
+  );
+}
+
+export function RecipeDevicePdf({
+  contents,
+  photos,
+  screen,
+}: RecipeDevicePdfProps) {
+  const layout = RECIPE_PDF_SCREEN_LAYOUTS[screen];
+  return (
+    <Document
+      title={contents[0].title}
+      author={contents[0].author}
+      creator="Tastebase"
+      producer="Tastebase"
+    >
+      {contents.map((content) => (
+        <RecipeDeviceRecipe
+          key={content.id}
+          content={content}
+          photos={photos}
+          layout={layout}
+        />
+      ))}
     </Document>
   );
 }

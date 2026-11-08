@@ -15,6 +15,7 @@ function ingredients(
     groupName: item.group ?? null,
     sortOrder: index + 1,
     isOptional: false,
+    linkedRecipeId: null,
   }));
 }
 

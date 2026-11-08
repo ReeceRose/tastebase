@@ -1,0 +1,1 @@
+CREATE INDEX `recipe_ingredients_linked_recipe_id_idx` ON `recipe_ingredients` (`linked_recipe_id`);

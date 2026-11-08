@@ -28,6 +28,8 @@ export function emptyIngredient(): EditorIngredient {
     notes: "",
     groupName: "",
     isOptional: false,
+    linkedRecipeId: null,
+    linkedRecipeTitle: null,
   };
 }
 
@@ -121,6 +123,8 @@ export function editorValuesFromRecipe(
         notes: ingredient.notes ?? "",
         groupName: ingredient.groupName ?? "",
         isOptional: ingredient.isOptional,
+        linkedRecipeId: ingredient.linkedRecipe?.id ?? null,
+        linkedRecipeTitle: ingredient.linkedRecipe?.title ?? null,
       })),
     instructions: [...recipe.instructions]
       .sort((a, b) => a.stepNumber - b.stepNumber)
@@ -167,6 +171,7 @@ export function cleanEditorValues(
         notes: trimOrUndefined(ingredient.notes),
         groupName: trimOrUndefined(ingredient.groupName),
         isOptional: ingredient.isOptional,
+        linkedRecipeId: ingredient.linkedRecipeId ?? null,
       },
     ];
   });
@@ -226,6 +231,13 @@ export function parsePastedIngredients(text: string): EditorIngredient[] {
     groupName: parsed.groupName ?? "",
     isOptional: parsed.isOptional,
   }));
+}
+
+export function linkSearchFromIngredient(name: string): string {
+  return name
+    .replace(/\brecipes?\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function parsePastedSteps(text: string): EditorInstruction[] {

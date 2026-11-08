@@ -348,6 +348,7 @@ export function RecipeEditor({
             <EditorBasics />
             <EditorIngredients
               sectionError={sectionErrors[EditorSection.INGREDIENTS] ?? null}
+              recipeId={recipe?.id ?? null}
             />
             <EditorMethod
               sectionError={sectionErrors[EditorSection.METHOD] ?? null}

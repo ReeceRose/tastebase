@@ -169,6 +169,20 @@
       "when": 1794095953912,
       "tag": "0023_add_photo_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1794158813004,
+      "tag": "0024_add_ingredient_recipe_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1794158952745,
+      "tag": "0025_index_ingredient_recipe_links",
+      "breakpoints": true
     }
   ]
 }

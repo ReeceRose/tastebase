@@ -71,6 +71,48 @@ describe("GET /api/recipe-pdf/[slug]", () => {
     expect(render).not.toHaveBeenCalled();
   });
 
+  it("adds linked recipes the reader can see when asked", async () => {
+    signIn();
+    const linkedRecipe = { id: "pesto", slug: "pesto", title: "Pesto" };
+    const hiddenRecipe = { id: "hidden", slug: "hidden", title: "Hidden" };
+    const recipe = {
+      id: "soup",
+      ingredients: [
+        { linkedRecipe },
+        { linkedRecipe },
+        { linkedRecipe: hiddenRecipe },
+        { linkedRecipe: null },
+      ],
+    };
+    const pesto = { id: "pesto" };
+    getRecipe.mockImplementation(async (slug: string) => {
+      if (slug === "soup") return { success: true, data: recipe } as never;
+      if (slug === "pesto") return { success: true, data: pesto } as never;
+      return { success: false, error: "Recipe not found" };
+    });
+
+    await request("?linked=1");
+
+    expect(render.mock.calls[0][2]).toEqual([pesto]);
+    expect(getRecipe).toHaveBeenCalledTimes(3);
+  });
+
+  it("leaves linked recipes out unless asked", async () => {
+    signIn();
+    const recipe = {
+      id: "soup",
+      ingredients: [
+        { linkedRecipe: { id: "pesto", slug: "pesto", title: "Pesto" } },
+      ],
+    };
+    getRecipe.mockResolvedValue({ success: true, data: recipe } as never);
+
+    await request("");
+
+    expect(getRecipe).toHaveBeenCalledTimes(1);
+    expect(render.mock.calls[0][2]).toEqual([]);
+  });
+
   it("rejects unknown screen sizes", async () => {
     signIn();
     const response = await request("?style=device&screen=watch");
@@ -87,16 +129,20 @@ describe("GET /api/recipe-pdf/[slug]", () => {
 
     const response = await request("?style=printer&photos=1&colour=1");
 
-    expect(render).toHaveBeenCalledWith(recipe, {
-      style: RecipePdfStyle.PRINTER,
-      includePhotos: true,
-      colourPhotos: true,
-      screen: RecipePdfScreen.PHONE,
-      units: {
-        measurementSystem: MeasurementUnit.METRIC,
-        temperatureUnit: TemperatureUnit.CELSIUS,
+    expect(render).toHaveBeenCalledWith(
+      recipe,
+      {
+        style: RecipePdfStyle.PRINTER,
+        includePhotos: true,
+        colourPhotos: true,
+        screen: RecipePdfScreen.PHONE,
+        units: {
+          measurementSystem: MeasurementUnit.METRIC,
+          temperatureUnit: TemperatureUnit.CELSIUS,
+        },
       },
-    });
+      [],
+    );
     expect(response.headers.get("content-type")).toBe("application/pdf");
     expect(response.headers.get("content-disposition")).toBe(
       'inline; filename="soup-printable.pdf"',

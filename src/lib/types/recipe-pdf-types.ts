@@ -38,6 +38,7 @@ export interface RecipePdfStepGroup {
 }
 
 export interface RecipePdfContent {
+  id: string;
   title: string;
   description: string | null;
   author: string;
@@ -63,6 +64,7 @@ export interface RecipePdfChoices {
   includePhotos: boolean;
   colourPhotos: boolean;
   screen: RecipePdfScreen;
+  includeLinkedRecipes?: boolean;
 }
 
 export interface RecipePdfOptions extends RecipePdfChoices {
@@ -71,8 +73,13 @@ export interface RecipePdfOptions extends RecipePdfChoices {
 
 export type RecipePdfPhotos = Map<string, Buffer>;
 
-export interface RecipePdfDocumentProps {
+export interface RecipePdfRecipeProps {
   content: RecipePdfContent;
+  photos: RecipePdfPhotos;
+}
+
+export interface RecipePdfDocumentProps {
+  contents: RecipePdfContent[];
   photos: RecipePdfPhotos;
 }
 

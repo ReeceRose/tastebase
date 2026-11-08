@@ -305,6 +305,7 @@ export function CookMode({
                   ticked={ticked}
                   onToggle={toggle}
                   large
+                  linksInNewTab
                 />
               </section>
             )}
@@ -405,6 +406,7 @@ export function CookMode({
             ticked={ticked}
             onToggle={toggle}
             large
+            linksInNewTab
           />
         </SheetContent>
       </Sheet>

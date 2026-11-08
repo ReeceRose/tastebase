@@ -26,6 +26,7 @@ interface RecipeExportDialogProps {
   slug: string;
   title: string;
   hasPhotos: boolean;
+  linkedRecipeTitles: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -50,14 +51,17 @@ export function RecipeExportDialog({
   slug,
   title,
   hasPhotos,
+  linkedRecipeTitles,
   open,
   onOpenChange,
 }: RecipeExportDialogProps) {
   const photosId = useId();
   const colourId = useId();
+  const linkedId = useId();
   const [style, setStyle] = useState<RecipePdfStyle>(RecipePdfStyle.PRINTER);
   const [printPhotos, setPrintPhotos] = useState(false);
   const [colourPhotos, setColourPhotos] = useState(false);
+  const [wantsLinked, setWantsLinked] = useState(true);
   const [screen, setScreen] = useState<RecipePdfScreen>(() =>
     typeof window === "undefined"
       ? RecipePdfScreen.PHONE
@@ -66,11 +70,13 @@ export function RecipeExportDialog({
   const [attempt, setAttempt] = useState(0);
   const isPrinter = style === RecipePdfStyle.PRINTER;
   const includePhotos = isPrinter && printPhotos && hasPhotos;
+  const hasLinkedRecipes = linkedRecipeTitles.length > 0;
   const choices = {
     style,
     includePhotos,
     colourPhotos: includePhotos && colourPhotos,
     screen,
+    includeLinkedRecipes: hasLinkedRecipes && wantsLinked,
   };
 
   return (
@@ -129,6 +135,21 @@ export function RecipeExportDialog({
                   checked={colourPhotos}
                   onCheckedChange={setColourPhotos}
                 />
+              </div>
+            )}
+            {hasLinkedRecipes && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-3">
+                  <Label htmlFor={linkedId}>Include linked recipes</Label>
+                  <Switch
+                    id={linkedId}
+                    checked={wantsLinked}
+                    onCheckedChange={setWantsLinked}
+                  />
+                </div>
+                <p className="text-meta text-muted-foreground">
+                  {linkedRecipeTitles.join(", ")}
+                </p>
               </div>
             )}
           </div>

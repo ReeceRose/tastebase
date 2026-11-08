@@ -40,11 +40,11 @@ export function parseSearchTerms(query: string): string[] {
   return rawTerms.slice(0, MAX_SEARCH_TERMS);
 }
 
-function likePattern(term: string): string {
+export function likePattern(term: string): string {
   return `%${term.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
 }
 
-function contains(column: AnySQLiteColumn, pattern: string): SQL {
+export function contains(column: AnySQLiteColumn, pattern: string): SQL {
   return sql`${column} LIKE ${pattern} ESCAPE '\\'`;
 }
 

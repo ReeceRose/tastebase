@@ -30,6 +30,7 @@ interface RecipeActionsMenuProps {
   slug: string;
   title: string;
   hasPhotos: boolean;
+  linkedRecipeTitles: string[];
   canDelete: boolean;
   cooks: RecipeCookSummary;
   currentUserId: string;
@@ -50,6 +51,7 @@ export function RecipeActionsMenu({
   slug,
   title,
   hasPhotos,
+  linkedRecipeTitles,
   canDelete,
   cooks,
   currentUserId,
@@ -136,6 +138,7 @@ export function RecipeActionsMenu({
         slug={slug}
         title={title}
         hasPhotos={hasPhotos}
+        linkedRecipeTitles={linkedRecipeTitles}
         open={exportOpen}
         onOpenChange={setExportOpen}
       />

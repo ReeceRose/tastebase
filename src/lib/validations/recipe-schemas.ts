@@ -35,6 +35,7 @@ const recipeIngredientSchema = z.object({
     .max(50, "Group name must be 50 characters or less")
     .optional(),
   isOptional: z.boolean(),
+  linkedRecipeId: z.string().min(1).nullable().optional(),
 });
 
 const recipeInstructionSchema = z.object({

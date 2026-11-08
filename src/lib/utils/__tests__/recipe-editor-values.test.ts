@@ -5,6 +5,7 @@ import {
   emptyEditorValues,
   emptyIngredient,
   emptyInstruction,
+  linkSearchFromIngredient,
   parsePastedIngredients,
   parsePastedSteps,
 } from "@/lib/utils/recipe-editor-values";
@@ -51,6 +52,21 @@ describe("editorValuesFromImport", () => {
 });
 
 describe("cleanEditorValues", () => {
+  it("keeps a linked recipe with its ingredient", () => {
+    const cleaned = cleanEditorValues({
+      ...emptyEditorValues(true),
+      ingredients: [
+        {
+          ...emptyIngredient(),
+          name: "Pesto",
+          linkedRecipeId: "recipe-2",
+          linkedRecipeTitle: "Basil pesto",
+        },
+      ],
+    });
+    expect(cleaned.values.ingredients[0].linkedRecipeId).toBe("recipe-2");
+  });
+
   it("drops blank rows and keeps a map back to the form rows", () => {
     const values = {
       ...emptyEditorValues(true),
@@ -113,5 +129,14 @@ describe("parsePastedSteps", () => {
     expect(steps[0].instruction).toBe("Brown the onions for 10 minutes.");
     expect(steps[0].timeMinutes).toBe(10);
     expect(steps[1].instruction).toBe("Add the stock.");
+  });
+});
+
+describe("linkSearchFromIngredient", () => {
+  it("drops the word recipe so 'pesto recipe' finds Pesto", () => {
+    expect(linkSearchFromIngredient("pesto recipe")).toBe("pesto");
+    expect(linkSearchFromIngredient("balsamic reduction")).toBe(
+      "balsamic reduction",
+    );
   });
 });

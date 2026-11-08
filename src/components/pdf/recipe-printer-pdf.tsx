@@ -13,6 +13,7 @@ import type {
   RecipePdfDocumentProps,
   RecipePdfIngredientGroup,
   RecipePdfPhotos,
+  RecipePdfRecipeProps,
 } from "@/lib/types/recipe-pdf-types";
 
 const MIN_INGREDIENTS_FOR_TWO_COLUMNS = 8;
@@ -130,7 +131,7 @@ function PhotoRow({
   );
 }
 
-export function RecipePrinterPdf({ content, photos }: RecipePdfDocumentProps) {
+function RecipePrinterRecipe({ content, photos }: RecipePdfRecipeProps) {
   const ingredientCount = content.ingredientGroups.reduce(
     (sum, group) => sum + group.items.length,
     0,
@@ -150,95 +151,111 @@ export function RecipePrinterPdf({ content, photos }: RecipePdfDocumentProps) {
     .join(" · ");
 
   return (
-    <Document title={content.title} creator="Tastebase" producer="Tastebase">
-      <Page size="LETTER" style={styles.page}>
-        <View style={styles.flow}>
-          <View style={styles.header}>
-            <View style={styles.headerText}>
-              <Text style={styles.title}>{content.title}</Text>
-              {content.description && (
-                <Text style={styles.description}>{content.description}</Text>
-              )}
-              {factLine && <Text style={styles.facts}>{factLine}</Text>}
-            </View>
-            {mainPhoto && (
-              <Image
-                style={styles.mainPhoto}
-                src={{ data: mainPhoto, format: "jpg" }}
-              />
+    <Page size="LETTER" style={styles.page}>
+      <View style={styles.flow}>
+        <View style={styles.header}>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>{content.title}</Text>
+            {content.description && (
+              <Text style={styles.description}>{content.description}</Text>
             )}
+            {factLine && <Text style={styles.facts}>{factLine}</Text>}
           </View>
-          <View style={styles.rule} />
-
-          {ingredientCount > 0 && (
-            <View>
-              <Text style={styles.heading}>Ingredients</Text>
-              <View style={styles.columns}>
-                {columns.map((groups, index) => (
-                  <IngredientColumn
-                    key={index === 0 ? "first-column" : "second-column"}
-                    groups={groups}
-                  />
-                ))}
-              </View>
-              <PhotoRow filenames={content.ingredientPhotos} photos={photos} />
-            </View>
+          {mainPhoto && (
+            <Image
+              style={styles.mainPhoto}
+              src={{ data: mainPhoto, format: "jpg" }}
+            />
           )}
+        </View>
+        <View style={styles.rule} />
 
-          {content.stepGroups.length > 0 && (
-            <Text
-              style={[styles.heading, styles.methodHeading]}
-              minPresenceAhead={40}
-            >
-              Method
-            </Text>
-          )}
-          {content.stepGroups.map((group, index) => (
-            <View key={group.name ?? `method-${index}`}>
-              {group.name && (
-                <Text
-                  style={[styles.groupName, styles.laterGroup]}
-                  minPresenceAhead={30}
-                >
-                  {group.name}
-                </Text>
-              )}
-              {group.steps.map((step) => (
-                <View key={step.id} style={styles.step} wrap={false}>
-                  <Text style={styles.stepNumber}>{step.number}.</Text>
-                  <View style={styles.stepBody}>
-                    <Text>{step.text}</Text>
-                    {step.facts.length > 0 && (
-                      <Text style={styles.stepFacts}>
-                        {step.facts.join(" · ")}
-                      </Text>
-                    )}
-                    {step.notes && (
-                      <Text style={styles.stepNotes}>{step.notes}</Text>
-                    )}
-                    <PhotoRow filenames={step.photos} photos={photos} />
-                  </View>
-                </View>
+        {ingredientCount > 0 && (
+          <View>
+            <Text style={styles.heading}>Ingredients</Text>
+            <View style={styles.columns}>
+              {columns.map((groups, index) => (
+                <IngredientColumn
+                  key={index === 0 ? "first-column" : "second-column"}
+                  groups={groups}
+                />
               ))}
             </View>
-          ))}
+            <PhotoRow filenames={content.ingredientPhotos} photos={photos} />
+          </View>
+        )}
 
-          <PhotoRow filenames={content.otherPhotos} photos={photos} />
-        </View>
-
-        {source && (
-          <Text style={styles.source} fixed>
-            From {source}
+        {content.stepGroups.length > 0 && (
+          <Text
+            style={[styles.heading, styles.methodHeading]}
+            minPresenceAhead={40}
+          >
+            Method
           </Text>
         )}
-        <Text
-          style={styles.pageNumber}
-          fixed
-          render={({ pageNumber, totalPages }) =>
-            totalPages > 1 ? `${pageNumber} of ${totalPages}` : ""
-          }
+        {content.stepGroups.map((group, index) => (
+          <View key={group.name ?? `method-${index}`}>
+            {group.name && (
+              <Text
+                style={[styles.groupName, styles.laterGroup]}
+                minPresenceAhead={30}
+              >
+                {group.name}
+              </Text>
+            )}
+            {group.steps.map((step) => (
+              <View key={step.id} style={styles.step} wrap={false}>
+                <Text style={styles.stepNumber}>{step.number}.</Text>
+                <View style={styles.stepBody}>
+                  <Text>{step.text}</Text>
+                  {step.facts.length > 0 && (
+                    <Text style={styles.stepFacts}>
+                      {step.facts.join(" · ")}
+                    </Text>
+                  )}
+                  {step.notes && (
+                    <Text style={styles.stepNotes}>{step.notes}</Text>
+                  )}
+                  <PhotoRow filenames={step.photos} photos={photos} />
+                </View>
+              </View>
+            ))}
+          </View>
+        ))}
+
+        <PhotoRow filenames={content.otherPhotos} photos={photos} />
+      </View>
+
+      {source && (
+        <Text style={styles.source} fixed>
+          From {source}
+        </Text>
+      )}
+      <Text
+        style={styles.pageNumber}
+        fixed
+        render={({ pageNumber, totalPages }) =>
+          totalPages > 1 ? `${pageNumber} of ${totalPages}` : ""
+        }
+      />
+    </Page>
+  );
+}
+
+export function RecipePrinterPdf({ contents, photos }: RecipePdfDocumentProps) {
+  return (
+    <Document
+      title={contents[0].title}
+      creator="Tastebase"
+      producer="Tastebase"
+    >
+      {contents.map((content) => (
+        <RecipePrinterRecipe
+          key={content.id}
+          content={content}
+          photos={photos}
         />
-      </Page>
+      ))}
     </Document>
   );
 }

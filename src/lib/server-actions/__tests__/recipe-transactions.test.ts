@@ -17,8 +17,13 @@ import {
   recipeTags,
 } from "@/db/schema.recipes";
 import {
+  getRecipesUsing,
+  searchLinkableRecipes,
+} from "@/lib/server-actions/linked-recipe-actions";
+import {
   createRecipe,
   deleteRecipe,
+  getRecipeBySlug,
   updateRecipe,
 } from "@/lib/server-actions/recipe-actions";
 import { reorderRecipeImages } from "@/lib/server-actions/recipe-image-actions";
@@ -109,6 +114,158 @@ describe("recipe transactions", () => {
         .where(eq(recipeIngredients.recipeId, recipe.id)),
     ).toHaveLength(1);
     expect(await tagNamesFor(recipe.id)).toEqual(["salad", "side dish"]);
+  });
+
+  describe("linked recipes", () => {
+    async function addOthersRecipe(id: string, isPublic: boolean) {
+      await db
+        .insert(users)
+        .values({ id: "user-2", name: "Sam", email: "sam@example.com" })
+        .onConflictDoNothing();
+      await db.insert(recipes).values({
+        id,
+        slug: id,
+        userId: "user-2",
+        title: `Pesto ${id}`,
+        isPublic,
+      });
+    }
+
+    async function createLinkedRecipe(linkedRecipeId: string) {
+      const result = await createRecipe({
+        ...recipeInput,
+        title: "Chicken",
+        ingredients: [{ name: "Pesto", isOptional: false, linkedRecipeId }],
+      });
+      if (!result.data) throw new Error(`Not created: ${result.error}`);
+      return result.data;
+    }
+
+    async function savedLink(recipeId: string) {
+      const [row] = await db
+        .select()
+        .from(recipeIngredients)
+        .where(eq(recipeIngredients.recipeId, recipeId));
+      return row.linkedRecipeId;
+    }
+
+    it("saves a link and shows the linked recipe", async () => {
+      const pesto = await createTestRecipe();
+      const chicken = await createLinkedRecipe(pesto.id);
+
+      const result = await getRecipeBySlug(chicken.slug);
+      expect(result.data?.ingredients[0].linkedRecipe).toEqual({
+        id: pesto.id,
+        slug: pesto.slug,
+        title: pesto.title,
+      });
+    });
+
+    it("keeps a link when the recipe is edited", async () => {
+      const pesto = await createTestRecipe();
+      const chicken = await createLinkedRecipe(pesto.id);
+
+      await updateRecipe({
+        ...recipeInput,
+        id: chicken.id,
+        title: "Chicken",
+        ingredients: [
+          { name: "Pesto", isOptional: false, linkedRecipeId: pesto.id },
+        ],
+      });
+
+      expect(await savedLink(chicken.id)).toBe(pesto.id);
+    });
+
+    it("won't save a link to someone else's private recipe", async () => {
+      await addOthersRecipe("hidden", false);
+      const chicken = await createLinkedRecipe("hidden");
+
+      expect(await savedLink(chicken.id)).toBeNull();
+    });
+
+    it("won't save a recipe linked to itself", async () => {
+      const chicken = await createTestRecipe();
+
+      await updateRecipe({
+        ...recipeInput,
+        id: chicken.id,
+        ingredients: [
+          { name: "Pesto", isOptional: false, linkedRecipeId: chicken.id },
+        ],
+      });
+
+      expect(await savedLink(chicken.id)).toBeNull();
+    });
+
+    it("hides a link once its recipe turns private", async () => {
+      await addOthersRecipe("shared", true);
+      const chicken = await createLinkedRecipe("shared");
+      await db
+        .update(recipes)
+        .set({ isPublic: false })
+        .where(eq(recipes.id, "shared"));
+
+      const result = await getRecipeBySlug(chicken.slug);
+      expect(result.data?.ingredients[0]).toMatchObject({
+        linkedRecipeId: null,
+        linkedRecipe: null,
+      });
+    });
+
+    it("keeps the ingredient when the linked recipe is deleted", async () => {
+      const pesto = await createTestRecipe();
+      const chicken = await createLinkedRecipe(pesto.id);
+
+      expect((await deleteRecipe(pesto.id)).success).toBe(true);
+
+      expect(await savedLink(chicken.id)).toBeNull();
+    });
+
+    it("lists each recipe using this one once", async () => {
+      const pesto = await createTestRecipe();
+      const result = await createRecipe({
+        ...recipeInput,
+        title: "Chicken",
+        ingredients: [
+          { name: "Pesto", isOptional: false, linkedRecipeId: pesto.id },
+          { name: "More pesto", isOptional: false, linkedRecipeId: pesto.id },
+        ],
+      });
+
+      const usedIn = await getRecipesUsing(pesto.id);
+
+      expect(usedIn.recipes).toEqual([
+        { id: result.data?.id, slug: "chicken", title: "Chicken" },
+      ]);
+    });
+
+    it("leaves private recipes out of used in", async () => {
+      const pesto = await createTestRecipe();
+      await addOthersRecipe("hidden", false);
+      await db.insert(recipeIngredients).values({
+        id: "hidden-ingredient",
+        recipeId: "hidden",
+        name: "Pesto",
+        sortOrder: 0,
+        linkedRecipeId: pesto.id,
+      });
+
+      expect((await getRecipesUsing(pesto.id)).recipes).toEqual([]);
+    });
+
+    it("searches only recipes the person can see", async () => {
+      await addOthersRecipe("hidden", false);
+      await addOthersRecipe("shared", true);
+      const mine = await createRecipe({ ...recipeInput, title: "Pesto mine" });
+
+      const result = await searchLinkableRecipes(
+        "pesto",
+        mine.data?.id ?? null,
+      );
+
+      expect(result.recipes.map((recipe) => recipe.id)).toEqual(["shared"]);
+    });
   });
 
   it("gives a second recipe with the same long title a valid slug", async () => {

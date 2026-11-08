@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import Link from "next/link";
 import type { MeasurementUnit } from "@/lib/types";
 import type { RecipeIngredient } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ interface IngredientListProps {
   ticked: Set<string>;
   onToggle: (ingredientId: string) => void;
   large?: boolean;
+  linksInNewTab?: boolean;
 }
 
 export function IngredientList({
@@ -23,6 +25,7 @@ export function IngredientList({
   ticked,
   onToggle,
   large = false,
+  linksInNewTab = false,
 }: IngredientListProps) {
   const groups = Object.entries(groupIngredientsByGroup([...ingredients]));
   const showGroupNames = groups.length > 1;
@@ -78,7 +81,19 @@ export function IngredientList({
                       {quantity || "—"}
                     </span>
                     <span className={cn(done && "line-through decoration-2")}>
-                      {name}
+                      {ingredient.linkedRecipe ? (
+                        <Link
+                          href={`/recipes/${ingredient.linkedRecipe.slug}`}
+                          {...(linksInNewTab
+                            ? { target: "_blank", rel: "noopener" }
+                            : {})}
+                          className="underline decoration-2 underline-offset-4 outline-none hover:decoration-accent focus-visible:ring-[3px] focus-visible:ring-ring"
+                        >
+                          {name}
+                        </Link>
+                      ) : (
+                        name
+                      )}
                       {ingredient.notes && (
                         <span className="text-muted-foreground">
                           , {ingredient.notes}

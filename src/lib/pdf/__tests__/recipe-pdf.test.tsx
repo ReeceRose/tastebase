@@ -94,6 +94,7 @@ function ingredient(
     groupName: null,
     sortOrder,
     isOptional: false,
+    linkedRecipeId: null,
     ...overrides,
   };
 }
@@ -305,6 +306,19 @@ describe("recipe PDF links", () => {
     expect(recipePdfScreenForWidth(1440)).toBe(RecipePdfScreen.LAPTOP);
   });
 
+  it("asks for linked recipes only when they're wanted", () => {
+    const choices = {
+      style: RecipePdfStyle.PRINTER,
+      includePhotos: false,
+      colourPhotos: false,
+      screen: RecipePdfScreen.PHONE,
+    };
+    expect(recipePdfUrl("soup", choices, false)).not.toContain("linked");
+    expect(
+      recipePdfUrl("soup", { ...choices, includeLinkedRecipes: true }, false),
+    ).toContain("linked=1");
+  });
+
   it("only sends the screen size for screen PDFs", () => {
     const choices = {
       includePhotos: false,
@@ -420,6 +434,44 @@ describe("long screen PDFs", () => {
       expect(texts[1]).toMatch(/\b2\s*$/);
     },
   );
+});
+
+describe("linked recipes in a PDF", () => {
+  const linked = { id: "pesto", slug: "basil-pesto", title: "Basil pesto" };
+  const chicken = {
+    ...recipe,
+    ingredients: recipe.ingredients.map((item, index) =>
+      index === 0 ? { ...item, linkedRecipe: linked } : item,
+    ),
+  };
+  const pesto = {
+    ...recipe,
+    id: "pesto",
+    title: "Basil pesto",
+    sourceName: "The pesto binder",
+  };
+
+  it.each([
+    [RecipePdfStyle.PRINTER, 2],
+    [RecipePdfStyle.DEVICE, 4],
+  ])("gives a %s PDF the linked recipe's own pages", async (style, pages) => {
+    const options = {
+      style,
+      includePhotos: false,
+      colourPhotos: false,
+      screen: RecipePdfScreen.PHONE,
+      units: imperial,
+    };
+    const single = await pdfPageTexts(await renderRecipePdf(chicken, options));
+    const texts = await pdfPageTexts(
+      await renderRecipePdf(chicken, options, [pesto]),
+    );
+
+    expect(texts.length).toBeGreaterThanOrEqual(pages);
+    expect(texts.length).toBeGreaterThan(single.length);
+    expect(texts.join(" ")).toContain("see Basil pesto");
+    expect(single.join(" ")).not.toContain("see Basil pesto");
+  });
 });
 
 describe("renderRecipePdf", () => {

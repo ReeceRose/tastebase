@@ -20,6 +20,10 @@ import { auth } from "@/lib/auth/auth";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
 import { PhotoRole } from "@/lib/types";
 import type { RecipeWithRelations } from "@/lib/types/recipe-types";
+import {
+  keepLinkableIngredients,
+  withLinkedRecipes,
+} from "@/lib/utils/linked-recipes";
 import { describeRecipeChanges } from "@/lib/utils/recipe-changes";
 import {
   addRecipeSlugSuffix,
@@ -154,6 +158,12 @@ export async function createRecipe(rawData: CreateRecipeInput) {
       return { success: false, error: "User not found in database" };
     }
 
+    const ingredientsToSave = await keepLinkableIngredients(
+      validatedData.ingredients,
+      userId,
+      recipeId,
+    );
+
     const now = new Date();
     const recipe = {
       id: recipeId,
@@ -182,7 +192,7 @@ export async function createRecipe(rawData: CreateRecipeInput) {
       if (validatedData.ingredients?.length) {
         tx.insert(recipeIngredients)
           .values(
-            validatedData.ingredients.map((ingredient, index: number) => ({
+            ingredientsToSave.map((ingredient, index: number) => ({
               id: nanoid(),
               recipeId,
               name: ingredient.name,
@@ -192,6 +202,7 @@ export async function createRecipe(rawData: CreateRecipeInput) {
               groupName: ingredient.groupName,
               sortOrder: index,
               isOptional: ingredient.isOptional,
+              linkedRecipeId: ingredient.linkedRecipeId ?? null,
             })),
           )
           .run();
@@ -319,10 +330,15 @@ export async function getRecipeBySlug(
           .where(eq(recipeTagRelations.recipeId, recipeId)),
       ]);
 
+    const linkedIngredients = await withLinkedRecipes(
+      ingredients,
+      session.user.id,
+    );
+
     const recipeWithRelations: RecipeWithRelations = {
       ...recipe[0].recipe,
       author: { id: recipe[0].recipe.userId, name: recipe[0].authorName },
-      ingredients: ingredients.sort(
+      ingredients: linkedIngredients.sort(
         (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0),
       ),
       instructions: instructions.sort(
@@ -413,6 +429,10 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
       instructionsAfter: instructions ?? null,
     });
 
+    const ingredientsToSave = ingredients
+      ? await keepLinkableIngredients(ingredients, session.user.id, recipeId)
+      : null;
+
     const updatedRecipe = db.transaction((tx) => {
       const updateData = {
         title: recipeData.title ?? existingRecipe.title,
@@ -438,14 +458,14 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
         .returning()
         .all();
 
-      if (ingredients) {
+      if (ingredientsToSave) {
         tx.delete(recipeIngredients)
           .where(eq(recipeIngredients.recipeId, recipeId))
           .run();
-        if (ingredients.length > 0) {
+        if (ingredientsToSave.length > 0) {
           tx.insert(recipeIngredients)
             .values(
-              ingredients.map((ingredient, index) => ({
+              ingredientsToSave.map((ingredient, index) => ({
                 id: nanoid(),
                 recipeId,
                 name: ingredient.name,
@@ -455,6 +475,7 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
                 groupName: ingredient.groupName,
                 sortOrder: index,
                 isOptional: ingredient.isOptional,
+                linkedRecipeId: ingredient.linkedRecipeId ?? null,
               })),
             )
             .run();

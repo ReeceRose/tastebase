@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, ClipboardPaste, Plus, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { EditorSectionCard } from "@/components/forms/recipe-editor/editor-field";
+import { EditorIngredientLink } from "@/components/forms/recipe-editor/editor-ingredient-link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,12 +17,16 @@ import {
 
 interface EditorIngredientsProps {
   sectionError: string | null;
+  recipeId: string | null;
 }
 
 const iconButton =
   "grid size-9 place-items-center rounded-full text-muted-foreground outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring disabled:opacity-30";
 
-export function EditorIngredients({ sectionError }: EditorIngredientsProps) {
+export function EditorIngredients({
+  sectionError,
+  recipeId,
+}: EditorIngredientsProps) {
   const pasteId = useId();
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
@@ -187,33 +192,39 @@ export function EditorIngredients({ sectionError }: EditorIngredientsProps) {
                   </button>
                 </div>
               </div>
-              <details className="group mt-1 md:ml-[200px]">
-                <summary className="cursor-pointer rounded-sm px-1 text-caption font-normal text-muted-foreground outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring">
-                  Note, section or optional
-                </summary>
-                <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_180px_auto] sm:items-center">
-                  <Input
-                    {...register(`ingredients.${index}.notes`)}
-                    aria-label={`Note for ingredient ${index + 1}`}
-                    placeholder="finely chopped"
-                    className="h-10"
-                  />
-                  <Input
-                    {...register(`ingredients.${index}.groupName`)}
-                    aria-label={`Section for ingredient ${index + 1}`}
-                    placeholder="Section, e.g. For the sauce"
-                    className="h-10"
-                  />
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      {...register(`ingredients.${index}.isOptional`)}
-                      className="size-4 accent-[var(--ink)]"
+              <div className="relative mt-1 md:ml-[200px]">
+                <details className="group">
+                  <summary className="cursor-pointer rounded-sm px-1 text-caption font-normal text-muted-foreground outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring">
+                    Note, section or optional
+                  </summary>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_180px_auto] sm:items-center">
+                    <Input
+                      {...register(`ingredients.${index}.notes`)}
+                      aria-label={`Note for ingredient ${index + 1}`}
+                      placeholder="finely chopped"
+                      className="h-10"
                     />
-                    Optional
-                  </label>
-                </div>
-              </details>
+                    <Input
+                      {...register(`ingredients.${index}.groupName`)}
+                      aria-label={`Section for ingredient ${index + 1}`}
+                      placeholder="Section, e.g. For the sauce"
+                      className="h-10"
+                    />
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        {...register(`ingredients.${index}.isOptional`)}
+                        className="size-4 accent-[var(--ink)]"
+                      />
+                      Optional
+                    </label>
+                  </div>
+                </details>
+                <EditorIngredientLink
+                  index={index}
+                  excludeRecipeId={recipeId}
+                />
+              </div>
               {rowError && (
                 <p role="alert" className="mt-1 text-caption text-destructive">
                   {rowError}

@@ -21,7 +21,15 @@ import type {
 } from "@/lib/types";
 
 export type Recipe = typeof recipes.$inferSelect;
-export type RecipeIngredient = typeof recipeIngredients.$inferSelect;
+export interface LinkedRecipe {
+  id: string;
+  slug: string;
+  title: string;
+}
+
+export type RecipeIngredient = typeof recipeIngredients.$inferSelect & {
+  linkedRecipe?: LinkedRecipe | null;
+};
 export type RecipeInstruction = typeof recipeInstructions.$inferSelect;
 
 export type RecipeTag = typeof recipeTags.$inferSelect;
@@ -61,6 +69,8 @@ interface RecipeFormIngredient {
   notes?: string;
   groupName?: string;
   isOptional: boolean;
+  linkedRecipeId?: string | null;
+  linkedRecipeTitle?: string | null;
 }
 
 interface RecipeFormInstruction {

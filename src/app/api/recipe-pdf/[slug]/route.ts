@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/auth";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
+import { loadRecipesLinkedFrom } from "@/lib/pdf/recipe-pdf-linked";
 import { renderRecipePdf } from "@/lib/pdf/render-recipe-pdf";
 import { getRecipeBySlug } from "@/lib/server-actions/recipe-actions";
 import { MeasurementUnit, TemperatureUnit } from "@/lib/types";
@@ -37,23 +38,30 @@ export async function GET(
       );
     }
 
-    const { style, photos, colour, screen, download } = query.data;
-    const pdf = await renderRecipePdf(result.data, {
-      style,
-      includePhotos: photos,
-      colourPhotos: colour,
-      screen,
-      units: {
-        measurementSystem:
-          session.user.preferredWeightUnit === MeasurementUnit.METRIC
-            ? MeasurementUnit.METRIC
-            : MeasurementUnit.IMPERIAL,
-        temperatureUnit:
-          session.user.preferredTemperatureUnit === TemperatureUnit.CELSIUS
-            ? TemperatureUnit.CELSIUS
-            : TemperatureUnit.FAHRENHEIT,
+    const { style, photos, colour, linked, screen, download } = query.data;
+    const linkedRecipes = linked
+      ? await loadRecipesLinkedFrom(result.data)
+      : [];
+    const pdf = await renderRecipePdf(
+      result.data,
+      {
+        style,
+        includePhotos: photos,
+        colourPhotos: colour,
+        screen,
+        units: {
+          measurementSystem:
+            session.user.preferredWeightUnit === MeasurementUnit.METRIC
+              ? MeasurementUnit.METRIC
+              : MeasurementUnit.IMPERIAL,
+          temperatureUnit:
+            session.user.preferredTemperatureUnit === TemperatureUnit.CELSIUS
+              ? TemperatureUnit.CELSIUS
+              : TemperatureUnit.FAHRENHEIT,
+        },
       },
-    });
+      linkedRecipes,
+    );
 
     const disposition = download ? "attachment" : "inline";
     return new NextResponse(pdf as BodyInit, {
