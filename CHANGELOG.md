@@ -4,6 +4,26 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.14 — 2026-11-08
+
+Recipes can now leave Tastebase as PDFs, formatted for paper or for reading on a screen.
+
+### What's Changed
+
+#### Features
+- **Export a recipe as a PDF** from the recipe's actions menu, with a live preview before you download.
+- **Printer style:** plain text on letter paper that's easy on the ink, with optional photos in black and white or colour.
+- **Screen style:** full colour with photos, sized for a phone, tablet or laptop.
+
+#### Fixes
+- Importing from sites that store publisher data in their recipe keywords, such as `locale: US` or `sponsored: false`, no longer fills your recipe with junk tags.
+
+### Docker
+
+```
+docker pull ghcr.io/reecerose/tastebase:0.1.14
+```
+
 ## v0.1.13 — 2026-11-08
 
 A small polish release for tagging photos in the recipe editor.
