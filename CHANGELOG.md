@@ -4,6 +4,25 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.16 — 2026-11-08
+
+This release adds keyboard shortcuts you can set up to suit the way you work.
+
+### What's Changed
+
+#### Features
+
+- **Keyboard shortcuts:** turn them on in Settings to move around Tastebase without the mouse. They're off by default.
+- **Shortcuts that work anywhere:** search (`/`), add a recipe (`N`), go home (`H`) and go to recipes (`R`).
+- **Shortcuts on a recipe page:** edit (`E`), start cooking (`C`), favourite (`F`) and export as PDF (`Ctrl/⌘ P`).
+- **Make them your own:** press a new key to change any shortcut, remove the ones you don't want, or reset them all to the defaults. Tastebase warns you if a key is already taken or belongs to your browser.
+
+### Docker
+
+```
+docker pull ghcr.io/reecerose/tastebase:0.1.16
+```
+
 ## v0.1.15 — 2026-11-08
 
 Ingredients can now point to other recipes, so a sauce, dough or spice mix stays connected to the dishes that use it.
