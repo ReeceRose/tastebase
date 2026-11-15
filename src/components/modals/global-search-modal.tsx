@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock, Loader2, Plus, Search, Settings, Tags, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useId, useRef } from "react";
 import {
   Dialog,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Kbd } from "@/components/ui/kbd";
 import { MemberAvatar } from "@/components/ui/member-avatar";
-import { useGlobalSearch } from "@/hooks/use-global-search";
+import { recipeHref, useGlobalSearch } from "@/hooks/use-global-search";
 import { AvatarSize } from "@/lib/types";
 import type { RecipeSummary } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,6 @@ export function GlobalSearchModal({
   onClose,
   userId,
 }: GlobalSearchModalProps) {
-  const router = useRouter();
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const search = useGlobalSearch({ isOpen });
@@ -49,9 +48,16 @@ export function GlobalSearchModal({
   );
   const ordered = [...yours, ...fromHouse];
 
-  const go = (href: string) => {
+  const closeOnPlainClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
     onClose();
-    router.push(href);
+  };
+
+  const followLink = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    search.remember();
+    closeOnPlainClick(event);
   };
 
   const open = (recipe: RecipeSummary) => {
@@ -94,10 +100,10 @@ export function GlobalSearchModal({
     const time = formatTotalTime(recipe.totalMinutes);
     return (
       <li key={recipe.id}>
-        <button
-          type="button"
+        <Link
+          href={recipeHref(recipe)}
           onMouseEnter={() => search.setSelectedIndex(index)}
-          onClick={() => open(recipe)}
+          onClick={followLink}
           aria-current={selected ? "true" : undefined}
           className={cn(rowClass, selected ? "bg-muted" : "hover:bg-muted/60")}
         >
@@ -124,7 +130,7 @@ export function GlobalSearchModal({
             size={AvatarSize.SM}
             decorative
           />
-        </button>
+        </Link>
       </li>
     );
   };
@@ -223,9 +229,9 @@ export function GlobalSearchModal({
                 <ul>
                   {QUICK_ACTIONS.map((action) => (
                     <li key={action.href}>
-                      <button
-                        type="button"
-                        onClick={() => go(action.href)}
+                      <Link
+                        href={action.href}
+                        onClick={closeOnPlainClick}
                         className={cn(
                           rowClass,
                           "font-semibold hover:bg-muted/60 focus-visible:bg-muted",
@@ -233,7 +239,7 @@ export function GlobalSearchModal({
                       >
                         <action.icon aria-hidden className="size-4" />
                         {action.label}
-                      </button>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -283,18 +289,15 @@ export function GlobalSearchModal({
               <Kbd>esc</Kbd>
               close
             </span>
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                search.viewAll();
-              }}
+            <Link
+              href={search.viewAllHref}
+              onClick={followLink}
               className="ml-auto rounded-sm font-semibold text-foreground underline decoration-2 underline-offset-4 outline-none hover:decoration-accent focus-visible:ring-[3px] focus-visible:ring-ring"
             >
               {search.total > 0
                 ? `See all ${search.total} in Recipes`
                 : "Search in Recipes"}
-            </button>
+            </Link>
           </div>
         )}
       </DialogContent>

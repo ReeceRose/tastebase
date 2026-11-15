@@ -12,6 +12,10 @@ import {
 } from "@/lib/server-actions/search-history-actions";
 import type { RecipeSummary } from "@/lib/types/recipe-types";
 
+export function recipeHref(recipe: RecipeSummary) {
+  return `/recipes/${recipe.slug}`;
+}
+
 interface UseGlobalSearchProps {
   isOpen: boolean;
 }
@@ -99,20 +103,22 @@ export function useGlobalSearch({ isOpen }: UseGlobalSearchProps) {
     if (trimmed) void recordSearchQuery(trimmed, total);
   }, [trimmed, total]);
 
+  const viewAllHref = trimmed
+    ? `/recipes?q=${encodeURIComponent(trimmed)}`
+    : "/recipes";
+
   const openRecipe = useCallback(
     (recipe: RecipeSummary) => {
       remember();
-      router.push(`/recipes/${recipe.slug}`);
+      router.push(recipeHref(recipe));
     },
     [remember, router],
   );
 
   const viewAll = useCallback(() => {
     remember();
-    router.push(
-      trimmed ? `/recipes?q=${encodeURIComponent(trimmed)}` : "/recipes",
-    );
-  }, [remember, router, trimmed]);
+    router.push(viewAllHref);
+  }, [remember, router, viewAllHref]);
 
   return {
     query,
@@ -125,6 +131,8 @@ export function useGlobalSearch({ isOpen }: UseGlobalSearchProps) {
     setSelectedIndex,
     openRecipe,
     viewAll,
+    viewAllHref,
+    remember,
     isPending: isSearching || (trimmed.length > 0 && query !== debouncedQuery),
     hasQuery: trimmed.length > 0,
     hasCompletedSearch:
