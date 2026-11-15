@@ -4,6 +4,24 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.19 — 2026-11-15
+
+Search results now behave like normal links, so you can open recipes in new tabs straight from search.
+
+### What's Changed
+
+#### Features
+- In the search window, recipe results, quick actions and the "See all in Recipes" link are now real links. Cmd/Ctrl-click or middle-click opens them in a new tab and leaves search open. Right-click lets you copy the link.
+
+#### Improvements
+- Running the test suite prints less log noise.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.19
+```
+
 ## v0.1.18 — 2026-11-08
 
 Recipes now have a dedicated place for extra notes.
