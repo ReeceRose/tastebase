@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { KeyboardShortcutProvider } from "@/components/layout/keyboard-shortcut-provider";
+import { TimeZoneCookie } from "@/components/layout/time-zone-cookie";
 import { GlobalSearchModal } from "@/components/modals/global-search-modal";
 import { AppSidebar } from "@/components/navigation/app-sidebar";
 import { AppTopbar } from "@/components/navigation/app-topbar";
@@ -38,6 +39,7 @@ export function AppShell({
     <NavCountsProvider counts={counts}>
       <KeyboardShortcutProvider settings={shortcuts}>
         <GlobalShortcuts onOpenSearch={() => setSearchOpen(true)} />
+        <TimeZoneCookie />
         <div className="flex min-h-dvh bg-background">
           <AppSidebar counts={counts} household={household} />
           <div className="flex min-w-0 flex-1 flex-col">

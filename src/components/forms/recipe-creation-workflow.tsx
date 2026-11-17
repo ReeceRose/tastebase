@@ -223,6 +223,7 @@ export function RecipeCreationWorkflow({
         notice={null}
         initialPhotos={initialPhotos}
         photoSuggestions={photoSuggestions}
+        videoSuggestions={result?.videos ?? []}
         onStartOver={startOver}
       />
     </div>

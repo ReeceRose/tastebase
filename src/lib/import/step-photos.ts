@@ -1,6 +1,8 @@
 import type {
   ImportedStepPhoto,
+  ImportedVideo,
   JsonLdStepImage,
+  JsonLdVideo,
   ParsedInstruction,
 } from "@/lib/types/import-types";
 
@@ -43,5 +45,24 @@ export function matchStepPhotos(
     if (index < 0) return [];
     seen.add(image.url);
     return [{ url: image.url, stepNumber: index + 1 }];
+  });
+}
+
+// Videos are matched the same way. One whose step can't be found is kept for
+// the whole recipe, since a video is still worth watching.
+export function matchVideos(
+  videos: JsonLdVideo[],
+  instructions: ParsedInstruction[],
+): ImportedVideo[] {
+  const steps = instructions.map((step) => comparable(step.instruction));
+  return videos.map((video) => {
+    const text = comparable(video.text);
+    const index = text ? findStep(text, steps) : -1;
+    return {
+      url: video.url,
+      name: video.name,
+      durationSeconds: video.durationSeconds,
+      stepNumber: index >= 0 ? index + 1 : null,
+    };
   });
 }

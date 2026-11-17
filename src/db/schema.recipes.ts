@@ -195,6 +195,33 @@ export const recipeImages = sqliteTable(
   ],
 );
 
+// Videos saved from a recipe page. Untagged videos cover the whole recipe;
+// the rest show on the steps in stepNumbers.
+export const recipeVideos = sqliteTable(
+  "recipe_videos",
+  {
+    id: text("id").primaryKey(),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    filename: text("filename").notNull(),
+    originalName: text("original_name"),
+    mimeType: text("mime_type").notNull(),
+    fileSize: integer("file_size").notNull(),
+    durationSeconds: integer("duration_seconds"),
+    title: text("title"),
+    stepNumbers: text("step_numbers", { mode: "json" })
+      .$type<number[]>()
+      .default(sql`'[]'`)
+      .notNull(),
+    sortOrder: integer("sort_order").notNull(),
+    uploadedAt: integer("uploaded_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+  },
+  (table) => [index("recipe_videos_recipe_id_idx").on(table.recipeId)],
+);
+
 export const userSearchHistory = sqliteTable(
   "user_search_history",
   {
@@ -451,6 +478,7 @@ export const recipesRelations = relations(recipes, ({ one, many }) => ({
   instructions: many(recipeInstructions),
   tags: many(recipeTagRelations),
   images: many(recipeImages),
+  videos: many(recipeVideos),
   notes: many(recipeNotes),
   favorites: many(recipeFavorites),
   views: many(recipeViews),
@@ -499,6 +527,13 @@ export const recipeTagRelationsRelations = relations(
 export const recipeImagesRelations = relations(recipeImages, ({ one }) => ({
   recipe: one(recipes, {
     fields: [recipeImages.recipeId],
+    references: [recipes.id],
+  }),
+}));
+
+export const recipeVideosRelations = relations(recipeVideos, ({ one }) => ({
+  recipe: one(recipes, {
+    fields: [recipeVideos.recipeId],
     references: [recipes.id],
   }),
 }));
@@ -603,6 +638,7 @@ export type RecipeIngredientInsert = typeof recipeIngredients.$inferInsert;
 export type RecipeInstruction = typeof recipeInstructions.$inferSelect;
 export type RecipeTag = typeof recipeTags.$inferSelect;
 export type RecipeImage = typeof recipeImages.$inferSelect;
+export type RecipeVideo = typeof recipeVideos.$inferSelect;
 export type RecipeNote = typeof recipeNotes.$inferSelect;
 export type RecipeFavorite = typeof recipeFavorites.$inferSelect;
 export type RecipeView = typeof recipeViews.$inferSelect;

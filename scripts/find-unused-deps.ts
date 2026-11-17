@@ -275,9 +275,9 @@ class DependencyAnalyzer {
     // Build tools and configs
     const configTools: Record<string, string[]> = {
       '@biomejs/biome': ['biome.json'],
-      '@vitejs/plugin-react': ['vitest.config.ts'],
-      '@vitest/coverage-v8': ['vitest.config.ts'],
-      'jsdom': ['vitest.config.ts'],
+      '@vitejs/plugin-react': ['vitest.config.mts'],
+      '@vitest/coverage-v8': ['vitest.config.mts'],
+      'jsdom': ['vitest.config.mts'],
       '@tailwindcss/postcss': ['postcss.config.mjs'],
       'tailwindcss': ['postcss.config.mjs', 'src/app/globals.css'],
       'tw-animate-css': ['src/app/globals.css'], 

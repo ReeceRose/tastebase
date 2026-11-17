@@ -6,6 +6,10 @@ const MAX_REDIRECTS = 5;
 const MAX_HTML_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 15000;
+export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+const VIDEO_TIMEOUT_MS = 120000;
+const VIDEO_CONTENT_TYPE =
+  /^(video\/|application\/octet-stream|binary\/octet-stream)/;
 const USER_AGENT =
   "Mozilla/5.0 (compatible; Tastebase/1.0; self-hosted recipe manager)";
 
@@ -127,9 +131,10 @@ interface PublicResponse {
 async function fetchPublic(
   input: string,
   accept: string,
+  timeoutMs = REQUEST_TIMEOUT_MS,
 ): Promise<PublicResponse> {
   let url = parseImportUrl(input);
-  const signal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+  const signal = AbortSignal.timeout(timeoutMs);
 
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
     await assertPublicHost(url);
@@ -200,4 +205,26 @@ export async function fetchRecipeImage(input: string): Promise<Buffer> {
     throw new PageFetchError("That link doesn't point to an image");
   }
   return readLimitedBytes(response, MAX_IMAGE_BYTES, "The image is too large");
+}
+
+// Videos are much bigger than photos, so they get longer to download. The
+// bytes are checked for a real video file before they're stored.
+export async function fetchRecipeVideo(input: string): Promise<Buffer> {
+  const { response } = await fetchPublic(
+    input,
+    "video/mp4,video/webm,video/*;q=0.8",
+    VIDEO_TIMEOUT_MS,
+  );
+  if (!response.ok) {
+    throw new PageFetchError(`The video returned HTTP ${response.status}`);
+  }
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!VIDEO_CONTENT_TYPE.test(contentType)) {
+    throw new PageFetchError("That link doesn't point to a video");
+  }
+  return readLimitedBytes(
+    response,
+    MAX_VIDEO_BYTES,
+    "The video is larger than 50 MB",
+  );
 }

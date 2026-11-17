@@ -17,6 +17,7 @@ import {
   newStepKey,
   photoTagsForSave,
   photoTagsFromRecipe,
+  videoTagsFromRecipe,
 } from "@/lib/utils/photo-tags";
 import { RECIPE_CONSTANTS } from "@/lib/utils/recipe-constants";
 
@@ -139,7 +140,10 @@ export function editorValuesFromRecipe(
         groupName: instruction.groupName ?? "",
       })),
     tags: recipe.tags.map((tag) => tag.name),
-    photoTags: photoTagsFromRecipe(recipe.images, recipe.instructions),
+    photoTags: [
+      ...photoTagsFromRecipe(recipe.images, recipe.instructions),
+      ...videoTagsFromRecipe(recipe.videos, recipe.instructions),
+    ],
     swatch: (recipe.swatch as RecipeSwatch | null) ?? null,
   };
 }

@@ -22,7 +22,7 @@ interface LinkRecipeSearchProps {
   onSelect: (recipe: LinkedRecipe) => void;
 }
 
-function LinkRecipeSearch({
+export function LinkRecipeSearch({
   initialQuery,
   excludeRecipeId,
   onSelect,

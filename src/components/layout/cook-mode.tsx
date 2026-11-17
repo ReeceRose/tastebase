@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { IngredientList } from "@/components/recipes/ingredient-list";
 import { PhotoStrip } from "@/components/recipes/photo-strip";
+import { RecipeVideoPlayer } from "@/components/recipes/recipe-video-player";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -43,6 +44,7 @@ import type { RecipeWithRelations } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
 import { convertTemperaturesInText } from "@/lib/utils/ingredient-scaling";
 import { photosForStep, photosWithRole } from "@/lib/utils/photo-tags";
+import { videosForStep } from "@/lib/utils/recipe-videos";
 import { matchStepIngredients } from "@/lib/utils/step-ingredients";
 import { isDarkSwatch, swatchClasses } from "@/lib/utils/swatches";
 import { formatTotalTime } from "@/lib/utils/time-formatting";
@@ -95,6 +97,7 @@ export function CookMode({
   const usedHere = stepIngredients[index] ?? [];
   const isLast = index === steps.length - 1;
   const stepPhotos = step ? photosForStep(recipe.images, step.stepNumber) : [];
+  const stepVideos = step ? videosForStep(recipe.videos, step.stepNumber) : [];
   const finishedPhotos = isLast
     ? photosWithRole(recipe.images, PhotoRole.FINISHED)
     : [];
@@ -117,7 +120,12 @@ export function CookMode({
     startFinishing(async () => {
       const result = await recordRecipeCook(recipe.id);
       if (result.success) {
-        toast.success("Nice. Marked as cooked.");
+        toast.success("Nice. Marked as cooked.", {
+          action: {
+            label: "Add a photo",
+            onClick: () => router.push(`${recipeHref}?log=1`),
+          },
+        });
       }
       router.push(recipeHref);
     });
@@ -288,6 +296,27 @@ export function CookMode({
                   label="Photos for this step"
                 />
               </div>
+            )}
+
+            {stepVideos.length > 0 && (
+              <ul
+                key={step.id}
+                className={cn(
+                  "mt-8 grid gap-3",
+                  stepVideos.length > 1 && "sm:grid-cols-2",
+                )}
+                aria-label="Videos for this step"
+              >
+                {stepVideos.map((video) => (
+                  <li key={video.id}>
+                    <RecipeVideoPlayer
+                      src={`/api/recipes/videos/${video.filename}`}
+                      title={`Step ${index + 1} video`}
+                      clip
+                    />
+                  </li>
+                ))}
+              </ul>
             )}
 
             {usedHere.length > 0 && (

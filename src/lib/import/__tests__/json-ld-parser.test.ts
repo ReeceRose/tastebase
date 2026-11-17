@@ -286,3 +286,77 @@ describe("extractJsonLdRecipe", () => {
     expect(result?.imageUrl).toBe("/photos/soup.jpg");
   });
 });
+
+describe("extractJsonLdRecipe videos", () => {
+  const clip = (name: string, duration: string) => ({
+    "@type": "VideoObject",
+    name,
+    duration,
+    contentUrl: `https://vp.example.com/${name}.mp4`,
+  });
+
+  it("reads step videos with their step text, then the recipe's own", () => {
+    const result = extractJsonLdRecipe(
+      page({
+        "@type": "Recipe",
+        name: "Tiramisu",
+        recipeIngredient: ["4 eggs"],
+        video: clip("overview", "PT1M51S"),
+        recipeInstructions: [
+          {
+            "@type": "HowToStep",
+            text: "Whip the eggs and sugar.",
+            video: clip("whip", "PT6S"),
+          },
+          {
+            "@type": "HowToStep",
+            text: "Whip the cream, then fold.",
+            video: [clip("cream", "PT4S"), clip("fold", "PT8S")],
+          },
+          { "@type": "HowToStep", text: "Chill overnight." },
+        ],
+      }),
+    );
+    expect(result?.videos).toEqual([
+      {
+        url: "https://vp.example.com/whip.mp4",
+        text: "Whip the eggs and sugar.",
+        name: "whip",
+        durationSeconds: 6,
+      },
+      {
+        url: "https://vp.example.com/cream.mp4",
+        text: "Whip the cream, then fold.",
+        name: "cream",
+        durationSeconds: 4,
+      },
+      {
+        url: "https://vp.example.com/fold.mp4",
+        text: "Whip the cream, then fold.",
+        name: "fold",
+        durationSeconds: 8,
+      },
+      {
+        url: "https://vp.example.com/overview.mp4",
+        text: "",
+        name: "overview",
+        durationSeconds: 111,
+      },
+    ]);
+  });
+
+  it("skips embed-only videos, which have no file to save", () => {
+    const result = extractJsonLdRecipe(
+      page({
+        "@type": "Recipe",
+        name: "Soup",
+        video: {
+          "@type": "VideoObject",
+          name: "Soup",
+          embedUrl: "https://www.youtube.com/embed/abc",
+        },
+      }),
+    );
+    expect(result?.videos).toEqual([]);
+  });
+});

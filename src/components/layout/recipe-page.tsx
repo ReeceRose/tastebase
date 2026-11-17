@@ -5,6 +5,7 @@ import { RecipeDetailsPanel } from "@/components/cards/recipe-details-panel";
 import { RecipeExtraNotesPanel } from "@/components/cards/recipe-extra-notes-panel";
 import { RecipeHero } from "@/components/cards/recipe-hero";
 import { RecipeHouseNotes } from "@/components/cards/recipe-house-notes";
+import { RecipeJournalPanel } from "@/components/cards/recipe-journal-panel";
 import { RecipeUsedInPanel } from "@/components/cards/recipe-used-in-panel";
 import { RecipeVideoPanel } from "@/components/cards/recipe-video-panel";
 import { InstructionSteps } from "@/components/recipes/instruction-steps";
@@ -14,6 +15,8 @@ import {
   PhotoRole,
   type TemperatureUnit,
 } from "@/lib/types";
+import type { RecipeHistory } from "@/lib/types/journal-lookback-types";
+import type { JournalEntry } from "@/lib/types/journal-types";
 import type {
   LinkedRecipe,
   RecipeCookSummary,
@@ -21,6 +24,7 @@ import type {
   RecipeWithRelations,
 } from "@/lib/types/recipe-types";
 import { photosWithRole } from "@/lib/utils/photo-tags";
+import { recipeWideVideos } from "@/lib/utils/recipe-videos";
 import { resolveSwatch } from "@/lib/utils/swatches";
 import { formatTotalTime } from "@/lib/utils/time-formatting";
 
@@ -31,6 +35,9 @@ interface RecipePageProps {
   lists: RecipeListOption[];
   usedIn: LinkedRecipe[];
   cooks: RecipeCookSummary;
+  journal: JournalEntry[];
+  history: RecipeHistory;
+  openJournalComposer: boolean;
   measurementSystem: MeasurementUnit;
   temperatureUnit: TemperatureUnit;
 }
@@ -50,6 +57,9 @@ export function RecipePage({
   lists,
   usedIn,
   cooks,
+  journal,
+  history,
+  openJournalComposer,
   measurementSystem,
   temperatureUnit,
 }: RecipePageProps) {
@@ -122,12 +132,24 @@ export function RecipePage({
           <InstructionSteps
             instructions={recipe.instructions}
             images={recipe.images}
+            videos={recipe.videos}
             title={recipe.title}
             swatch={swatch}
             temperatureUnit={temperatureUnit}
           />
           <RecipeExtraNotesPanel notes={recipe.extraNotes} />
-          <RecipeVideoPanel title={recipe.title} videoUrl={recipe.videoUrl} />
+          <RecipeVideoPanel
+            title={recipe.title}
+            videoUrl={recipe.videoUrl}
+            videos={recipeWideVideos(recipe.videos)}
+          />
+          <RecipeJournalPanel
+            recipe={{ id: recipe.id, slug: recipe.slug, title: recipe.title }}
+            entries={journal}
+            history={history}
+            currentUserId={currentUserId}
+            openComposer={openJournalComposer}
+          />
         </section>
 
         <aside className="space-y-4 lg:col-span-2 xl:col-span-1">

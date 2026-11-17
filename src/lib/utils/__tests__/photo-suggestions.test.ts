@@ -36,6 +36,7 @@ function result(
     image: null,
     photoUrls,
     stepPhotos,
+    videos: [],
     warnings: [],
   };
 }

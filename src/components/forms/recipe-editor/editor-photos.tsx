@@ -12,6 +12,7 @@ import { EditorSectionCard } from "@/components/forms/recipe-editor/editor-field
 import { EditorPhotoSuggestions } from "@/components/forms/recipe-editor/editor-photo-suggestions";
 import { EditorPhotoTagPicker } from "@/components/forms/recipe-editor/editor-photo-tag-picker";
 import { EditorPhotoTile } from "@/components/forms/recipe-editor/editor-photo-tile";
+import { EditorVideos } from "@/components/forms/recipe-editor/editor-videos";
 import { ImageUpload } from "@/components/recipe-images/image-upload";
 import {
   attachImageToRecipe,
@@ -20,13 +21,15 @@ import {
   reorderRecipeImages,
 } from "@/lib/server-actions/recipe-image-actions";
 import { EditorSection } from "@/lib/types";
-import type { PhotoSuggestion } from "@/lib/types/import-types";
+import type { ImportedVideo, PhotoSuggestion } from "@/lib/types/import-types";
 import type {
   EditorPhotoTag,
   EditorStepOption,
   PendingImage,
+  PendingVideo,
   RecipeEditorValues,
   RecipeImage,
+  RecipeVideo,
 } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
 import { withPhotoTags } from "@/lib/utils/photo-tags";
@@ -40,6 +43,11 @@ interface EditorPhotosProps {
   pending: PendingImage[];
   onPendingChange: Dispatch<SetStateAction<PendingImage[]>>;
   suggestions: PhotoSuggestion[];
+  videos: RecipeVideo[];
+  onVideosChange: (videos: RecipeVideo[]) => void;
+  pendingVideos: PendingVideo[];
+  onPendingVideosChange: Dispatch<SetStateAction<PendingVideo[]>>;
+  videoSuggestions: ImportedVideo[];
 }
 
 interface UploadedFile {
@@ -76,6 +84,11 @@ export function EditorPhotos({
   pending,
   onPendingChange,
   suggestions,
+  videos,
+  onVideosChange,
+  pendingVideos,
+  onPendingVideosChange,
+  videoSuggestions,
 }: EditorPhotosProps) {
   const [isWorking, startWork] = useTransition();
   const [dragFrom, setDragFrom] = useState<number | null>(null);
@@ -206,7 +219,7 @@ export function EditorPhotos({
   return (
     <EditorSectionCard
       id={EditorSection.PHOTOS}
-      title="Photos"
+      title="Photos and videos"
       description="Drag photos or use the arrows to change their order. The first is the main photo, shown on the recipe tile and at the top of the recipe. Without one, the recipe uses its colour. Tag a photo with a step, the ingredients or the finished dish and cook mode shows it when you get there."
     >
       {tiles.length > 0 && (
@@ -252,6 +265,18 @@ export function EditorPhotos({
           ))}
         </ul>
       )}
+
+      <EditorVideos
+        recipeId={recipeId}
+        videos={videos}
+        onVideosChange={onVideosChange}
+        pending={pendingVideos}
+        onPendingChange={onPendingVideosChange}
+        suggestions={videoSuggestions}
+        steps={steps}
+        tagsFor={tagsFor}
+        onTagsChange={setTags}
+      />
 
       {!recipeId && (
         <EditorPhotoSuggestions

@@ -158,21 +158,31 @@ export function EditorMethod({ sectionError, photos }: EditorMethodProps) {
                 {stepPhotos.length > 0 && (
                   <ul
                     className="flex flex-wrap gap-2"
-                    aria-label={`Photos for step ${index + 1}`}
+                    aria-label={`Photos and videos for step ${index + 1}`}
                   >
                     {stepPhotos.map((photo) => (
                       <li
                         key={photo.photo}
                         className="relative size-14 overflow-hidden rounded-control bg-muted"
                       >
-                        <Image
-                          src={photo.src}
-                          alt=""
-                          fill
-                          sizes="56px"
-                          className="object-cover"
-                          unoptimized
-                        />
+                        {photo.isVideo ? (
+                          <video
+                            src={`${photo.src}#t=0.1`}
+                            muted
+                            playsInline
+                            preload="metadata"
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <Image
+                            src={photo.src}
+                            alt=""
+                            fill
+                            sizes="56px"
+                            className="object-cover"
+                            unoptimized
+                          />
+                        )}
                       </li>
                     ))}
                   </ul>

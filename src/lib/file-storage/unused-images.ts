@@ -1,8 +1,13 @@
 import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { db } from "@/db";
-import { recipeImages } from "@/db/schema.recipes";
+import { journalPhotos } from "@/db/schema.journal";
+import { recipeImages, recipeVideos } from "@/db/schema.recipes";
 import { deleteRecipeImage, STORAGE_CONFIG } from "@/lib/file-storage";
+import {
+  deleteRecipeVideo,
+  RECIPE_VIDEOS_DIR,
+} from "@/lib/file-storage/videos";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
 
 const logger = createOperationLogger("unused-image-cleanup");
@@ -33,15 +38,11 @@ export function findUnusedImages(
     .map((file) => file.filename);
 }
 
-async function listStoredImages(): Promise<StoredImageFile[]> {
-  const names = await readdir(STORAGE_CONFIG.recipeImagesDir).catch(
-    () => [] as string[],
-  );
+async function listStoredFiles(directory: string): Promise<StoredImageFile[]> {
+  const names = await readdir(directory).catch(() => [] as string[]);
   const files = await Promise.all(
     names.map(async (filename) => {
-      const info = await stat(
-        path.join(STORAGE_CONFIG.recipeImagesDir, filename),
-      ).catch(() => null);
+      const info = await stat(path.join(directory, filename)).catch(() => null);
       return info?.isFile() ? { filename, modifiedAt: info.mtimeMs } : null;
     }),
   );
@@ -49,9 +50,34 @@ async function listStoredImages(): Promise<StoredImageFile[]> {
 }
 
 export async function deleteUnusedRecipeImages(): Promise<number> {
-  const [files, rows] = await Promise.all([
-    listStoredImages(),
+  const [files, recipeRows, journalRows] = await Promise.all([
+    listStoredFiles(STORAGE_CONFIG.recipeImagesDir),
     db.select({ filename: recipeImages.filename }).from(recipeImages),
+    db.select({ filename: journalPhotos.filename }).from(journalPhotos),
+  ]);
+  const unused = findUnusedImages(
+    files,
+    new Set([...recipeRows, ...journalRows].map((row) => row.filename)),
+    Date.now(),
+  );
+  for (const filename of unused) {
+    await deleteRecipeImage(filename);
+  }
+  if (unused.length > 0) {
+    logger.info(
+      { count: unused.length },
+      "Deleted photos no recipe or journal entry uses",
+    );
+  }
+  return unused.length;
+}
+
+// Videos are downloaded while a recipe is being imported, so an abandoned
+// import leaves them behind just like photos.
+export async function deleteUnusedRecipeVideos(): Promise<number> {
+  const [files, rows] = await Promise.all([
+    listStoredFiles(RECIPE_VIDEOS_DIR),
+    db.select({ filename: recipeVideos.filename }).from(recipeVideos),
   ]);
   const unused = findUnusedImages(
     files,
@@ -59,10 +85,10 @@ export async function deleteUnusedRecipeImages(): Promise<number> {
     Date.now(),
   );
   for (const filename of unused) {
-    await deleteRecipeImage(filename);
+    await deleteRecipeVideo(filename);
   }
   if (unused.length > 0) {
-    logger.info({ count: unused.length }, "Deleted photos no recipe uses");
+    logger.info({ count: unused.length }, "Deleted videos no recipe uses");
   }
   return unused.length;
 }
@@ -76,9 +102,14 @@ export function scheduleUnusedImageCleanup() {
   globalForCleanup.tastebaseImageCleanup = true;
 
   const run = () =>
-    deleteUnusedRecipeImages().catch((error) =>
-      logError(logger, "Unused photo cleanup failed", error),
-    );
+    Promise.all([
+      deleteUnusedRecipeImages().catch((error) =>
+        logError(logger, "Unused photo cleanup failed", error),
+      ),
+      deleteUnusedRecipeVideos().catch((error) =>
+        logError(logger, "Unused video cleanup failed", error),
+      ),
+    ]);
   setTimeout(run, FIRST_RUN_DELAY_MS).unref();
   setInterval(run, CLEANUP_INTERVAL_MS).unref();
 }

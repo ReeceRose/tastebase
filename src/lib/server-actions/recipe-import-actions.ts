@@ -13,15 +13,18 @@ import {
   importRecipeFromText,
   importRecipeFromUrl,
 } from "@/lib/import/import-recipe";
+import { saveSuggestedVideo } from "@/lib/import/import-video";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
 import { findSavedRecipe } from "@/lib/search/saved-recipe-lookup";
 import type { ServerActionResult } from "@/lib/server-actions/utils";
 import type {
   CapturedPage,
+  ImportedVideo,
   PhotoSuggestion,
   RecipeImportResult,
   SavedRecipeMatch,
   SuggestedPhotoOutcome,
+  SuggestedVideoOutcome,
 } from "@/lib/types/import-types";
 import { mapWithLimit } from "@/lib/utils/map-with-limit";
 
@@ -187,6 +190,34 @@ export async function importSuggestedPhotosAction(
     (photo) => importSuggestedPhoto(photo, userId),
   );
   return { success: true, data: outcomes };
+}
+
+// One video per request: they can take a while to download, and the editor
+// shows each one's progress on its own.
+export async function importSuggestedVideoAction(
+  video: ImportedVideo,
+): Promise<ServerActionResult<SuggestedVideoOutcome>> {
+  const userId = await requireUserId();
+  if (!userId) {
+    return { success: false, error: "Authentication required" };
+  }
+  const failed = (error: string) => ({
+    success: true as const,
+    data: { url: video.url, video: null, error },
+  });
+  try {
+    parseImportUrl(video.url);
+    const saved = await saveSuggestedVideo(video);
+    return saved
+      ? { success: true, data: { url: video.url, video: saved, error: null } }
+      : failed("That file isn't a video Tastebase can play");
+  } catch (error) {
+    if (error instanceof PageFetchError) {
+      return failed(error.message);
+    }
+    logError(logger, "Suggested video import failed", error, { userId });
+    return failed("That video couldn't be added");
+  }
 }
 
 export async function findSavedRecipeAction(

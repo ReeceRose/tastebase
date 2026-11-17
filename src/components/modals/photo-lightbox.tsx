@@ -8,14 +8,15 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { RecipeImage } from "@/lib/types/recipe-types";
+import type { LightboxPhoto } from "@/lib/types/recipe-types";
 import { photoRoleLabel } from "@/lib/utils/photo-tags";
 
 interface PhotoLightboxProps {
-  images: RecipeImage[];
+  images: LightboxPhoto[];
   title: string;
   openIndex: number | null;
   onOpenIndexChange: (index: number | null) => void;
+  captions?: string[];
 }
 
 export function PhotoLightbox({
@@ -23,10 +24,13 @@ export function PhotoLightbox({
   title,
   openIndex,
   onOpenIndexChange,
+  captions,
 }: PhotoLightboxProps) {
   const current = openIndex === null ? null : (images[openIndex] ?? null);
   const several = images.length > 1;
-  const caption = current ? photoRoleLabel(current) : null;
+  const caption = current
+    ? (captions?.[openIndex ?? 0] ?? photoRoleLabel(current))
+    : null;
   const move = (step: number) => {
     if (openIndex === null) return;
     onOpenIndexChange((openIndex + step + images.length) % images.length);

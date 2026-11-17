@@ -300,6 +300,22 @@ export const attachRecipeImagesSchema = z.object({
     .min(1),
 });
 
+export const attachRecipeVideosSchema = z.object({
+  recipeId: z.string().min(1, "Recipe ID is required"),
+  videos: z
+    .array(
+      z.object({
+        filename: z.string().regex(/^[a-zA-Z0-9-]+\.(mp4|webm)$/),
+        originalName: z.string().max(200),
+        fileSize: z.number().int().min(0),
+        durationSeconds: z.number().int().min(0).nullable(),
+        title: z.string().max(200).nullable(),
+        stepNumbers: z.array(z.number().int().min(1)),
+      }),
+    )
+    .min(1),
+});
+
 export const updateRecipeImageSchema = z.object({
   id: z.string().min(1, "Image ID is required"),
   altText: z
@@ -319,3 +335,4 @@ export type RecipeSearchParams = z.infer<typeof recipeSearchSchema>;
 export type UploadRecipeImageInput = z.infer<typeof uploadRecipeImageSchema>;
 export type UpdateRecipeImageInput = z.infer<typeof updateRecipeImageSchema>;
 export type AttachRecipeImagesInput = z.infer<typeof attachRecipeImagesSchema>;
+export type AttachRecipeVideosInput = z.infer<typeof attachRecipeVideosSchema>;

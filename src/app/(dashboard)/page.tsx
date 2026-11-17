@@ -10,6 +10,7 @@ import {
   HouseRecipesSection,
   RecentlyOpenedSection,
 } from "@/components/layout/home-sections";
+import { OnThisDaySection } from "@/components/layout/journal-lookback-sections";
 import {
   HomeActivitySkeleton,
   HomeFeatureSkeleton,
@@ -49,6 +50,9 @@ export default async function HomePage() {
       </Suspense>
 
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 xl:grid-cols-3">
+        <Suspense fallback={null}>
+          <OnThisDaySection />
+        </Suspense>
         <Suspense fallback={<HomeRecentSkeleton />}>
           <RecentlyOpenedSection currentUserId={userId} />
         </Suspense>

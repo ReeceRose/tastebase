@@ -14,6 +14,7 @@ import { createOperationLogger } from "@/lib/logging/logger";
 import { RecipeDifficulty } from "@/lib/types";
 import type {
   JsonLdStepImage,
+  JsonLdVideo,
   ParsedIngredient,
   ParsedInstruction,
   RecipeParsingResult,
@@ -37,6 +38,7 @@ export interface JsonLdRecipe {
   siteName: string | null;
   imageUrl: string | null;
   stepImages: JsonLdStepImage[];
+  videos: JsonLdVideo[];
 }
 
 const MAX_TAGS = 20;
@@ -383,6 +385,71 @@ function readStepImages(
   ];
 }
 
+const ISO_SECONDS = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/i;
+
+function readSeconds(value: JsonValue | undefined): number | null {
+  const match = typeof value === "string" ? value.match(ISO_SECONDS) : null;
+  if (!match) return null;
+  const seconds =
+    Number.parseInt(match[1] || "0", 10) * 3600 +
+    Number.parseInt(match[2] || "0", 10) * 60 +
+    Math.round(Number.parseFloat(match[3] || "0"));
+  return seconds > 0 ? seconds : null;
+}
+
+// Only videos with a file address can be saved; embeds like YouTube's player
+// have nothing to download.
+function readVideos(value: JsonValue | undefined, text: string): JsonLdVideo[] {
+  const items = Array.isArray(value) ? value : value ? [value] : [];
+  return items.flatMap((item) => {
+    if (!isObject(item)) return [];
+    const url = item.contentUrl;
+    if (typeof url !== "string" || !url.trim()) return [];
+    return [
+      {
+        url: url.trim(),
+        text,
+        name: readText(item.name),
+        durationSeconds: readSeconds(item.duration),
+      },
+    ];
+  });
+}
+
+// Keeps each video's step text so it can be matched to the imported step.
+function readStepVideos(
+  value: JsonValue | undefined,
+  depth = 0,
+): JsonLdVideo[] {
+  if (value === undefined || depth > MAX_SEARCH_DEPTH) {
+    return [];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => readStepVideos(item, depth + 1));
+  }
+  if (!isObject(value)) {
+    return [];
+  }
+  if (value.itemListElement !== undefined) {
+    return readStepVideos(value.itemListElement, depth + 1);
+  }
+  const text = readText(value.text ?? value.name ?? value.description) ?? "";
+  return text ? readVideos(value.video, text) : [];
+}
+
+function readRecipeVideos(node: JsonObject): JsonLdVideo[] {
+  const videos = [
+    ...readStepVideos(node.recipeInstructions),
+    ...readVideos(node.video, ""),
+  ];
+  const seen = new Set<string>();
+  return videos.filter((video) => {
+    if (seen.has(video.url)) return false;
+    seen.add(video.url);
+    return true;
+  });
+}
+
 function readSiteName(node: JsonObject, scripts: JsonValue[]): string | null {
   const publisher = node.publisher;
   if (publisher !== undefined) {
@@ -429,6 +496,7 @@ export function extractJsonLdRecipe(html: string): JsonLdRecipe | null {
         siteName: readSiteName(node, scripts),
         imageUrl: readImageUrl(node.image ?? node.thumbnailUrl),
         stepImages: readStepImages(node.recipeInstructions),
+        videos: readRecipeVideos(node),
       };
     }
   }

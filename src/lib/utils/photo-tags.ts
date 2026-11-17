@@ -3,9 +3,11 @@ import { PhotoRole } from "@/lib/types";
 import type {
   EditorInstruction,
   EditorPhotoTag,
+  LightboxPhoto,
   RecipeEditorValues,
   RecipeImage,
   RecipeInstruction,
+  RecipeVideo,
   SavedPhotoTag,
 } from "@/lib/types/recipe-types";
 
@@ -39,6 +41,24 @@ export function photoTagsFromRecipe(
       return stepKey ? [{ photo: image.id, role, stepKey }] : [];
     });
   });
+}
+
+// Videos only take step tags; one without steps covers the whole recipe.
+export function videoTagsFromRecipe(
+  videos: RecipeVideo[],
+  instructions: RecipeInstruction[],
+): EditorPhotoTag[] {
+  const keyByStep = new Map(
+    instructions.map((instruction) => [instruction.stepNumber, instruction.id]),
+  );
+  return videos.flatMap((video) =>
+    video.stepNumbers.flatMap((stepNumber): EditorPhotoTag[] => {
+      const stepKey = keyByStep.get(stepNumber);
+      return stepKey
+        ? [{ photo: video.id, role: PhotoRole.STEP, stepKey }]
+        : [];
+    }),
+  );
 }
 
 // Turns step keys into step numbers once blank steps are dropped, with one
@@ -110,7 +130,7 @@ export function photosWithRole(
   return images.filter((image) => image.photoRole === role);
 }
 
-export function photoRoleLabel(image: RecipeImage): string | null {
+export function photoRoleLabel(image: LightboxPhoto): string | null {
   const role = toPhotoRole(image.photoRole);
   if (role === PhotoRole.INGREDIENTS) return "Ingredients";
   if (role === PhotoRole.FINISHED) return "Finished dish";

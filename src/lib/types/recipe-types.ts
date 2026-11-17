@@ -5,6 +5,7 @@ import type {
   recipeNotes,
   recipes,
   recipeTags,
+  recipeVideos,
 } from "@/db/schema.recipes";
 import type {
   ActivityKind,
@@ -35,6 +36,11 @@ export type RecipeInstruction = typeof recipeInstructions.$inferSelect;
 export type RecipeTag = typeof recipeTags.$inferSelect;
 
 export type RecipeImage = typeof recipeImages.$inferSelect;
+export type RecipeVideo = typeof recipeVideos.$inferSelect;
+export type LightboxPhoto = Pick<
+  RecipeImage,
+  "id" | "filename" | "altText" | "photoRole" | "stepNumbers"
+>;
 export type RecipeNote = typeof recipeNotes.$inferSelect;
 export interface RecipeNoteWithAuthor extends RecipeNote {
   authorName: string;
@@ -44,6 +50,7 @@ export interface RecipeWithRelations extends Recipe {
   ingredients: RecipeIngredient[];
   instructions: RecipeInstruction[];
   images: RecipeImage[];
+  videos: RecipeVideo[];
   notes: RecipeNoteWithAuthor[];
   tags: RecipeTag[];
   author: RecipeAuthor;
@@ -313,6 +320,7 @@ export interface EditorStepOption {
 export interface EditorPhotoRef {
   photo: string;
   src: string;
+  isVideo: boolean;
 }
 
 // A photo tag ready to save, with the steps it points at as step numbers.
@@ -328,6 +336,16 @@ export interface PendingImage {
   fileSize: number;
   width: number | null;
   height: number | null;
+  url: string;
+}
+
+// A video saved to disk while the recipe is still being written.
+export interface PendingVideo {
+  filename: string;
+  originalName: string;
+  fileSize: number;
+  durationSeconds: number | null;
+  title: string | null;
   url: string;
 }
 

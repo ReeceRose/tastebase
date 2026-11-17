@@ -9,7 +9,8 @@ import {
   users,
   verificationTokens,
 } from "@/db/schema.base";
-import { recipeImages, recipes } from "@/db/schema.recipes";
+import { journalEntries, journalPhotos } from "@/db/schema.journal";
+import { recipeImages, recipes, recipeVideos } from "@/db/schema.recipes";
 import {
   areSignUpsOpen,
   SIGN_UPS_CLOSED_MESSAGE,
@@ -90,17 +91,37 @@ export const auth = betterAuth({
     deleteUser: {
       enabled: true,
       beforeDelete: async (user) => {
-        const images = await db
-          .select({ filename: recipeImages.filename })
-          .from(recipeImages)
-          .innerJoin(recipes, eq(recipeImages.recipeId, recipes.id))
-          .where(eq(recipes.userId, user.id));
+        const [recipePhotos, entryPhotos, videos] = await Promise.all([
+          db
+            .select({ filename: recipeImages.filename })
+            .from(recipeImages)
+            .innerJoin(recipes, eq(recipeImages.recipeId, recipes.id))
+            .where(eq(recipes.userId, user.id)),
+          db
+            .select({ filename: journalPhotos.filename })
+            .from(journalPhotos)
+            .innerJoin(
+              journalEntries,
+              eq(journalPhotos.entryId, journalEntries.id),
+            )
+            .where(eq(journalEntries.userId, user.id)),
+          db
+            .select({ filename: recipeVideos.filename })
+            .from(recipeVideos)
+            .innerJoin(recipes, eq(recipeVideos.recipeId, recipes.id))
+            .where(eq(recipes.userId, user.id)),
+        ]);
+        const images = [...recipePhotos, ...entryPhotos];
         const { deleteRecipeImage } = await import("@/lib/file-storage");
-        await Promise.all(
-          images.map((image) =>
+        const { deleteRecipeVideo } = await import("@/lib/file-storage/videos");
+        await Promise.all([
+          ...images.map((image) =>
             deleteRecipeImage(image.filename).catch(() => false),
           ),
-        );
+          ...videos.map((video) =>
+            deleteRecipeVideo(video.filename).catch(() => false),
+          ),
+        ]);
         logger.info(
           { userId: user.id, imageCount: images.length },
           "Deleting account and recipe photos",

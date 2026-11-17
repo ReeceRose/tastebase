@@ -264,6 +264,17 @@ export enum PhotoRole {
   FINISHED = "finished",
 }
 
+export enum JournalEntryKind {
+  COOKED = "cooked",
+  NOTE = "note",
+}
+
+export enum JournalFilter {
+  ALL = "all",
+  COOKED = "cooked",
+  NOTES = "notes",
+}
+
 export enum RecipeEditorMode {
   CREATE = "create",
   EDIT = "edit",

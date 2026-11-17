@@ -107,6 +107,7 @@ function recipe(overrides: Partial<RecipeWithRelations>): RecipeWithRelations {
     ],
     instructions: [step(1, "Heat the oil."), step(2, "Add the stock.")],
     images: [],
+    videos: [],
     notes: [],
     tags: [tag],
     ...overrides,

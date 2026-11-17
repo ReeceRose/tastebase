@@ -1,4 +1,5 @@
 import {
+  BookHeart,
   Clock,
   Heart,
   House,
@@ -38,6 +39,7 @@ export const PRIMARY_NAV: NavItem[] = [
     countKey: NavCountKey.FAVOURITES,
   },
   { title: "Lists", href: "/recipes/lists", icon: LayoutList },
+  { title: "Journal", href: "/journal", icon: BookHeart },
   { title: "Recent", href: "/recipes/recent", icon: Clock },
   { title: "Tags", href: "/recipes/tags", icon: Tags },
 ];
@@ -46,6 +48,7 @@ export const MOBILE_NAV: NavItem[] = [
   PRIMARY_NAV[0],
   PRIMARY_NAV[1],
   { ...PRIMARY_NAV[3], matchPrefixes: ["/recipes/favourites"] },
+  PRIMARY_NAV[4],
 ];
 
 export const QUICK_PICKS: QuickPick[] = [

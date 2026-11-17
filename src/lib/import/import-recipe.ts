@@ -15,7 +15,7 @@ import {
 import { extractMicrodataRecipe } from "@/lib/import/microdata-parser";
 import { extractTextFromImage } from "@/lib/import/ocr";
 import { findPagePhotos } from "@/lib/import/page-photos";
-import { matchStepPhotos } from "@/lib/import/step-photos";
+import { matchStepPhotos, matchVideos } from "@/lib/import/step-photos";
 import { parseRecipeText } from "@/lib/import/text-recipe-parser";
 import { createOperationLogger } from "@/lib/logging/logger";
 import {
@@ -100,6 +100,7 @@ function importFromParsedText(
     image: null,
     photoUrls: options.photoUrls,
     stepPhotos: [],
+    videos: [],
     warnings: warningsFor(confidence, parsed.recipe),
   };
 }
@@ -124,9 +125,14 @@ export function importRecipeFromPage(page: FetchedPage): RecipeImportResult {
     const url = absoluteHttpUrl(image.url, page.url);
     return url ? [{ url, text: image.text }] : [];
   });
+  const videos = (jsonLd?.videos ?? []).flatMap((video) => {
+    const url = absoluteHttpUrl(video.url, page.url);
+    return url ? [{ ...video, url }] : [];
+  });
   return {
     ...result,
     stepPhotos: matchStepPhotos(stepImages, result.recipe.instructions),
+    videos: matchVideos(videos, result.recipe.instructions),
   };
 }
 
@@ -157,6 +163,7 @@ function importPage(
     image: null,
     photoUrls,
     stepPhotos: [],
+    videos: [],
   };
 
   const structured: StructuredCandidate[] = [
@@ -266,6 +273,7 @@ export async function importRecipeFromImage(
       image: null,
       photoUrls: [],
       stepPhotos: [],
+      videos: [],
       warnings: [
         "No text could be read from this image. Try a sharper, well-lit photo.",
       ],

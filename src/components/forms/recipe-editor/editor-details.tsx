@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import {
   EditorField,
@@ -29,6 +29,8 @@ export function EditorDetails({ automaticSwatch }: EditorDetailsProps) {
     extraNotes: useId(),
   };
   const [tagText, setTagText] = useState("");
+  const [repeatedTags, setRepeatedTags] = useState<string[]>([]);
+  const repeatTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const {
     control,
     register,
@@ -40,15 +42,44 @@ export function EditorDetails({ automaticSwatch }: EditorDetailsProps) {
   const chosen = useWatch({ control, name: "swatch" });
   const preview = swatchClasses(chosen ?? automaticSwatch);
 
+  useEffect(
+    () => () => {
+      if (repeatTimer.current) clearTimeout(repeatTimer.current);
+    },
+    [],
+  );
+
+  const flagRepeats = (repeats: string[]) => {
+    if (repeatTimer.current) clearTimeout(repeatTimer.current);
+    setRepeatedTags(repeats);
+    repeatTimer.current = setTimeout(() => setRepeatedTags([]), 2500);
+  };
+
   const addTags = (raw: string) => {
-    const next = raw
-      .split(",")
-      .map((tag) => tag.trim().toLowerCase())
-      .filter((tag) => tag && !tags.includes(tag));
-    if (next.length === 0) return;
-    setValue("tags", [...tags, ...next], { shouldDirty: true });
+    const typed = [
+      ...new Set(
+        raw
+          .split(",")
+          .map((tag) => tag.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    ];
+    if (typed.length === 0) return;
+    const next = typed.filter((tag) => !tags.includes(tag));
+    const repeats = typed.filter((tag) => tags.includes(tag));
+    if (next.length > 0) {
+      setValue("tags", [...tags, ...next], { shouldDirty: true });
+    }
+    if (repeats.length > 0) flagRepeats(repeats);
     setTagText("");
   };
+
+  const repeatMessage =
+    repeatedTags.length === 0
+      ? ""
+      : `${repeatedTags.map((tag) => `“${tag}”`).join(", ")} ${
+          repeatedTags.length === 1 ? "is" : "are"
+        } already on this recipe.`;
 
   return (
     <EditorSectionCard id={EditorSection.DETAILS} title="Details">
@@ -57,13 +88,24 @@ export function EditorDetails({ automaticSwatch }: EditorDetailsProps) {
           <EditorField
             id={ids.tags}
             label="Tags"
-            hint="Press Enter or a comma after each one. Tags help everyone find it later."
+            hint={
+              repeatMessage ||
+              "Press Enter or a comma after each one. Tags help everyone find it later."
+            }
           >
+            <span role="status" className="sr-only">
+              {repeatMessage}
+            </span>
             <div className="flex min-h-12 flex-wrap items-center gap-2 rounded-control border-2 border-input bg-card px-2 py-1.5 focus-within:border-foreground">
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center gap-1 rounded-full bg-muted py-1 pr-1 pl-3 text-sm font-semibold"
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full py-1 pr-1 pl-3 text-sm font-semibold transition-colors",
+                    repeatedTags.includes(tag)
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-muted",
+                  )}
                 >
                   {tag}
                   <button

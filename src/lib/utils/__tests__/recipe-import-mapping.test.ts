@@ -52,6 +52,7 @@ const RESULT: RecipeImportResult = {
   image: null,
   photoUrls: [],
   stepPhotos: [],
+  videos: [],
   warnings: [],
 };
 

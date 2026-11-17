@@ -156,7 +156,7 @@ await global.testUtils.waitFor(100)
 
 ## Configuration
 
-### Vitest Config (`vitest.config.ts`)
+### Vitest Config (`vitest.config.mts`)
 - React plugin for JSX support
 - jsdom environment for DOM testing
 - Path aliases (`@/` → `src/`)
@@ -198,7 +198,7 @@ If mocks aren't working correctly:
 3. Verify mock paths match the actual import paths
 
 ### Coverage Issues
-To exclude files from coverage, update the `coverage.exclude` array in `vitest.config.ts`.
+To exclude files from coverage, update the `coverage.exclude` array in `vitest.config.mts`.
 
 ## Examples
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchStepPhotos } from "@/lib/import/step-photos";
+import { matchStepPhotos, matchVideos } from "@/lib/import/step-photos";
 import type { ParsedInstruction } from "@/lib/types/import-types";
 
 function steps(...texts: string[]): ParsedInstruction[] {
@@ -65,5 +65,53 @@ describe("matchStepPhotos", () => {
         instructions,
       ),
     ).toEqual([]);
+  });
+});
+
+describe("matchVideos", () => {
+  const instructions = steps(
+    "Whip the eggs and sugar until pale and thick.",
+    "Dip each ladyfinger in the espresso and lay it in the dish.",
+  );
+  const video = (url: string, text: string) => ({
+    url,
+    text,
+    name: null,
+    durationSeconds: 4,
+  });
+
+  it("ties step videos to their step and keeps the rest for the recipe", () => {
+    expect(
+      matchVideos(
+        [
+          video(
+            "https://a.com/dip.mp4",
+            "Dip each ladyfinger in the espresso and lay it in the dish.",
+          ),
+          video("https://a.com/whole.mp4", ""),
+          video("https://a.com/lost.mp4", "A step the importer dropped."),
+        ],
+        instructions,
+      ),
+    ).toEqual([
+      {
+        url: "https://a.com/dip.mp4",
+        name: null,
+        durationSeconds: 4,
+        stepNumber: 2,
+      },
+      {
+        url: "https://a.com/whole.mp4",
+        name: null,
+        durationSeconds: 4,
+        stepNumber: null,
+      },
+      {
+        url: "https://a.com/lost.mp4",
+        name: null,
+        durationSeconds: 4,
+        stepNumber: null,
+      },
+    ]);
   });
 });

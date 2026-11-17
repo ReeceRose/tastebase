@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import { users } from "@/db/schema.base";
+import { journalEntryRecipes } from "@/db/schema.journal";
 import {
   recipeImages,
   recipeIngredients,
@@ -15,6 +16,7 @@ import {
   recipes,
   recipeTagRelations,
   recipeTags,
+  recipeVideos,
 } from "@/db/schema.recipes";
 import { auth } from "@/lib/auth/auth";
 import { createOperationLogger, logError } from "@/lib/logging/logger";
@@ -120,6 +122,37 @@ function savePhotoTags(
         and(
           eq(recipeImages.id, tag.imageId),
           eq(recipeImages.recipeId, recipeId),
+        ),
+      )
+      .run();
+  }
+  saveVideoSteps(tx, recipeId, photoTags, stepCount);
+}
+
+// Videos share the editor's photo tags but only use the step ones; a video
+// with no steps covers the whole recipe.
+function saveVideoSteps(
+  tx: RecipeTransaction,
+  recipeId: string,
+  photoTags: PhotoTagInput[],
+  stepCount: number | null,
+) {
+  tx.update(recipeVideos)
+    .set({ stepNumbers: [] })
+    .where(eq(recipeVideos.recipeId, recipeId))
+    .run();
+  for (const tag of photoTags) {
+    if (tag.role !== PhotoRole.STEP) continue;
+    const stepNumbers = tag.stepNumbers.filter(
+      (stepNumber) => stepCount === null || stepNumber <= stepCount,
+    );
+    if (stepNumbers.length === 0) continue;
+    tx.update(recipeVideos)
+      .set({ stepNumbers })
+      .where(
+        and(
+          eq(recipeVideos.id, tag.imageId),
+          eq(recipeVideos.recipeId, recipeId),
         ),
       )
       .run();
@@ -296,7 +329,7 @@ export async function getRecipeBySlug(
     }
 
     const recipeId = recipe[0].recipe.id;
-    const [ingredients, instructions, images, notes, tagRelations] =
+    const [ingredients, instructions, images, videos, notes, tagRelations] =
       await Promise.all([
         db
           .select()
@@ -310,6 +343,10 @@ export async function getRecipeBySlug(
           .select()
           .from(recipeImages)
           .where(eq(recipeImages.recipeId, recipeId)),
+        db
+          .select()
+          .from(recipeVideos)
+          .where(eq(recipeVideos.recipeId, recipeId)),
         db
           .select({ note: recipeNotes, authorName: users.name })
           .from(recipeNotes)
@@ -349,6 +386,7 @@ export async function getRecipeBySlug(
           Number(b.isHero) - Number(a.isHero) ||
           (a.sortOrder || 0) - (b.sortOrder || 0),
       ),
+      videos: videos.sort((a, b) => a.sortOrder - b.sortOrder),
       notes: notes
         .map((row) => ({ ...row.note, authorName: row.authorName }))
         .sort((a, b) => {
@@ -573,13 +611,22 @@ export async function deleteRecipe(recipeId: string) {
       .select({ filename: recipeImages.filename })
       .from(recipeImages)
       .where(eq(recipeImages.recipeId, recipeId));
+    const videosToDelete = await db
+      .select({ filename: recipeVideos.filename })
+      .from(recipeVideos)
+      .where(eq(recipeVideos.recipeId, recipeId));
 
     db.transaction((tx) => {
       tx.delete(recipeTagRelations)
         .where(eq(recipeTagRelations.recipeId, recipeId))
         .run();
       tx.delete(recipeNotes).where(eq(recipeNotes.recipeId, recipeId)).run();
+      tx.update(journalEntryRecipes)
+        .set({ recipeId: null })
+        .where(eq(journalEntryRecipes.recipeId, recipeId))
+        .run();
       tx.delete(recipeImages).where(eq(recipeImages.recipeId, recipeId)).run();
+      tx.delete(recipeVideos).where(eq(recipeVideos.recipeId, recipeId)).run();
       tx.delete(recipeInstructions)
         .where(eq(recipeInstructions.recipeId, recipeId))
         .run();
@@ -603,6 +650,13 @@ export async function deleteRecipe(recipeId: string) {
             "Failed to delete recipe image file during recipe deletion",
           );
         }
+      }
+    }
+
+    if (videosToDelete.length > 0) {
+      const { deleteRecipeVideo } = await import("@/lib/file-storage/videos");
+      for (const video of videosToDelete) {
+        await deleteRecipeVideo(video.filename);
       }
     }
 

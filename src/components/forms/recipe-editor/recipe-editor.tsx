@@ -20,13 +20,16 @@ import {
   updateRecipe,
 } from "@/lib/server-actions/recipe-actions";
 import { attachImagesToRecipe } from "@/lib/server-actions/recipe-image-actions";
+import { attachVideosToRecipe } from "@/lib/server-actions/recipe-video-actions";
 import { ButtonVariant, EditorSection, RecipeEditorMode } from "@/lib/types";
-import type { PhotoSuggestion } from "@/lib/types/import-types";
+import type { ImportedVideo, PhotoSuggestion } from "@/lib/types/import-types";
 import type {
   EditorPhotoRef,
   PendingImage,
+  PendingVideo,
   RecipeEditorValues,
   RecipeImage,
+  RecipeVideo,
   RecipeWithRelations,
   SavedPhotoTag,
 } from "@/lib/types/recipe-types";
@@ -47,6 +50,7 @@ interface RecipeEditorProps {
   notice: string | null;
   initialPhotos?: PendingImage[];
   photoSuggestions?: PhotoSuggestion[];
+  videoSuggestions?: ImportedVideo[];
   onStartOver?: () => void;
 }
 
@@ -77,6 +81,7 @@ export function RecipeEditor({
   notice,
   initialPhotos = [],
   photoSuggestions = [],
+  videoSuggestions = [],
   onStartOver,
 }: RecipeEditorProps) {
   const router = useRouter();
@@ -84,6 +89,8 @@ export function RecipeEditor({
   const [isSaving, startSaving] = useTransition();
   const [images, setImages] = useState<RecipeImage[]>(recipe?.images ?? []);
   const [pending, setPending] = useState<PendingImage[]>(initialPhotos);
+  const [videos, setVideos] = useState<RecipeVideo[]>(recipe?.videos ?? []);
+  const [pendingVideos, setPendingVideos] = useState<PendingVideo[]>([]);
   const [sectionErrors, setSectionErrors] = useState<
     Partial<Record<EditorSection, string>>
   >({});
@@ -174,6 +181,27 @@ export function RecipeEditor({
     return result.success;
   };
 
+  const attachPendingVideos = async (
+    recipeId: string,
+    photoTags: SavedPhotoTag[],
+  ) => {
+    if (pendingVideos.length === 0) return true;
+    const stepsFor = (filename: string) =>
+      photoTags.find((tag) => tag.photo === filename)?.stepNumbers ?? [];
+    const result = await attachVideosToRecipe({
+      recipeId,
+      videos: pendingVideos.map((video) => ({
+        filename: video.filename,
+        originalName: video.originalName,
+        fileSize: video.fileSize,
+        durationSeconds: video.durationSeconds,
+        title: video.title,
+        stepNumbers: stepsFor(video.filename),
+      })),
+    }).catch(() => ({ success: false }));
+    return result.success;
+  };
+
   const save = () => {
     startSaving(async () => {
       form.clearErrors();
@@ -208,10 +236,16 @@ export function RecipeEditor({
           parsed.data.title,
           cleaned.photoTags,
         );
+        const videosAttached = await attachPendingVideos(
+          result.data.id,
+          cleaned.photoTags,
+        );
         draft.clear();
         form.reset(form.getValues());
         if (!attached) {
           toast.warning("Recipe saved, but the photos didn't attach.");
+        } else if (!videosAttached) {
+          toast.warning("Recipe saved, but the videos didn't attach.");
         } else {
           toast.success("Recipe saved");
         }
@@ -241,11 +275,30 @@ export function RecipeEditor({
   };
 
   const photoRefs: EditorPhotoRef[] = recipe
-    ? images.map((image) => ({
-        photo: image.id,
-        src: `/api/recipes/images/${image.filename}`,
-      }))
-    : pending.map((image) => ({ photo: image.filename, src: image.url }));
+    ? [
+        ...images.map((image) => ({
+          photo: image.id,
+          src: `/api/recipes/images/${image.filename}`,
+          isVideo: false,
+        })),
+        ...videos.map((video) => ({
+          photo: video.id,
+          src: `/api/recipes/videos/${video.filename}`,
+          isVideo: true,
+        })),
+      ]
+    : [
+        ...pending.map((image) => ({
+          photo: image.filename,
+          src: image.url,
+          isVideo: false,
+        })),
+        ...pendingVideos.map((video) => ({
+          photo: video.filename,
+          src: video.url,
+          isVideo: true,
+        })),
+      ];
 
   const savedLabel = draft.lastSavedAt
     ? "Draft saved on this device"
@@ -363,6 +416,11 @@ export function RecipeEditor({
               pending={pending}
               onPendingChange={setPending}
               suggestions={photoSuggestions}
+              videos={videos}
+              onVideosChange={setVideos}
+              pendingVideos={pendingVideos}
+              onPendingVideosChange={setPendingVideos}
+              videoSuggestions={videoSuggestions}
             />
             <EditorDetails automaticSwatch={automaticSwatch} />
             <EditorSharing />

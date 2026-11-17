@@ -1,10 +1,16 @@
 import { PhotoStrip } from "@/components/recipes/photo-strip";
+import { RecipeVideoPlayer } from "@/components/recipes/recipe-video-player";
 import type { RecipeSwatch, TemperatureUnit } from "@/lib/types";
-import type { RecipeImage, RecipeInstruction } from "@/lib/types/recipe-types";
+import type {
+  RecipeImage,
+  RecipeInstruction,
+  RecipeVideo,
+} from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
 import { convertTemperaturesInText } from "@/lib/utils/ingredient-scaling";
 import { photosForStep } from "@/lib/utils/photo-tags";
 import { groupInstructionsByGroup } from "@/lib/utils/recipe-utils";
+import { videosForStep } from "@/lib/utils/recipe-videos";
 import { stepSwatch, swatchClasses } from "@/lib/utils/swatches";
 import { formatTotalTime } from "@/lib/utils/time-formatting";
 import { formatTemperatureForDisplay } from "@/lib/utils/unit-conversions";
@@ -12,6 +18,7 @@ import { formatTemperatureForDisplay } from "@/lib/utils/unit-conversions";
 interface InstructionStepsProps {
   instructions: RecipeInstruction[];
   images: RecipeImage[];
+  videos: RecipeVideo[];
   title: string;
   swatch: RecipeSwatch;
   temperatureUnit: TemperatureUnit;
@@ -20,6 +27,7 @@ interface InstructionStepsProps {
 export function InstructionSteps({
   instructions,
   images,
+  videos,
   title,
   swatch,
   temperatureUnit,
@@ -52,6 +60,7 @@ export function InstructionSteps({
                 ? formatTemperatureForDisplay(step.temperature, temperatureUnit)
                 : null;
               const stepPhotos = photosForStep(images, step.stepNumber);
+              const stepVideos = videosForStep(videos, step.stepNumber);
 
               return (
                 <li
@@ -104,6 +113,25 @@ export function InstructionSteps({
                           label={`Photos for step ${index + 1}`}
                         />
                       </div>
+                    )}
+                    {stepVideos.length > 0 && (
+                      <ul
+                        className={cn(
+                          "mt-3 grid gap-2.5",
+                          stepVideos.length > 1 && "sm:grid-cols-2",
+                        )}
+                        aria-label={`Videos for step ${index + 1}`}
+                      >
+                        {stepVideos.map((video) => (
+                          <li key={video.id}>
+                            <RecipeVideoPlayer
+                              src={`/api/recipes/videos/${video.filename}`}
+                              title={`Step ${index + 1} video`}
+                              clip
+                            />
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </div>
                 </li>

@@ -5,6 +5,8 @@ import { RecipeJsonLd } from "@/components/layout/recipe-json-ld";
 import { RecipePage } from "@/components/layout/recipe-page";
 import { RecipeDetailSkeleton } from "@/components/skeletons/recipe-detail-skeleton";
 import { auth } from "@/lib/auth/auth";
+import { getRecipeJournal } from "@/lib/server-actions/journal-actions";
+import { getRecipeHistory } from "@/lib/server-actions/journal-lookback-actions";
 import { getRecipesUsing } from "@/lib/server-actions/linked-recipe-actions";
 import { getRecipeBySlug } from "@/lib/server-actions/recipe-actions";
 import { getRecipeCookSummary } from "@/lib/server-actions/recipe-cook-actions";
@@ -16,6 +18,7 @@ import { requestOrigin } from "@/lib/utils/recipe-json-ld";
 
 interface RecipeDetailPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ log?: string | string[] }>;
 }
 
 interface RecipeDetailContentProps {
@@ -24,6 +27,7 @@ interface RecipeDetailContentProps {
   measurementSystem: MeasurementUnit;
   temperatureUnit: TemperatureUnit;
   origin: string;
+  openJournalComposer: boolean;
 }
 
 async function RecipeDetailContent({
@@ -32,6 +36,7 @@ async function RecipeDetailContent({
   measurementSystem,
   temperatureUnit,
   origin,
+  openJournalComposer,
 }: RecipeDetailContentProps) {
   const result = await getRecipeBySlug(recipeSlug);
 
@@ -42,13 +47,16 @@ async function RecipeDetailContent({
     throw new Error(result.error || "Failed to load recipe");
   }
 
-  const [favoriteStatus, cooks, lists, usedIn] = await Promise.all([
-    getRecipeFavoriteStatus(result.data.id).catch(() => undefined),
-    getRecipeCookSummary(result.data.id).catch(() => undefined),
-    getRecipeListOptions(result.data.id).catch(() => undefined),
-    getRecipesUsing(result.data.id).catch(() => undefined),
-    trackRecipeView(result.data.id).catch(() => undefined),
-  ]);
+  const [favoriteStatus, cooks, lists, usedIn, journal, history] =
+    await Promise.all([
+      getRecipeFavoriteStatus(result.data.id).catch(() => undefined),
+      getRecipeCookSummary(result.data.id).catch(() => undefined),
+      getRecipeListOptions(result.data.id).catch(() => undefined),
+      getRecipesUsing(result.data.id).catch(() => undefined),
+      getRecipeJournal(result.data.id).catch(() => undefined),
+      getRecipeHistory(result.data.id).catch(() => undefined),
+      trackRecipeView(result.data.id).catch(() => undefined),
+    ]);
 
   return (
     <>
@@ -60,6 +68,11 @@ async function RecipeDetailContent({
         lists={lists ?? []}
         usedIn={usedIn?.recipes ?? []}
         cooks={cooks ?? { count: 0, lastCookedAt: null, lastCookedBy: null }}
+        journal={journal?.entries ?? []}
+        history={
+          history ?? { count: 0, firstAt: null, lastAt: null, ratings: [] }
+        }
+        openJournalComposer={openJournalComposer}
         measurementSystem={measurementSystem}
         temperatureUnit={temperatureUnit}
       />
@@ -69,6 +82,7 @@ async function RecipeDetailContent({
 
 export default async function RecipeDetailPage({
   params,
+  searchParams,
 }: RecipeDetailPageProps) {
   const requestHeaders = await headers();
   const session = await auth.api.getSession({
@@ -80,6 +94,7 @@ export default async function RecipeDetailPage({
   }
 
   const { slug } = await params;
+  const { log } = await searchParams;
   const measurementSystem =
     session.user.preferredWeightUnit === MeasurementUnit.METRIC
       ? MeasurementUnit.METRIC
@@ -97,6 +112,7 @@ export default async function RecipeDetailPage({
         measurementSystem={measurementSystem}
         temperatureUnit={temperatureUnit}
         origin={requestOrigin(requestHeaders)}
+        openJournalComposer={log === "1"}
       />
     </Suspense>
   );

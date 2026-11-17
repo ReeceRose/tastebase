@@ -1,5 +1,5 @@
 import type { RecipeDifficulty } from "@/lib/types";
-import type { PendingImage } from "@/lib/types/recipe-types";
+import type { PendingImage, PendingVideo } from "@/lib/types/recipe-types";
 
 export enum RecipeImportSource {
   JSON_LD = "json_ld",
@@ -67,6 +67,22 @@ export interface JsonLdStepImage {
   text: string;
 }
 
+// A video the recipe's structured data attaches to one step, or to the whole
+// recipe when text is empty.
+export interface JsonLdVideo {
+  url: string;
+  text: string;
+  name: string | null;
+  durationSeconds: number | null;
+}
+
+export interface ImportedVideo {
+  url: string;
+  name: string | null;
+  durationSeconds: number | null;
+  stepNumber: number | null;
+}
+
 export interface ImportedStepPhoto {
   url: string;
   stepNumber: number;
@@ -82,6 +98,7 @@ export interface RecipeImportResult {
   image: PendingImage | null;
   photoUrls: string[];
   stepPhotos: ImportedStepPhoto[];
+  videos: ImportedVideo[];
   warnings: string[];
 }
 
@@ -101,6 +118,13 @@ export interface PhotoSuggestion {
   url: string;
   image: CapturedImage | null;
   stepNumber: number | null;
+}
+
+// What happened to one video: the saved file, or why it wasn't added.
+export interface SuggestedVideoOutcome {
+  url: string;
+  video: PendingVideo | null;
+  error: string | null;
 }
 
 // What happened to one photo in a batch: the saved image, or why it wasn't

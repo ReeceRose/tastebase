@@ -231,6 +231,7 @@ Tastebase provides comprehensive recipe management capabilities for shared insta
 - **Recipe Notes**: Add personal notes and modifications to recipes
 - **Recipe Search**: Find recipes by name, ingredients, or tags across all accessible recipes
 - **Privacy Controls**: Public recipes (shared with all instance users) or private recipes (personal only)
+- **Cooking Journal**: `/journal` is each person's timeline of things they made (tied to a recipe, with photos, date and rating) and notes (recipe optional). Entries are shared unless marked "only me"; a recipe's page shows its cook log. Tables live in `db/schema.journal.ts` (an entry's recipes are rows in `journal_entry_recipes`, which keep the title after a recipe is deleted), actions in `journal-actions.ts`. Journal photos use the recipe image storage, so the unused-photo cleanup and account deletion must keep counting `journal_photos`. Look-back features (on this day, `/journal/[year]` review, `/journal/photos` wall, recipe history, old favourites) live in `journal-lookback-actions.ts`, and the `/journal/[year]/[month]` recap in `journal-month-actions.ts`; cook counts come from `recipe_cooks`, which journal cooks also write. Cook moments are bucketed by the viewer's time zone from the `tz` cookie (`TimeZoneCookie` in the app shell); journal entries are stored as noon UTC on their day
 
 ### Database Schema Structure
 ```typescript
@@ -251,6 +252,8 @@ Tastebase provides comprehensive recipe management capabilities for shared insta
 ## Recipe Import
 
 English recipes only. `src/lib/import/import-recipe.ts` tries JSON-LD, then microdata, then page text, and page text must pass `pageTextIsRecipe` or nothing is filled in. `ingredient-parser.ts` reads each line in stages (amount, unit, second measures, adjustments, then name and notes via `ingredient-notes-split.ts`). `import-quality.ts` holds the row checks behind confidence scores and warnings.
+
+Videos come from JSON-LD `VideoObject`s with a `contentUrl` (on a step or the recipe; embeds like YouTube have no file and are skipped). The editor offers them next to the suggested photos; adding one downloads it (50 MB cap, MP4 or WebM checked by its bytes) to `uploads/recipe-videos`, served with range support by `/api/recipes/videos/[filename]`. Rows live in `recipe_videos`: a video with `step_numbers` plays muted on that step and in cook mode, one without goes in the recipe's Video panel. Step tags share the editor's `photoTags`. The unused-file cleanup, recipe deletion and account deletion must keep counting `recipe_videos`.
 
 An author's second measure and an adjustment stay in the ingredient name, as in `flour (125 g), plus 2 tbsp`, because `ingredient-scaling.ts` reads and scales them there. Everything else goes in `notes`.
 
@@ -277,6 +280,7 @@ Tests that guard it:
 - Modular schema approach - recipe schema in `schema.recipes.ts`
 - Database connection and migrations in `db/index.ts` and `db/migrate.ts`
 - Persistent local storage for recipes, ingredients, and user data
+- **Migrations run inside a transaction with foreign keys on**, so `PRAGMA foreign_keys=OFF` in a generated migration does nothing. When Drizzle rebuilds a table (`__new_<table>`), dropping the old one cascades deletes to child tables: back the children up first and restore them, as `0031_journal_entry_recipes.sql` does. The running dev server applies new migrations as soon as `db:generate` writes them, so stop it before generating one you'll need to edit
 - **Troubleshooting**: If better-sqlite3 fails to install, manually build with: `cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && pnpm run build-release`
 
 ### Recipe Management Features

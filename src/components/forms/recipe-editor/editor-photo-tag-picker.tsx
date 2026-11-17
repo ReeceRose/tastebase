@@ -29,6 +29,7 @@ interface EditorPhotoTagPickerProps {
   steps: EditorStepOption[];
   photoNumber: number;
   onChange: (tags: EditorPhotoTag[]) => void;
+  forVideo?: boolean;
 }
 
 const STEP_TOOLTIP_CLASS = "max-w-[min(20rem,calc(100vw-2rem))] text-pretty";
@@ -39,6 +40,7 @@ export function EditorPhotoTagPicker({
   steps,
   photoNumber,
   onChange,
+  forVideo = false,
 }: EditorPhotoTagPickerProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [triggerHovered, setTriggerHovered] = useState(false);
@@ -66,7 +68,9 @@ export function EditorPhotoTagPicker({
       ? "Ingredients"
       : role === PhotoRole.FINISHED
         ? "Finished dish"
-        : "Not tagged";
+        : forVideo
+          ? "Whole recipe"
+          : "Not tagged";
 
   return (
     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
@@ -76,7 +80,7 @@ export function EditorPhotoTagPicker({
       >
         <TooltipTrigger asChild>
           <DropdownMenuTrigger
-            aria-label={`What photo ${photoNumber} shows`}
+            aria-label={`What ${forVideo ? "video" : "photo"} ${photoNumber} shows`}
             className="flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-control border-2 border-input bg-card px-4 text-meta whitespace-nowrap transition-[border-color,box-shadow] duration-150 outline-none focus-visible:border-foreground focus-visible:ring-[3px] focus-visible:ring-ring/25"
             onPointerEnter={() => setTriggerHovered(true)}
             onPointerLeave={() => setTriggerHovered(false)}
@@ -116,20 +120,24 @@ export function EditorPhotoTagPicker({
           checked={role === null && taggedSteps.length === 0}
           onSelect={() => chooseRole(null)}
         >
-          Not tagged
+          {forVideo ? "Whole recipe" : "Not tagged"}
         </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem
-          checked={role === PhotoRole.INGREDIENTS}
-          onSelect={() => chooseRole(PhotoRole.INGREDIENTS)}
-        >
-          Ingredients
-        </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem
-          checked={role === PhotoRole.FINISHED}
-          onSelect={() => chooseRole(PhotoRole.FINISHED)}
-        >
-          Finished dish
-        </DropdownMenuCheckboxItem>
+        {!forVideo && (
+          <>
+            <DropdownMenuCheckboxItem
+              checked={role === PhotoRole.INGREDIENTS}
+              onSelect={() => chooseRole(PhotoRole.INGREDIENTS)}
+            >
+              Ingredients
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={role === PhotoRole.FINISHED}
+              onSelect={() => chooseRole(PhotoRole.FINISHED)}
+            >
+              Finished dish
+            </DropdownMenuCheckboxItem>
+          </>
+        )}
         {steps.length > 0 && (
           <>
             <DropdownMenuSeparator />

@@ -145,6 +145,7 @@ const recipe: RecipeWithRelations = {
     step(2, "Roast at 400°F.", { timeMinutes: 60, notes: "Rest it." }),
     step(1, "Season the bird."),
   ],
+  videos: [],
   images: [
     image("step", PhotoRole.STEP, [2]),
     image("main", null, [], true),
@@ -581,6 +582,7 @@ describe("renderRecipePdf", () => {
         ingredients: [],
         instructions: [],
         images: [],
+        videos: [],
       },
       {
         style: RecipePdfStyle.DEVICE,
