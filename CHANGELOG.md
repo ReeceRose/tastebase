@@ -4,6 +4,28 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.20 — 2026-11-17
+
+This release adds a cooking journal so your household can track what you've made, and brings recipe videos into Tastebase.
+
+### What's Changed
+
+#### Features
+- **Cooking journal**: The new Journal page records each thing you cook, with the recipe, photos, date and a rating. You can also write notes with or without a recipe. Entries are shared with everyone unless you mark them "only me".
+- **Look-back recaps**: See what you cooked on this day in past years, a review of each year and month, a cooking calendar and heatmap, your most-cooked recipes, and a wall of all your journal photos.
+- **Cook log on recipes**: Each recipe page now shows when it was made and by whom.
+- **Recipe videos**: Imported recipes now suggest videos from the source page, and you can upload your own MP4 or WebM files (up to 50 MB). Tag a video to a step and it plays muted on that step and in cook mode. Untagged videos appear in the recipe's Video panel.
+
+#### Improvements
+- Cook dates and recaps follow your own time zone.
+- Cleaning up unused files and deleting an account now also cover journal photos and recipe videos.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.20
+```
+
 ## v0.1.19 — 2026-11-15
 
 Search results now behave like normal links, so you can open recipes in new tabs straight from search.
