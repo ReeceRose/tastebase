@@ -18,7 +18,7 @@ Tastebase runs as a single Docker container with a SQLite database and a folder 
 | Container path | Holds |
 | --- | --- |
 | `/app/data` | The SQLite database (`DATABASE_URL=file:/app/data/tastebase.db`) |
-| `/app/uploads` | Recipe photos |
+| `/app/uploads` | Recipe photos and videos |
 
 Mount both. Without them, every recipe and photo is lost when the container is recreated.
 
@@ -179,7 +179,8 @@ recipes.example.com {
 server {
     listen 80;
     server_name recipes.example.com;
-    client_max_body_size 10m;
+    client_max_body_size 500m;
+    proxy_request_buffering off;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -192,7 +193,9 @@ server {
 }
 ```
 
-`client_max_body_size` matters: photo uploads go up to 10 MB, and Nginx rejects anything over 1 MB by default.
+`client_max_body_size` matters: video uploads go up to 500 MB, and Nginx rejects anything over 1 MB by default. `proxy_request_buffering off` passes uploads straight through instead of saving each one to disk first.
+
+If Tastebase is reached through Cloudflare (a proxied DNS record or a tunnel), Cloudflare caps uploads at 100 MB on its Free and Pro plans, so larger videos fail there.
 
 ### Traefik (Docker labels)
 

@@ -27,9 +27,6 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb", // Increase limit for file uploads
     },
-    // The proxy reads request bodies, so video uploads need room past the
-    // 10 MB default (50 MB videos plus form overhead).
-    proxyClientMaxBodySize: "60mb",
   },
   compress: true,
   skipTrailingSlashRedirect: true,

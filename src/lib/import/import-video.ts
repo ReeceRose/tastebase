@@ -1,5 +1,5 @@
-import { saveRecipeVideo } from "@/lib/file-storage/videos";
-import { fetchRecipeVideo } from "@/lib/import/fetch-page";
+import { saveRecipeVideo, VideoTooLargeError } from "@/lib/file-storage/videos";
+import { fetchRecipeVideo, PageFetchError } from "@/lib/import/fetch-page";
 import type { ImportedVideo } from "@/lib/types/import-types";
 import type { PendingVideo } from "@/lib/types/recipe-types";
 
@@ -13,7 +13,13 @@ function originalNameFor(url: string): string {
 export async function saveSuggestedVideo(
   video: ImportedVideo,
 ): Promise<PendingVideo | null> {
-  const saved = await saveRecipeVideo(await fetchRecipeVideo(video.url));
+  const saved = await saveRecipeVideo(await fetchRecipeVideo(video.url)).catch(
+    (error) => {
+      throw error instanceof VideoTooLargeError
+        ? new PageFetchError(error.message)
+        : error;
+    },
+  );
   if (!saved) return null;
   return {
     filename: saved.filename,

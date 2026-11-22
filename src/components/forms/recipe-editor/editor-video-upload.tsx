@@ -5,6 +5,13 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  MAX_VIDEO_BYTES,
+  MAX_VIDEO_LABEL,
+  VIDEO_DURATION_HEADER,
+  VIDEO_NAME_HEADER,
+  VIDEO_UPLOAD_PATH,
+} from "@/lib/config/video-limits";
 import { ButtonVariant } from "@/lib/types";
 import type { PendingVideo } from "@/lib/types/recipe-types";
 
@@ -16,7 +23,6 @@ interface UploadErrorBody {
   error: string;
 }
 
-const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 const ACCEPTED_TYPES = "video/mp4,video/webm,video/quicktime";
 const DURATION_TIMEOUT_MS = 5000;
 
@@ -46,14 +52,17 @@ function uploadVideo(
   onProgress: (percent: number) => void,
 ): Promise<PendingVideo> {
   return new Promise((resolve, reject) => {
-    const form = new FormData();
-    form.append("file", file);
-    if (durationSeconds !== null) {
-      form.append("durationSeconds", String(durationSeconds));
-    }
     const request = new XMLHttpRequest();
-    request.open("POST", "/api/recipes/videos");
+    request.open("POST", VIDEO_UPLOAD_PATH);
     request.responseType = "json";
+    request.setRequestHeader(
+      "Content-Type",
+      file.type || "application/octet-stream",
+    );
+    request.setRequestHeader(VIDEO_NAME_HEADER, encodeURIComponent(file.name));
+    if (durationSeconds !== null) {
+      request.setRequestHeader(VIDEO_DURATION_HEADER, String(durationSeconds));
+    }
     request.upload.onprogress = (event) => {
       if (event.lengthComputable) {
         onProgress(Math.round((event.loaded / event.total) * 100));
@@ -69,7 +78,7 @@ function uploadVideo(
     };
     request.onerror = () =>
       reject(new Error("That video didn't upload. Try again."));
-    request.send(form);
+    request.send(file);
   });
 }
 
@@ -81,7 +90,7 @@ export function EditorVideoUpload({ onUploaded }: EditorVideoUploadProps) {
   const uploadFiles = async (files: File[]) => {
     for (const file of files) {
       if (file.size > MAX_VIDEO_BYTES) {
-        toast.error(`${file.name} is larger than 50 MB`);
+        toast.error(`${file.name} is larger than ${MAX_VIDEO_LABEL}`);
         continue;
       }
       setCurrent(file.name);
@@ -133,7 +142,7 @@ export function EditorVideoUpload({ onUploaded }: EditorVideoUploadProps) {
         </div>
       ) : (
         <p className="text-meta text-muted-foreground">
-          MP4 or WebM, up to 50 MB each.
+          MP4 or WebM, up to {MAX_VIDEO_LABEL} each.
         </p>
       )}
     </div>

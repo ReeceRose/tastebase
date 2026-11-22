@@ -197,7 +197,7 @@ docker compose start</code></pre>
     reverse_proxy localhost:3000
 }</code></pre>
             </div>
-            <p>With Nginx, set <code>client_max_body_size 10m;</code>, because photo uploads go up to 10 MB and Nginx stops at 1 MB by default. The <a href="https://github.com/ReeceRose/tastebase/blob/main/docs/DEPLOYMENT.md#reverse-proxy-and-https">deployment guide</a> has full Nginx and Traefik examples.</p>
+            <p>With Nginx, set <code>client_max_body_size 500m;</code>, because video uploads go up to 500 MB and Nginx stops at 1 MB by default. Cloudflare caps uploads at 100 MB on its Free and Pro plans. The <a href="https://github.com/ReeceRose/tastebase/blob/main/docs/DEPLOYMENT.md#reverse-proxy-and-https">deployment guide</a> has full Nginx and Traefik examples.</p>
           </section>
 
           <section id="troubleshooting">

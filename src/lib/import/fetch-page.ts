@@ -1,13 +1,13 @@
 import { lookup } from "node:dns/promises";
 import { BlockList, isIP } from "node:net";
+import { MAX_VIDEO_BYTES, MAX_VIDEO_LABEL } from "@/lib/config/video-limits";
 import type { FetchedPage } from "@/lib/types/import-types";
 
 const MAX_REDIRECTS = 5;
 const MAX_HTML_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 15000;
-export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
-const VIDEO_TIMEOUT_MS = 120000;
+const VIDEO_TIMEOUT_MS = 10 * 60 * 1000;
 const VIDEO_CONTENT_TYPE =
   /^(video\/|application\/octet-stream|binary\/octet-stream)/;
 const USER_AGENT =
@@ -207,9 +207,12 @@ export async function fetchRecipeImage(input: string): Promise<Buffer> {
   return readLimitedBytes(response, MAX_IMAGE_BYTES, "The image is too large");
 }
 
-// Videos are much bigger than photos, so they get longer to download. The
-// bytes are checked for a real video file before they're stored.
-export async function fetchRecipeVideo(input: string): Promise<Buffer> {
+// Videos are much bigger than photos, so they get longer to download and
+// come back as a stream for saveRecipeVideo to write to disk. It checks the
+// bytes for a real video file and enforces the size limit as it goes.
+export async function fetchRecipeVideo(
+  input: string,
+): Promise<ReadableStream<Uint8Array>> {
   const { response } = await fetchPublic(
     input,
     "video/mp4,video/webm,video/*;q=0.8",
@@ -222,9 +225,13 @@ export async function fetchRecipeVideo(input: string): Promise<Buffer> {
   if (!VIDEO_CONTENT_TYPE.test(contentType)) {
     throw new PageFetchError("That link doesn't point to a video");
   }
-  return readLimitedBytes(
-    response,
-    MAX_VIDEO_BYTES,
-    "The video is larger than 50 MB",
-  );
+  const declaredLength = Number(response.headers.get("content-length") ?? 0);
+  if (!response.body) {
+    throw new PageFetchError("The video download was empty");
+  }
+  if (declaredLength > MAX_VIDEO_BYTES) {
+    await response.body.cancel().catch(() => undefined);
+    throw new PageFetchError(`The video is larger than ${MAX_VIDEO_LABEL}`);
+  }
+  return response.body;
 }

@@ -45,10 +45,13 @@ export default async function proxy(req: NextRequest) {
 }
 
 export const config = {
+  // The video upload route is skipped: the proxy would hold the whole video
+  // in memory and cut it off past proxyClientMaxBodySize. It checks the
+  // session itself.
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    "/(api|trpc)(.*)",
+    "/((?!_next|api/recipes/videos/upload|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for other API routes
+    "/((?!api/recipes/videos/upload)(?:api|trpc).*)",
   ],
 };

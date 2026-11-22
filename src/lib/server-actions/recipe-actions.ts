@@ -186,7 +186,7 @@ export async function createRecipe(rawData: CreateRecipeInput) {
       .limit(1);
 
     if (userExists.length === 0) {
-      console.error("❌ User not found in database:", userId);
+      logger.warn({ userId }, "User not found in database");
       return { success: false, error: "User not found in database" };
     }
 
@@ -266,29 +266,22 @@ export async function createRecipe(rawData: CreateRecipeInput) {
     logger.info({ recipeId, userId }, "Recipe created successfully");
     return { success: true, data: recipe };
   } catch (error) {
-    console.error("💥 Database error:", error);
-
     logError(logger, "Failed to create recipe", error);
 
     // Check for specific database errors
     if (error && typeof error === "object" && "code" in error) {
       switch (error.code) {
         case "SQLITE_CONSTRAINT_FOREIGNKEY":
-          console.error(
-            "❌ Foreign key constraint failed - likely user doesn't exist in database",
-          );
           return {
             success: false,
             error: "Database relationship error - user not found",
           };
         case "SQLITE_CONSTRAINT_UNIQUE":
-          console.error("❌ Unique constraint failed - slug already exists");
           return {
             success: false,
             error: "Recipe with this title already exists",
           };
         default:
-          console.error("❌ Database constraint error:", error.code);
           return { success: false, error: `Database error: ${error.code}` };
       }
     }
