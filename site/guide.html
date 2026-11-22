@@ -98,7 +98,7 @@ curl -o .env https://raw.githubusercontent.com/ReeceRose/tastebase/main/.env.doc
                 <p>Open your <code>BETTER_AUTH_URL</code> and create the first account.</p>
               </li>
             </ol>
-            <p>Recipes live in the <code>tastebase-data</code> volume and photos in <code>tastebase-uploads</code>, so both survive restarts and upgrades.</p>
+            <p>Recipes live in the <code>tastebase-data</code> volume and photos and videos in <code>tastebase-uploads</code>, so both survive restarts and upgrades.</p>
             <p>Using Unraid? There's a <a href="https://github.com/ReeceRose/tastebase/blob/main/docs/DEPLOYMENT_UNRAID.md">separate Unraid guide</a>. For <code>docker run</code> and host folders, see the <a href="https://github.com/ReeceRose/tastebase/blob/main/docs/DEPLOYMENT.md">deployment guide</a>.</p>
           </section>
 
@@ -166,7 +166,7 @@ docker compose up -d</code></pre>
             </div>
             <p><code>latest</code> always points at the newest release. To choose when you upgrade, pin a version in <code>docker-compose.yml</code>, such as <code>ghcr.io/reecerose/tastebase:0.1.1</code>. What's changed is listed on the <a href="https://github.com/ReeceRose/tastebase/releases">Releases page</a>.</p>
             <h3>Back up</h3>
-            <p>This stops Tastebase so the database is consistent, then writes one archive of your recipes and photos to the current folder.</p>
+            <p>This stops Tastebase so the database is consistent, then writes one archive of your recipes, photos and videos to the current folder.</p>
             <div class="code">
               <pre><code>docker compose stop
 docker run --rm --volumes-from tastebase -v "$PWD":/backup alpine \

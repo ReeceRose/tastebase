@@ -1,6 +1,6 @@
 # Tastebase Deployment Guide
 
-Tastebase runs as a single Docker container with a SQLite database and a folder of photos. This guide covers installing it, keeping it up to date, backups, and putting it behind a reverse proxy.
+Tastebase runs as a single Docker container with a SQLite database and a folder of photos and videos. This guide covers installing it, keeping it up to date, backups, and putting it behind a reverse proxy.
 
 ## The image
 

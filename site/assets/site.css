@@ -639,6 +639,70 @@ dd code {
   border-color: #8cc152;
 }
 
+.journal {
+  display: grid;
+  gap: 12px;
+  max-width: 400px;
+  margin-inline: auto;
+  padding: 0;
+  list-style: none;
+}
+
+.journal-entry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 22px;
+  background: var(--surface);
+}
+
+.journal-photo {
+  position: relative;
+  flex: none;
+  width: 68px;
+  height: 68px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--tile-bg);
+}
+
+.journal-photo::after {
+  content: "";
+  position: absolute;
+  right: -16px;
+  bottom: -20px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--tile-deep);
+}
+
+.journal-date,
+.journal-note {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.journal-entry h3 {
+  margin-top: 2px;
+  font-size: 1.0625rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.journal-note {
+  margin-top: 4px;
+}
+
+.journal-rating {
+  margin-top: 4px;
+  color: var(--turmeric);
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+}
+
 [hidden] {
   display: none !important;
 }

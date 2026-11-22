@@ -10,11 +10,15 @@ A simple, local-first recipe management application designed for shared instance
 
 - **🏠 Local-First** - Everything stored on your server, no cloud dependencies
 - **🧺 Made for a household** - Everyone on the instance shares recipes, leaves notes and sees what the house has been cooking
-- **📥 Recipe Import** - Paste a link, the text or a photo of a cookbook page
-- **✍️ One editor** - Paste whole ingredient lists or steps, autosaved drafts on your device, photos, tags and a colour for every recipe
-- **👩‍🍳 Cook mode** - Full-screen steps, timers, ingredient tick-offs and a screen that stays on
+- **📥 Recipe Import** - Paste a link, the text or a photo of a cookbook page; photos and videos from the page come along
+- **✍️ One editor** - Paste whole ingredient lists or steps, autosaved drafts on your device, photos, videos, tags and a colour for every recipe
+- **📸 Photos and videos** - Tag photos to a step, an ingredient or the finished dish; videos tagged to a step play on it, up to 500 MB each
+- **👩‍🍳 Cook mode** - Full-screen steps with their photos and videos, timers, ingredient tick-offs and a screen that stays on
+- **📔 Cooking journal** - Log what you made with photos, the date and a rating, or write a note; shared with the house or kept to yourself
+- **🕰️ Look back** - On this day, monthly and yearly recaps, a cooking calendar, most-made recipes and a wall of journal photos
 - **⚖️ Scaling and units** - Scale servings up or down and switch metric/imperial on any recipe
 - **🔍 Search & Filter** - Search names, ingredients, steps and notes; filter by cook, time, difficulty, cuisine and tag
+- **🗂️ Lists and favourites** - Your own private lists, plus favourites and recently opened
 - **📝 House notes and ratings** - Leave notes for everyone, or keep them to yourself
 - **🏡 Home** - New recipes from the house, what you opened last, what's not been made in a while, and recent activity
 - **🔐 Sharing Controls** - Share a recipe with the house or keep it only visible to you
@@ -28,7 +32,7 @@ A simple, local-first recipe management application designed for shared instance
 - **Framework**: Next.js 16 with App Router and Server Actions
 - **Authentication**: BetterAuth (simple email/password)
 - **Database**: SQLite + Drizzle ORM (local file storage)
-- **File Storage**: Local filesystem for recipe images
+- **File Storage**: Local filesystem for recipe and journal photos and recipe videos
 - **UI**: Tailwind CSS + ShadCN/UI components
 - **Deployment**: Docker with persistent volumes
 - **Development**: TypeScript, Vitest, Biome
@@ -55,7 +59,7 @@ Tastebase is published as a Docker image for `linux/amd64` and `linux/arm64` (Ap
 
 4. **Open Tastebase** at your `BETTER_AUTH_URL` and create the first account. Everyone else in the house signs up from the same page.
 
-Recipes live in the `tastebase-data` volume and photos in `tastebase-uploads`, so both survive restarts and upgrades. Migrations run automatically when the container starts.
+Recipes live in the `tastebase-data` volume and photos and videos in `tastebase-uploads`, so both survive restarts and upgrades. Migrations run automatically when the container starts.
 
 ### Updating
 
@@ -128,8 +132,8 @@ tastebase/
 ├── src/
 │   ├── app/
 │   │   ├── (public)/          # Sign-in, sign-up, password reset
-│   │   ├── (dashboard)/       # Signed-in pages (recipes, search, settings)
-│   │   └── api/               # Auth, health check and image routes
+│   │   ├── (dashboard)/       # Signed-in pages (recipes, journal, search, settings)
+│   │   └── api/               # Auth, health check, PDF, image and video routes
 │   ├── components/            # UI components organized by purpose
 │   │   ├── ui/                # ShadCN base components
 │   │   ├── layout/            # App shell and page layouts
@@ -203,24 +207,36 @@ docker build -t tastebase . # Build the image from source
 - **Recipe Validation** - Ensure all required fields are present
 
 ### Recipe Import
-- **Link Import** - Reads recipe data from most recipe sites, then falls back to the page text. The recipe photo comes in as the main photo, and the other photos on the page are offered to pick from
+- **Link Import** - Reads recipe data from most recipe sites, then falls back to the page text. The recipe photo comes in as the main photo, and the other photos on the page are offered to pick from, along with any videos the page hosts (embeds like YouTube are skipped)
 - **Browser Extension** - [Save to Tastebase](extensions/chrome/README.md) imports the page you're viewing, including sites that block automated imports (Serious Eats, Allrecipes) and subscriber sites you're signed in to (NYT Cooking)
 - **Save from your phone** - Install Tastebase on Android to share recipe links straight into it, or set up an iPhone Shortcut (steps in Settings → Saving recipes)
 - **Text Import** - Paste a recipe and it is split into ingredients and steps
 - **Photo Import** - OCR on the server
 - **Review in the editor** - Imports open in the editor so you can check everything before saving
 
+### Photos and Videos
+- **Photo tags** - Mark each photo as a step (or several), an ingredient or the finished dish
+- **Step videos** - MP4 or WebM, imported or uploaded, up to 500 MB. Tagged to a step, a video plays muted on that step and in cook mode; untagged, it goes in the recipe's Video panel
+- **Stored locally** - Everything lives in the uploads folder, and unused files are cleaned up
+
+### Cooking Journal
+- **Entries** - Things you made (with recipes, photos, date and rating) and notes, with or without a recipe
+- **Sharing** - Entries are shared with the house unless marked "only me"
+- **Cook log** - Each recipe page shows when it was made and by whom
+- **Look back** - On this day, a review of each year and month, a cooking calendar, most-made recipes, old favourites and a photo wall
+
 ### Search & Organization
 - **Search** - Names, ingredients, steps and notes
 - **Filters** - Cook, total time, difficulty, cuisine, tag and who can see it
 - **Tags** - Coloured tag tiles with counts and previews
 - **Sorting** - Newest, top rated, quickest, A to Z, recently changed
+- **Lists** - Your own private recipe lists
 - **Favourites and recent** - Your saved recipes and the ones you opened last
 
 ### User Experience
 - **Recipe tiles** - Every recipe gets a colour, so the collection is easy to scan even without photos
-- **Recipe page** - Ingredients with tick-offs and scaling, numbered steps, notes from the house
-- **Cook mode** - One step at a time with timers
+- **Recipe page** - Ingredients with tick-offs and scaling, numbered steps with their photos and videos, notes from the house and a cook log
+- **Cook mode** - One step at a time with timers, step photos and videos
 - **Dark/Light Mode** - Theme switching for comfortable cooking
 - **Responsive Design** - Works perfectly on desktop and mobile
 
@@ -230,6 +246,7 @@ The database uses a modular schema approach with SQLite:
 
 - `db/schema.base.ts` - Base user schema (BetterAuth integration)
 - `db/schema.recipes.ts` - Recipe management tables
+- `db/schema.journal.ts` - Cooking journal tables
 - `db/schema.ts` - Main export combining all schemas
 
 ### Current Tables
@@ -245,10 +262,17 @@ The database uses a modular schema approach with SQLite:
 - `steps` - Step-by-step cooking instructions
 - `tags` - Recipe categorization tags
 - `notes` - User notes and cooking tips
-- `images` - Recipe image metadata and file paths
+- `images` - Recipe image metadata, file paths and photo tags
+- `recipe_videos` - Imported and uploaded videos, and the steps they're tagged to
+- `recipe_collections`, `recipe_collection_items` - Private recipe lists
 - `recipe_favorites`, `recipe_views` - Favourites and recently opened recipes
 - `recipe_cooks` - When someone finished a recipe in cook mode or marked it cooked
 - `recipe_modifications` - A short history of edits, shown in the house activity feed
+
+**Journal** (`schema.journal.ts`):
+- `journal_entries` - Cooks and notes, with date, rating and who can see them
+- `journal_entry_recipes` - The recipes an entry is about (keeps the title if a recipe is deleted)
+- `journal_photos` - Photos on journal entries
 
 **Relationships:**
 - One-to-many: Recipe → Ingredients, Steps, Tags, Notes, Images
@@ -417,6 +441,7 @@ This recipe app is designed to be your group's shared recipe collection: import 
 
 - ✅ **Import from anywhere** - Links, pasted text or photos
 - ✅ **Made for a household** - Shared recipes, notes and activity, with private recipes when you want them
+- ✅ **A cooking journal** - Remember what you made and look back on it
 - ✅ **Self-Hosted** - Your data stays on your server
 - ✅ **Complete Workflow** - From import to cooking with notes and tips
 - ✅ **Docker Ready** - One-command deployment
