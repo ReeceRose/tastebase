@@ -4,6 +4,29 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.21 — 2026-11-22
+
+Video uploads and imports now handle much larger files without straining the server.
+
+### What's Changed
+
+#### Features
+- Recipe videos can now be up to 500 MB, for both uploads from the editor and videos imported from recipe pages.
+
+#### Fixes
+- Large video uploads no longer get cut off partway through. They now go straight to the server instead of passing through the request proxy, which used to truncate big files.
+
+#### Improvements
+- Uploaded and imported videos are written to disk as they arrive rather than held in memory, so big files don't spike the container's memory use.
+- Every video is still checked to confirm it's a real MP4 or WebM file before it's saved.
+- The deployment guide has updated notes on video size limits.
+
+### Docker
+
+```bash
+docker pull ghcr.io/reecerose/tastebase:0.1.21
+```
+
 ## v0.1.20 — 2026-11-17
 
 This release adds a cooking journal so your household can track what you've made, and brings recipe videos into Tastebase.
