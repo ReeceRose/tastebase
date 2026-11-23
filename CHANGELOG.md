@@ -4,6 +4,27 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.22 — 2026-11-23
+
+Recipes can now be compared side by side, show nutrition, and pull in changes from the page they were imported from.
+
+### What's Changed
+
+#### Features
+- **Compare recipes**: pick two recipes and see them side by side, with ingredients lined up row by row, the methods in columns, a quick summary table, photos and nutrition. A servings control scales both recipes.
+- **Nutrition**: imports now read per-serving nutrition (calories, fat, protein and more) when the source page publishes it. It appears in a panel on the recipe page, and you can add or edit it in the editor.
+- **Update from source**: re-check an imported recipe against its original page and see what changed in the ingredients and steps before you accept anything. Step photos and videos stay with their steps, and nothing is saved until you save the editor.
+
+#### Improvements
+- The recipe actions menu now has links to compare a recipe and to update it from its source.
+- The README and the website now cover the cooking journal and recipe videos.
+
+### Docker
+
+```
+docker pull ghcr.io/reecerose/tastebase:0.1.22
+```
+
 ## v0.1.21 — 2026-11-22
 
 Video uploads and imports now handle much larger files without straining the server.
