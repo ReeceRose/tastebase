@@ -2,6 +2,7 @@ import type {
   LinkedRecipe,
   RecipeIngredient,
   RecipeInstruction,
+  RecipeWithRelations,
 } from "@/lib/types/recipe-types";
 
 export function parseIngredientAmount(amountString: string): {
@@ -162,4 +163,12 @@ export function linkedRecipesOf(
     if (linkedRecipe) linked.set(linkedRecipe.id, linkedRecipe);
   }
   return [...linked.values()];
+}
+
+export function averageRating(recipe: RecipeWithRelations): number | null {
+  const rated = recipe.notes.filter((note) => note.rating !== null);
+  if (rated.length === 0) return null;
+  return (
+    rated.reduce((sum, note) => sum + (note.rating ?? 0), 0) / rated.length
+  );
 }

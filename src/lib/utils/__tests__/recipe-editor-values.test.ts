@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { RecipeWithRelations } from "@/lib/types/recipe-types";
 import {
   cleanEditorValues,
   editorValuesFromImport,
+  editorValuesFromRecipe,
   emptyEditorValues,
   emptyIngredient,
   emptyInstruction,
@@ -34,7 +36,7 @@ describe("editorValuesFromImport", () => {
       },
       true,
     );
-    expect(values.prepTimeMinutes).toBeUndefined();
+    expect(values.prepTimeMinutes).toBeNull();
     expect(values.cookTimeMinutes).toBe(30);
     expect(values.ingredients.length).toBeGreaterThan(0);
   });
@@ -48,6 +50,65 @@ describe("editorValuesFromImport", () => {
       isPublic,
     );
     expect(values.isPublic).toBe(isPublic);
+  });
+});
+
+function undefinedPaths(value: object, path = ""): string[] {
+  return Object.entries(value).flatMap(([key, item]) => {
+    const here = `${path}.${key}`;
+    if (item === undefined) return [here];
+    return item !== null && typeof item === "object"
+      ? undefinedPaths(item, here)
+      : [];
+  });
+}
+
+describe("editorValuesFromRecipe", () => {
+  // A server page drops undefined keys when it hands values to the editor,
+  // and react-hook-form then sees the form as edited before anyone types.
+  it("uses null, not undefined, for blank values", () => {
+    const date = new Date("2026-01-02T00:00:00.000Z");
+    const recipe: RecipeWithRelations = {
+      id: "r1",
+      slug: "toast",
+      userId: "u1",
+      title: "Toast",
+      description: null,
+      servings: null,
+      prepTimeMinutes: null,
+      cookTimeMinutes: 0,
+      difficulty: null,
+      cuisine: null,
+      swatch: null,
+      sourceUrl: null,
+      sourceName: null,
+      videoUrl: null,
+      extraNotes: null,
+      nutrition: null,
+      isPublic: false,
+      isArchived: false,
+      createdAt: date,
+      updatedAt: date,
+      author: { id: "u1", name: "Sam" },
+      ingredients: [],
+      instructions: [
+        {
+          id: "s1",
+          recipeId: "r1",
+          stepNumber: 1,
+          instruction: "Toast the bread.",
+          timeMinutes: null,
+          temperature: null,
+          notes: null,
+          groupName: null,
+        },
+      ],
+      images: [],
+      videos: [],
+      notes: [],
+      tags: [],
+    };
+    expect(undefinedPaths(editorValuesFromRecipe(recipe))).toEqual([]);
   });
 });
 

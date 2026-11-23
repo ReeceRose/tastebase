@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import { parseIngredientList } from "@/lib/import/ingredient-list";
 import { toParsedInstructions } from "@/lib/import/instruction-cleaning";
+import { parseNutrition } from "@/lib/import/nutrition-parser";
 import {
   parseIsoDuration,
   parseServings,
@@ -67,5 +68,6 @@ export function extractMicrodataRecipe(
     tags: [],
     difficulty: null,
     cuisine: text("recipeCuisine"),
+    nutrition: parseNutrition(text),
   };
 }

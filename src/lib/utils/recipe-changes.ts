@@ -1,13 +1,14 @@
 import { RecipeChangeType } from "@/lib/types";
 import type {
+  ComparableDetailField,
   ComparableIngredient,
   ComparableInstruction,
-  ComparableRecipeFields,
   RecipeChangeInput,
   RecipeChangeSummary,
 } from "@/lib/types/recipe-types";
+import { sameNutrition } from "@/lib/utils/nutrition";
 
-const DETAIL_FIELDS: (keyof ComparableRecipeFields)[] = [
+const DETAIL_FIELDS: ComparableDetailField[] = [
   "description",
   "servings",
   "prepTimeMinutes",
@@ -101,7 +102,9 @@ export function describeRecipeChanges(
     DETAIL_FIELDS.some(
       (field) =>
         normalize(input.after[field]) !== normalize(input.before[field]),
-    )
+    ) ||
+    (input.after.nutrition !== undefined &&
+      !sameNutrition(input.after.nutrition, input.before.nutrition))
   ) {
     changed.push(RecipeChangeType.METADATA);
   }

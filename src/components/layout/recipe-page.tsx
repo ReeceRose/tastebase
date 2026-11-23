@@ -6,6 +6,7 @@ import { RecipeExtraNotesPanel } from "@/components/cards/recipe-extra-notes-pan
 import { RecipeHero } from "@/components/cards/recipe-hero";
 import { RecipeHouseNotes } from "@/components/cards/recipe-house-notes";
 import { RecipeJournalPanel } from "@/components/cards/recipe-journal-panel";
+import { RecipeNutritionPanel } from "@/components/cards/recipe-nutrition-panel";
 import { RecipeUsedInPanel } from "@/components/cards/recipe-used-in-panel";
 import { RecipeVideoPanel } from "@/components/cards/recipe-video-panel";
 import { InstructionSteps } from "@/components/recipes/instruction-steps";
@@ -24,6 +25,7 @@ import type {
   RecipeWithRelations,
 } from "@/lib/types/recipe-types";
 import { photosWithRole } from "@/lib/utils/photo-tags";
+import { averageRating } from "@/lib/utils/recipe-utils";
 import { recipeWideVideos } from "@/lib/utils/recipe-videos";
 import { resolveSwatch } from "@/lib/utils/swatches";
 import { formatTotalTime } from "@/lib/utils/time-formatting";
@@ -40,14 +42,6 @@ interface RecipePageProps {
   openJournalComposer: boolean;
   measurementSystem: MeasurementUnit;
   temperatureUnit: TemperatureUnit;
-}
-
-function averageRating(recipe: RecipeWithRelations): number | null {
-  const rated = recipe.notes.filter((note) => note.rating !== null);
-  if (rated.length === 0) return null;
-  return (
-    rated.reduce((sum, note) => sum + (note.rating ?? 0), 0) / rated.length
-  );
 }
 
 export function RecipePage({
@@ -160,6 +154,7 @@ export function RecipePage({
           />
           <RecipeUsedInPanel recipes={usedIn} />
           <RecipeDetailsPanel recipe={recipe} />
+          <RecipeNutritionPanel nutrition={recipe.nutrition} />
         </aside>
       </div>
     </div>

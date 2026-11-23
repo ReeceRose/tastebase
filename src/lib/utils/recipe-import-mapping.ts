@@ -63,11 +63,12 @@ export function mapImportResultToFormData(
     ingredients: recipe.ingredients.map(mapIngredient),
     instructions: recipe.instructions.map((instruction) => ({
       instruction: instruction.instruction,
-      timeMinutes: instruction.timeMinutes ?? undefined,
+      timeMinutes: instruction.timeMinutes,
       temperature: instruction.temperature ?? "",
       notes: "",
       groupName: clampText(instruction.groupName, MAX_GROUP_LENGTH),
     })),
     tags: recipe.tags,
+    nutrition: recipe.nutrition,
   };
 }

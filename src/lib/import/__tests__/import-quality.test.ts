@@ -49,6 +49,7 @@ function recipe(
     tags: [],
     difficulty: null,
     cuisine: null,
+    nutrition: null,
   };
 }
 

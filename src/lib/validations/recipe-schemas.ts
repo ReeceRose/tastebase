@@ -65,6 +65,28 @@ const recipeInstructionSchema = z.object({
     .optional(),
 });
 
+const nutrientAmountSchema = z
+  .number()
+  .min(0, "Nutrition values can't be negative")
+  .max(100000, "That value is too large")
+  .nullable();
+
+const nutritionSchema = z.object({
+  servingSize: z
+    .string()
+    .max(100, "Serving size must be 100 characters or less")
+    .nullable(),
+  calories: nutrientAmountSchema,
+  fat: nutrientAmountSchema,
+  saturatedFat: nutrientAmountSchema,
+  carbohydrates: nutrientAmountSchema,
+  sugar: nutrientAmountSchema,
+  fibre: nutrientAmountSchema,
+  protein: nutrientAmountSchema,
+  sodium: nutrientAmountSchema,
+  cholesterol: nutrientAmountSchema,
+});
+
 export const createRecipeSchema = z.object({
   title: z
     .string()
@@ -160,6 +182,7 @@ export const createRecipeSchema = z.object({
       "Video link must be a valid URL when provided",
     )
     .optional(),
+  nutrition: nutritionSchema.nullable().optional(),
   isPublic: z.boolean(),
   ingredients: z
     .array(recipeIngredientSchema)

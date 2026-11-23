@@ -13,6 +13,7 @@ const SECTIONS = [
   { id: EditorSection.INGREDIENTS, label: "Ingredients" },
   { id: EditorSection.METHOD, label: "Method" },
   { id: EditorSection.PHOTOS, label: "Photos and videos" },
+  { id: EditorSection.NUTRITION, label: "Nutrition" },
   { id: EditorSection.DETAILS, label: "Details" },
   { id: EditorSection.SHARING, label: "Who can see it" },
 ];

@@ -1,4 +1,5 @@
 import type { RecipeDifficulty } from "@/lib/types";
+import type { RecipeNutrition } from "@/lib/types/nutrition-types";
 import type { PendingImage, PendingVideo } from "@/lib/types/recipe-types";
 
 export enum RecipeImportSource {
@@ -59,6 +60,7 @@ export interface RecipeParsingResult {
   tags: string[];
   difficulty: RecipeDifficulty | null;
   cuisine: string | null;
+  nutrition: RecipeNutrition | null;
 }
 
 // A photo the recipe's structured data attaches to one step.

@@ -1,7 +1,7 @@
 "use client";
 
-import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import { ServingsStepper } from "@/components/forms/servings-stepper";
 import { IngredientList } from "@/components/recipes/ingredient-list";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useIngredientTicks } from "@/hooks/use-ingredient-ticks";
@@ -41,31 +41,11 @@ export function IngredientPanel({
           Ingredients
         </h2>
         {scale.canScale && (
-          <div className="flex items-center gap-1 rounded-full bg-background p-1">
-            <button
-              type="button"
-              onClick={scale.decrease}
-              disabled={scale.servings <= 1}
-              aria-label="Fewer servings"
-              className="grid size-10 place-items-center rounded-full bg-card sm:size-8 outline-none disabled:opacity-40 focus-visible:ring-[3px] focus-visible:ring-ring"
-            >
-              <Minus className="size-4" strokeWidth={2.5} />
-            </button>
-            <span
-              aria-live="polite"
-              className="min-w-16 text-center text-sm font-extrabold tabular"
-            >
-              Serves {scale.servings}
-            </span>
-            <button
-              type="button"
-              onClick={scale.increase}
-              aria-label="More servings"
-              className="grid size-10 place-items-center rounded-full bg-card sm:size-8 outline-none focus-visible:ring-[3px] focus-visible:ring-ring"
-            >
-              <Plus className="size-4" strokeWidth={2.5} />
-            </button>
-          </div>
+          <ServingsStepper
+            servings={scale.servings}
+            onDecrease={scale.decrease}
+            onIncrease={scale.increase}
+          />
         )}
       </div>
 

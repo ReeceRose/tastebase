@@ -10,16 +10,19 @@ import { editorValuesFromRecipe } from "@/lib/utils/recipe-editor-values";
 
 interface RecipeEditPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ refresh?: string }>;
 }
 
 interface RecipeEditContentProps {
   recipeSlug: string;
   userId: string;
+  openRefresh: boolean;
 }
 
 async function RecipeEditContent({
   recipeSlug,
   userId,
+  openRefresh,
 }: RecipeEditContentProps) {
   const result = await getRecipeBySlug(recipeSlug);
 
@@ -45,12 +48,16 @@ async function RecipeEditContent({
         recipe={result.data}
         initialValues={editorValuesFromRecipe(result.data)}
         notice={null}
+        openRefresh={openRefresh}
       />
     </div>
   );
 }
 
-export default async function RecipeEditPage({ params }: RecipeEditPageProps) {
+export default async function RecipeEditPage({
+  params,
+  searchParams,
+}: RecipeEditPageProps) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -59,11 +66,15 @@ export default async function RecipeEditPage({ params }: RecipeEditPageProps) {
     redirect("/auth/sign-in");
   }
 
-  const { slug } = await params;
+  const [{ slug }, { refresh }] = await Promise.all([params, searchParams]);
 
   return (
     <Suspense fallback={<RecipeFormSkeleton />}>
-      <RecipeEditContent recipeSlug={slug} userId={session.user.id} />
+      <RecipeEditContent
+        recipeSlug={slug}
+        userId={session.user.id}
+        openRefresh={refresh === "1"}
+      />
     </Suspense>
   );
 }

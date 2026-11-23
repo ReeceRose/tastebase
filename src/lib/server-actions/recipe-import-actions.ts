@@ -66,6 +66,30 @@ export async function importRecipeFromUrlAction(
   }
 }
 
+// Reads a saved recipe's source page again so the editor can compare it.
+// Unlike a new import, nothing is downloaded: the recipe keeps its photos.
+export async function fetchRecipeSourceUpdateAction(
+  sourceUrl: string,
+): Promise<ServerActionResult<RecipeImportResult>> {
+  const userId = await requireUserId();
+  if (!userId) {
+    return { success: false, error: "Authentication required" };
+  }
+
+  try {
+    return { success: true, data: await importRecipeFromUrl(sourceUrl) };
+  } catch (error) {
+    if (error instanceof PageFetchError) {
+      return { success: false, error: error.message };
+    }
+    logError(logger, "Source refresh failed", error, { userId });
+    return {
+      success: false,
+      error: "Couldn't read the recipe's page. Try again later.",
+    };
+  }
+}
+
 export async function importRecipeFromPageAction(
   page: CapturedPage,
 ): Promise<ServerActionResult<RecipeImportResult>> {

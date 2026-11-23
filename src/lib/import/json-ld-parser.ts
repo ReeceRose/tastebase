@@ -5,6 +5,7 @@ import {
   type StepText,
   toParsedInstructions,
 } from "@/lib/import/instruction-cleaning";
+import { parseNutrition } from "@/lib/import/nutrition-parser";
 import { readCardIngredientGroups } from "@/lib/import/recipe-card-groups";
 import {
   parseIsoDuration,
@@ -19,6 +20,7 @@ import type {
   ParsedInstruction,
   RecipeParsingResult,
 } from "@/lib/types/import-types";
+import type { RecipeNutrition } from "@/lib/types/nutrition-types";
 import { sizeFromUrl } from "@/lib/utils/photo-suggestions";
 
 const logger = createOperationLogger("json-ld-parser");
@@ -266,6 +268,15 @@ function toDifficulty(node: JsonObject): RecipeDifficulty | null {
   return match ?? null;
 }
 
+// Sites publish one NutritionInformation node, occasionally wrapped in a list.
+function readNutritionNode(
+  value: JsonValue | undefined,
+): RecipeNutrition | null {
+  const node = Array.isArray(value) ? value.find(isObject) : value;
+  if (!isObject(node)) return null;
+  return parseNutrition((property) => readText(node[property]));
+}
+
 function normalizeRecipe(node: JsonObject, html: string): RecipeParsingResult {
   const prepTime = readDuration(node.prepTime);
   const cookTime = readDuration(node.cookTime);
@@ -293,6 +304,7 @@ function normalizeRecipe(node: JsonObject, html: string): RecipeParsingResult {
     tags: toTags(node, ingredients),
     difficulty: toDifficulty(node),
     cuisine: readText(node.recipeCuisine),
+    nutrition: readNutritionNode(node.nutrition),
   };
 }
 

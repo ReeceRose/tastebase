@@ -2,15 +2,18 @@
 
 import {
   Check,
+  Columns2,
   CookingPot,
   FileDown,
   MoreHorizontal,
+  RefreshCw,
   Share2,
   Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CompareRecipePicker } from "@/components/modals/compare-recipe-picker";
 import { DeleteRecipeDialog } from "@/components/modals/delete-recipe-dialog";
 import { RecipeExportDialog } from "@/components/modals/recipe-export-dialog";
 import {
@@ -25,6 +28,7 @@ import { recordRecipeCook } from "@/lib/server-actions/recipe-cook-actions";
 import { KeyboardShortcutAction } from "@/lib/types";
 import type { RecipeCookSummary } from "@/lib/types/recipe-types";
 import { cn } from "@/lib/utils";
+import { compareHref } from "@/lib/utils/recipe-compare";
 import { COOK_REPEAT_WINDOW_MS } from "@/lib/utils/recipe-constants";
 
 interface RecipeActionsMenuProps {
@@ -34,6 +38,7 @@ interface RecipeActionsMenuProps {
   hasPhotos: boolean;
   linkedRecipeTitles: string[];
   canDelete: boolean;
+  canUpdateFromSource: boolean;
   cooks: RecipeCookSummary;
   currentUserId: string;
   className?: string;
@@ -55,6 +60,7 @@ export function RecipeActionsMenu({
   hasPhotos,
   linkedRecipeTitles,
   canDelete,
+  canUpdateFromSource,
   cooks,
   currentUserId,
   className,
@@ -62,6 +68,7 @@ export function RecipeActionsMenu({
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
   const justCooked = justCookedByUser(cooks, currentUserId);
 
   useShortcutAction(KeyboardShortcutAction.EXPORT_RECIPE, () =>
@@ -118,6 +125,18 @@ export function RecipeActionsMenu({
               {cooks.count > 0 ? "Cooked it again" : "Mark as cooked"}
             </DropdownMenuItem>
           )}
+          <DropdownMenuItem onSelect={() => setCompareOpen(true)}>
+            <Columns2 />
+            Compare with…
+          </DropdownMenuItem>
+          {canUpdateFromSource && (
+            <DropdownMenuItem
+              onSelect={() => router.push(`/recipes/${slug}/edit?refresh=1`)}
+            >
+              <RefreshCw />
+              Update from source
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={share}>
             <Share2 />
             Share link
@@ -147,6 +166,15 @@ export function RecipeActionsMenu({
         linkedRecipeTitles={linkedRecipeTitles}
         open={exportOpen}
         onOpenChange={setExportOpen}
+      />
+      <CompareRecipePicker
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        chosen={[{ id: recipeId, slug, title }]}
+        onSelect={(recipe) => {
+          setCompareOpen(false);
+          router.push(compareHref([slug, recipe.slug]));
+        }}
       />
       {canDelete && (
         <DeleteRecipeDialog

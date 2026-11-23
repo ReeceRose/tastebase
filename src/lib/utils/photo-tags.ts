@@ -10,6 +10,7 @@ import type {
   RecipeVideo,
   SavedPhotoTag,
 } from "@/lib/types/recipe-types";
+import { emptyNutrition } from "@/lib/utils/nutrition";
 
 export function newStepKey(): string {
   return nanoid(10);
@@ -109,6 +110,7 @@ export function withEditorKeys(values: RecipeEditorValues): RecipeEditorValues {
       instruction.key ? instruction : { ...instruction, key: newStepKey() },
     ),
     photoTags: values.photoTags ?? [],
+    nutrition: values.nutrition ?? emptyNutrition(),
   };
 }
 

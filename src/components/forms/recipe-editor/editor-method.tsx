@@ -13,6 +13,7 @@ import type {
   EditorPhotoRef,
   RecipeEditorValues,
 } from "@/lib/types/recipe-types";
+import { numberOrNull } from "@/lib/utils/form-values";
 import {
   emptyInstruction,
   parsePastedSteps,
@@ -25,9 +26,6 @@ interface EditorMethodProps {
 
 const iconButton =
   "grid size-9 place-items-center rounded-full text-muted-foreground outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring disabled:opacity-30";
-
-const numberOrUndefined = (value: string) =>
-  value === "" ? undefined : Number(value);
 
 export function EditorMethod({ sectionError, photos }: EditorMethodProps) {
   const pasteId = useId();
@@ -193,7 +191,7 @@ export function EditorMethod({ sectionError, photos }: EditorMethodProps) {
                     inputMode="numeric"
                     min={0}
                     {...register(`instructions.${index}.timeMinutes`, {
-                      setValueAs: numberOrUndefined,
+                      setValueAs: numberOrNull,
                     })}
                     aria-label={`Minutes for step ${index + 1}`}
                     placeholder="Minutes"

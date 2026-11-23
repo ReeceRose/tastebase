@@ -213,6 +213,7 @@ export async function createRecipe(rawData: CreateRecipeInput) {
       sourceName: validatedData.sourceName,
       videoUrl: validatedData.videoUrl,
       extraNotes: validatedData.extraNotes,
+      nutrition: validatedData.nutrition ?? null,
       isPublic: validatedData.isPublic,
       isArchived: false,
       createdAt: now,
@@ -251,8 +252,8 @@ export async function createRecipe(rawData: CreateRecipeInput) {
               instruction: instruction.instruction,
               timeMinutes: instruction.timeMinutes || null,
               temperature: instruction.temperature || null,
-              notes: null,
-              groupName: null,
+              notes: instruction.notes || null,
+              groupName: instruction.groupName || null,
             })),
           )
           .run();
@@ -478,6 +479,7 @@ export async function updateRecipe(rawData: UpdateRecipeInput) {
         sourceName: recipeData.sourceName ?? null,
         videoUrl: recipeData.videoUrl ?? null,
         extraNotes: recipeData.extraNotes ?? null,
+        nutrition: recipeData.nutrition ?? null,
         swatch: recipeData.swatch ?? null,
         isPublic: recipeData.isPublic ?? existingRecipe.isPublic,
         updatedAt: new Date(),

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -10,9 +10,11 @@ import { EditorBasics } from "@/components/forms/recipe-editor/editor-basics";
 import { EditorDetails } from "@/components/forms/recipe-editor/editor-details";
 import { EditorIngredients } from "@/components/forms/recipe-editor/editor-ingredients";
 import { EditorMethod } from "@/components/forms/recipe-editor/editor-method";
+import { EditorNutrition } from "@/components/forms/recipe-editor/editor-nutrition";
 import { EditorPhotos } from "@/components/forms/recipe-editor/editor-photos";
 import { EditorSectionNav } from "@/components/forms/recipe-editor/editor-section-nav";
 import { EditorSharing } from "@/components/forms/recipe-editor/editor-sharing";
+import { RecipeRefreshDialog } from "@/components/modals/recipe-refresh-dialog";
 import { Button } from "@/components/ui/button";
 import { useRecipeDraft } from "@/hooks/use-recipe-draft";
 import {
@@ -52,6 +54,7 @@ interface RecipeEditorProps {
   photoSuggestions?: PhotoSuggestion[];
   videoSuggestions?: ImportedVideo[];
   onStartOver?: () => void;
+  openRefresh?: boolean;
 }
 
 const FIELD_SECTIONS: Record<string, EditorSection> = {
@@ -70,6 +73,7 @@ const FIELD_SECTIONS: Record<string, EditorSection> = {
   videoUrl: EditorSection.DETAILS,
   extraNotes: EditorSection.DETAILS,
   swatch: EditorSection.DETAILS,
+  nutrition: EditorSection.NUTRITION,
   isPublic: EditorSection.SHARING,
 };
 
@@ -83,6 +87,7 @@ export function RecipeEditor({
   photoSuggestions = [],
   videoSuggestions = [],
   onStartOver,
+  openRefresh = false,
 }: RecipeEditorProps) {
   const router = useRouter();
   const form = useForm<RecipeEditorValues>({ defaultValues: initialValues });
@@ -102,6 +107,13 @@ export function RecipeEditor({
   const draftKey = `tastebase:draft:${userId}:${recipe?.id ?? "new"}`;
   const draft = useRecipeDraft(draftKey, values, isDirty && !isSaving);
   const automaticSwatch = swatchFor(recipe?.id ?? draftKey);
+  const savedSourceUrl =
+    recipe?.sourceUrl && /^https?:\/\//i.test(recipe.sourceUrl)
+      ? recipe.sourceUrl
+      : null;
+  const [refreshOpen, setRefreshOpen] = useState(
+    openRefresh && savedSourceUrl !== null,
+  );
 
   useEffect(() => {
     if (!isDirty) return;
@@ -137,6 +149,10 @@ export function RecipeEditor({
         firstField ??= path;
       } else if (root === "ingredients" || root === "instructions") {
         arrayErrors[section] = issue.message;
+      } else if (root === "nutrition" && typeof index === "string") {
+        const path = `nutrition.${index}` as Path<RecipeEditorValues>;
+        form.setError(path, { message: issue.message });
+        firstField ??= path;
       } else {
         const path = String(root) as Path<RecipeEditorValues>;
         form.setError(path, { message: issue.message });
@@ -338,6 +354,16 @@ export function RecipeEditor({
             )
           )}
           <div className="ml-auto flex items-center gap-3">
+            {savedSourceUrl && (
+              <Button
+                type="button"
+                variant={ButtonVariant.OUTLINE}
+                onClick={() => setRefreshOpen(true)}
+              >
+                <RefreshCw />
+                Update from source
+              </Button>
+            )}
             {savedLabel && (
               <span
                 className="hidden text-meta font-normal text-muted-foreground sm:inline"
@@ -422,6 +448,7 @@ export function RecipeEditor({
               onPendingVideosChange={setPendingVideos}
               videoSuggestions={videoSuggestions}
             />
+            <EditorNutrition />
             <EditorDetails automaticSwatch={automaticSwatch} />
             <EditorSharing />
             <div className="flex justify-end">
@@ -436,6 +463,18 @@ export function RecipeEditor({
           </div>
         </div>
       </form>
+      {savedSourceUrl && (
+        <RecipeRefreshDialog
+          open={refreshOpen}
+          onOpenChange={setRefreshOpen}
+          sourceUrl={savedSourceUrl}
+          getValues={form.getValues}
+          onApply={(next) => {
+            form.reset(next, { keepDefaultValues: true });
+            toast.success("Changes brought in. Check them, then save.");
+          }}
+        />
+      )}
     </FormProvider>
   );
 }

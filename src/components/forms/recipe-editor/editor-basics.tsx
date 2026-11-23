@@ -17,15 +17,13 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { EditorSection, RecipeDifficulty } from "@/lib/types";
 import type { RecipeEditorValues } from "@/lib/types/recipe-types";
+import { numberOrNull } from "@/lib/utils/form-values";
 
 const DIFFICULTY_OPTIONS = [
   { value: RecipeDifficulty.EASY, label: "Easy" },
   { value: RecipeDifficulty.MEDIUM, label: "Medium" },
   { value: RecipeDifficulty.HARD, label: "Takes effort" },
 ];
-
-const numberOrUndefined = (value: string) =>
-  value === "" ? undefined : Number(value);
 
 export function EditorBasics() {
   const ids = {
@@ -85,7 +83,7 @@ export function EditorBasics() {
               type="number"
               inputMode="numeric"
               min={1}
-              {...register("servings", { setValueAs: numberOrUndefined })}
+              {...register("servings", { setValueAs: numberOrNull })}
             />
           </EditorField>
           <EditorField
@@ -99,7 +97,7 @@ export function EditorBasics() {
               inputMode="numeric"
               min={0}
               {...register("prepTimeMinutes", {
-                setValueAs: numberOrUndefined,
+                setValueAs: numberOrNull,
               })}
             />
           </EditorField>
@@ -114,7 +112,7 @@ export function EditorBasics() {
               inputMode="numeric"
               min={0}
               {...register("cookTimeMinutes", {
-                setValueAs: numberOrUndefined,
+                setValueAs: numberOrNull,
               })}
             />
           </EditorField>

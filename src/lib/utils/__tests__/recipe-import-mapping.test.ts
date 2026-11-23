@@ -43,6 +43,7 @@ const RESULT: RecipeImportResult = {
     tags: ["dinner"],
     difficulty: null,
     cuisine: null,
+    nutrition: null,
   },
   source: RecipeImportSource.JSON_LD,
   confidence: 0.95,

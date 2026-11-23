@@ -8,6 +8,7 @@ import {
 } from "drizzle-orm/sqlite-core";
 import { users } from "@/db/schema.base";
 import { RecipeDifficulty, RecipeSwatch } from "@/lib/types";
+import type { RecipeNutrition } from "@/lib/types/nutrition-types";
 import { TemplateCategory } from "@/lib/types/template-types";
 
 // Main recipes table
@@ -54,6 +55,8 @@ export const recipes = sqliteTable(
     sourceName: text("source_name"),
     videoUrl: text("video_url"),
     extraNotes: text("extra_notes"),
+    // Per serving, from the source's structured data or typed in.
+    nutrition: text("nutrition", { mode: "json" }).$type<RecipeNutrition>(),
     isPublic: integer("is_public", { mode: "boolean" })
       .default(false)
       .notNull(),

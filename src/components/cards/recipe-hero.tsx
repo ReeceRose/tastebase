@@ -189,6 +189,7 @@ export function RecipeHero({
                 (linked) => linked.title,
               )}
               canDelete={own}
+              canUpdateFromSource={own && Boolean(recipe.sourceUrl)}
               cooks={cooks}
               currentUserId={currentUserId}
             />

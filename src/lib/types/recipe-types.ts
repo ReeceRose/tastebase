@@ -20,6 +20,7 @@ import type {
   SortOrder,
   ViewMode,
 } from "@/lib/types";
+import type { RecipeNutrition } from "@/lib/types/nutrition-types";
 
 export type Recipe = typeof recipes.$inferSelect;
 export interface LinkedRecipe {
@@ -82,24 +83,27 @@ interface RecipeFormIngredient {
 
 interface RecipeFormInstruction {
   instruction: string;
-  timeMinutes?: number;
+  timeMinutes?: number | null;
   temperature?: string;
   notes?: string;
   groupName?: string;
 }
 
+// Blank numbers are null rather than undefined: values passed from a server
+// page to the editor lose undefined keys, which makes the form look edited.
 export interface RecipeFormData {
   title: string;
   description?: string;
-  servings?: number;
-  prepTimeMinutes?: number;
-  cookTimeMinutes?: number;
-  difficulty?: RecipeDifficulty;
+  servings?: number | null;
+  prepTimeMinutes?: number | null;
+  cookTimeMinutes?: number | null;
+  difficulty?: RecipeDifficulty | null;
   cuisine?: string;
   sourceUrl?: string;
   sourceName?: string;
   videoUrl?: string;
   extraNotes?: string;
+  nutrition?: RecipeNutrition | null;
   isPublic: boolean;
   ingredients: RecipeFormIngredient[];
   instructions: RecipeFormInstruction[];
@@ -304,6 +308,7 @@ export interface EditorPhotoTag {
 }
 
 export interface RecipeEditorValues extends RecipeFormData {
+  nutrition: RecipeNutrition;
   instructions: EditorInstruction[];
   photoTags: EditorPhotoTag[];
   swatch: RecipeSwatch | null;
@@ -354,8 +359,13 @@ export interface RecipeDraftSnapshot {
   savedAt: string;
 }
 
+// Saved without nutrition when every value was left blank.
+export type CleanedRecipeValues = Omit<RecipeEditorValues, "nutrition"> & {
+  nutrition: RecipeNutrition | null;
+};
+
 export interface CleanedEditorValues {
-  values: RecipeEditorValues;
+  values: CleanedRecipeValues;
   ingredientRows: number[];
   instructionRows: number[];
   photoTags: SavedPhotoTag[];
@@ -436,7 +446,14 @@ export interface ComparableRecipeFields {
   extraNotes?: string | null;
   swatch?: string | null;
   isPublic?: boolean;
+  nutrition?: RecipeNutrition | null;
 }
+
+// Fields compared as plain values; nutrition is compared on its own.
+export type ComparableDetailField = Exclude<
+  keyof ComparableRecipeFields,
+  "nutrition"
+>;
 
 export interface RecipeChangeInput {
   before: ComparableRecipeFields;

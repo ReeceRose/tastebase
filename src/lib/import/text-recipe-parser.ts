@@ -310,6 +310,7 @@ export function parseRecipeText(
     tags: [],
     difficulty: null,
     cuisine: null,
+    nutrition: null,
   };
 
   return {

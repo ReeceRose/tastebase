@@ -232,6 +232,13 @@
       "when": 1794886253084,
       "tag": "0032_add_recipe_videos",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1795455726531,
+      "tag": "0033_add_recipe_nutrition",
+      "breakpoints": true
     }
   ]
 }

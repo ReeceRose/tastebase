@@ -13,6 +13,7 @@ import type {
   RecipeFormData,
   RecipeWithRelations,
 } from "@/lib/types/recipe-types";
+import { cleanNutrition, emptyNutrition } from "@/lib/utils/nutrition";
 import {
   newStepKey,
   photoTagsForSave,
@@ -38,7 +39,7 @@ export function emptyInstruction(): EditorInstruction {
   return {
     key: newStepKey(),
     instruction: "",
-    timeMinutes: undefined,
+    timeMinutes: null,
     temperature: "",
     notes: "",
     groupName: "",
@@ -50,14 +51,15 @@ export function emptyEditorValues(isPublic: boolean): RecipeEditorValues {
     title: "",
     description: "",
     servings: RECIPE_CONSTANTS.SERVING_LIMITS.DEFAULT_SERVINGS,
-    prepTimeMinutes: undefined,
-    cookTimeMinutes: undefined,
+    prepTimeMinutes: null,
+    cookTimeMinutes: null,
     difficulty: RecipeDifficulty.EASY,
     cuisine: "",
     sourceUrl: "",
     sourceName: "",
     videoUrl: "",
     extraNotes: "",
+    nutrition: emptyNutrition(),
     isPublic,
     ingredients: [emptyIngredient(), emptyIngredient(), emptyIngredient()],
     instructions: [emptyInstruction(), emptyInstruction()],
@@ -67,10 +69,8 @@ export function emptyEditorValues(isPublic: boolean): RecipeEditorValues {
   };
 }
 
-function positiveOrUndefined(
-  value: number | null | undefined,
-): number | undefined {
-  return value && value > 0 ? value : undefined;
+function positiveOrNull(value: number | null | undefined): number | null {
+  return value && value > 0 ? value : null;
 }
 
 export function editorValuesFromImport(
@@ -81,8 +81,9 @@ export function editorValuesFromImport(
   return {
     ...base,
     ...data,
-    prepTimeMinutes: positiveOrUndefined(data.prepTimeMinutes),
-    cookTimeMinutes: positiveOrUndefined(data.cookTimeMinutes),
+    prepTimeMinutes: positiveOrNull(data.prepTimeMinutes),
+    cookTimeMinutes: positiveOrNull(data.cookTimeMinutes),
+    nutrition: data.nutrition ?? emptyNutrition(),
     isPublic,
     ingredients:
       data.ingredients && data.ingredients.length > 0
@@ -107,15 +108,16 @@ export function editorValuesFromRecipe(
   return {
     title: recipe.title,
     description: recipe.description ?? "",
-    servings: recipe.servings ?? undefined,
-    prepTimeMinutes: positiveOrUndefined(recipe.prepTimeMinutes),
-    cookTimeMinutes: positiveOrUndefined(recipe.cookTimeMinutes),
-    difficulty: recipe.difficulty ?? undefined,
+    servings: recipe.servings ?? null,
+    prepTimeMinutes: positiveOrNull(recipe.prepTimeMinutes),
+    cookTimeMinutes: positiveOrNull(recipe.cookTimeMinutes),
+    difficulty: recipe.difficulty ?? null,
     cuisine: recipe.cuisine ?? "",
     sourceUrl: recipe.sourceUrl ?? "",
     sourceName: recipe.sourceName ?? "",
     videoUrl: recipe.videoUrl ?? "",
     extraNotes: recipe.extraNotes ?? "",
+    nutrition: recipe.nutrition ?? emptyNutrition(),
     isPublic: recipe.isPublic,
     ingredients: [...recipe.ingredients]
       .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -134,7 +136,7 @@ export function editorValuesFromRecipe(
       .map((instruction) => ({
         key: instruction.id,
         instruction: instruction.instruction,
-        timeMinutes: instruction.timeMinutes ?? undefined,
+        timeMinutes: instruction.timeMinutes ?? null,
         temperature: instruction.temperature ?? "",
         notes: instruction.notes ?? "",
         groupName: instruction.groupName ?? "",
@@ -153,7 +155,9 @@ function trimOrUndefined(value: string | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-function finiteOrUndefined(value: number | undefined): number | undefined {
+function finiteOrUndefined(
+  value: number | null | undefined,
+): number | undefined {
   return typeof value === "number" && Number.isFinite(value)
     ? value
     : undefined;
@@ -207,11 +211,13 @@ export function cleanEditorValues(
       servings: finiteOrUndefined(values.servings),
       prepTimeMinutes: finiteOrUndefined(values.prepTimeMinutes),
       cookTimeMinutes: finiteOrUndefined(values.cookTimeMinutes),
+      difficulty: values.difficulty ?? undefined,
       cuisine: trimOrUndefined(values.cuisine),
       sourceUrl: trimOrUndefined(values.sourceUrl),
       sourceName: trimOrUndefined(values.sourceName),
       videoUrl: trimOrUndefined(values.videoUrl),
       extraNotes: trimOrUndefined(values.extraNotes),
+      nutrition: cleanNutrition(values.nutrition),
       ingredients,
       instructions,
       tags: (values.tags ?? []).map((tag) => tag.trim()).filter(Boolean),
@@ -253,7 +259,7 @@ export function parsePastedSteps(text: string): EditorInstruction[] {
     return {
       ...emptyInstruction(),
       instruction,
-      timeMinutes: extractTimeMinutes(instruction) ?? undefined,
+      timeMinutes: extractTimeMinutes(instruction),
       temperature: extractTemperature(instruction) ?? "",
     };
   });

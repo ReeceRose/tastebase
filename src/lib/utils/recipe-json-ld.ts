@@ -1,8 +1,13 @@
+import {
+  NutrientUnit,
+  type RecipeNutrition,
+} from "@/lib/types/nutrition-types";
 import type {
   RecipeIngredient,
   RecipeInstruction,
   RecipeWithRelations,
 } from "@/lib/types/recipe-types";
+import { hasNutrientValues, NUTRIENTS } from "@/lib/utils/nutrition";
 
 type JsonLdValue =
   | string
@@ -20,6 +25,26 @@ function withoutEmpty(node: JsonLdObject): JsonLdObject {
         value !== null && !(Array.isArray(value) && value.length === 0),
     ),
   );
+}
+
+function nutritionNode(nutrition: RecipeNutrition | null): JsonLdObject | null {
+  if (!hasNutrientValues(nutrition) || !nutrition) return null;
+  const values = Object.fromEntries(
+    NUTRIENTS.flatMap((nutrient) => {
+      const value = nutrition[nutrient.key];
+      if (value === null) return [];
+      const text =
+        nutrient.unit === NutrientUnit.KCAL
+          ? `${value} kcal`
+          : `${value} ${nutrient.unit}`;
+      return [[nutrient.schemaProperty, text]];
+    }),
+  );
+  return withoutEmpty({
+    "@type": "NutritionInformation",
+    servingSize: nutrition.servingSize,
+    ...values,
+  });
 }
 
 function isoDuration(minutes: number | null): string | null {
@@ -102,6 +127,7 @@ export function buildRecipeJsonLd(
     keywords: recipe.tags.map((tag) => tag.name),
     recipeIngredient: recipe.ingredients.map(ingredientLine),
     recipeInstructions: instructionNodes(recipe.instructions),
+    nutrition: nutritionNode(recipe.nutrition),
     datePublished: recipe.createdAt.toISOString(),
     dateModified: recipe.updatedAt.toISOString(),
   });

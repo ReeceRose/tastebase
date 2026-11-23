@@ -253,6 +253,7 @@ export enum EditorSection {
   INGREDIENTS = "ingredients",
   METHOD = "method",
   PHOTOS = "photos",
+  NUTRITION = "nutrition",
   DETAILS = "details",
   SHARING = "sharing",
 }
@@ -301,6 +302,13 @@ export enum RecipeChangeType {
   METADATA = "metadata",
   IMAGES = "images",
   MAJOR = "major",
+}
+
+// Recipe comparison
+export enum CompareMeasure {
+  WEIGHT = "weight",
+  VOLUME = "volume",
+  COUNT = "count",
 }
 
 // Common type aliases for Pick/Omit patterns

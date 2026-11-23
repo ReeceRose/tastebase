@@ -133,6 +133,7 @@ const recipe: RecipeWithRelations = {
   sourceName: "The binder",
   videoUrl: null,
   extraNotes: null,
+  nutrition: null,
   isPublic: true,
   isArchived: false,
   createdAt: new Date(),
