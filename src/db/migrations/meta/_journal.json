@@ -239,6 +239,13 @@
       "when": 1795455726531,
       "tag": "0033_add_recipe_nutrition",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1795563832968,
+      "tag": "0034_add_recipe_total_time",
+      "breakpoints": true
     }
   ]
 }

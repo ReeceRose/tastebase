@@ -19,7 +19,10 @@ import {
   parseRange,
   QUANTITY_PATTERN,
 } from "@/lib/utils/quantity-parsing";
-import { formatTotalTime } from "@/lib/utils/time-formatting";
+import {
+  formatTotalTime,
+  recipeTotalMinutes,
+} from "@/lib/utils/time-formatting";
 import { normalizeUnit } from "@/lib/utils/unit-conversions";
 
 export const MAX_COMPARE_RECIPES = 4;
@@ -293,17 +296,9 @@ function fact(
   };
 }
 
-function minutesOrNull(minutes: number): number | null {
-  return minutes > 0 ? minutes : null;
-}
-
 export function compareFacts(items: CompareRecipe[]): CompareFact[] {
   const recipes = items.map((item) => item.recipe);
-  const totals = recipes.map((recipe) =>
-    minutesOrNull(
-      (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0),
-    ),
-  );
+  const totals = recipes.map(recipeTotalMinutes);
   const ingredientCounts = recipes.map(
     (recipe) =>
       recipe.ingredients.filter((ingredient) => ingredient.name?.trim()).length,

@@ -23,6 +23,7 @@ import { isDarkSwatch, swatchClasses } from "@/lib/utils/swatches";
 import {
   formatRelativeDay,
   formatTotalTime,
+  recipeTotalMinutes,
 } from "@/lib/utils/time-formatting";
 
 interface RecipeHeroProps {
@@ -76,6 +77,12 @@ export function RecipeHero({
   const facts = [
     { label: "Prep", value: formatTotalTime(recipe.prepTimeMinutes) },
     { label: "Cook", value: formatTotalTime(recipe.cookTimeMinutes) },
+    {
+      label: "Total",
+      value: recipe.totalTimeMinutes
+        ? formatTotalTime(recipeTotalMinutes(recipe))
+        : null,
+    },
     {
       label: "Serves",
       value: recipe.servings ? String(recipe.servings) : null,

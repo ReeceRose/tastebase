@@ -10,11 +10,13 @@ import { readCardIngredientGroups } from "@/lib/import/recipe-card-groups";
 import {
   parseIsoDuration,
   parseServings,
+  recipeTimes,
 } from "@/lib/import/recipe-text-helpers";
 import { createOperationLogger } from "@/lib/logging/logger";
 import { RecipeDifficulty } from "@/lib/types";
 import type {
   JsonLdStepImage,
+  JsonLdTip,
   JsonLdVideo,
   ParsedIngredient,
   ParsedInstruction,
@@ -22,6 +24,7 @@ import type {
 } from "@/lib/types/import-types";
 import type { RecipeNutrition } from "@/lib/types/nutrition-types";
 import { sizeFromUrl } from "@/lib/utils/photo-suggestions";
+import { videoWatchUrl } from "@/lib/utils/video-embed";
 
 const logger = createOperationLogger("json-ld-parser");
 
@@ -41,6 +44,8 @@ export interface JsonLdRecipe {
   imageUrl: string | null;
   stepImages: JsonLdStepImage[];
   videos: JsonLdVideo[];
+  tips: JsonLdTip[];
+  videoLink: string | null;
 }
 
 const MAX_TAGS = 20;
@@ -278,9 +283,6 @@ function readNutritionNode(
 }
 
 function normalizeRecipe(node: JsonObject, html: string): RecipeParsingResult {
-  const prepTime = readDuration(node.prepTime);
-  const cookTime = readDuration(node.cookTime);
-  const totalTime = readDuration(node.totalTime);
   const servingsText = readText(node.recipeYield ?? node.yield);
   const ingredients = toIngredients(
     node.recipeIngredient ?? node.ingredients,
@@ -291,14 +293,11 @@ function normalizeRecipe(node: JsonObject, html: string): RecipeParsingResult {
     title: readText(node.name ?? node.headline),
     description: readText(node.description),
     servings: servingsText ? parseServings(servingsText) : null,
-    prepTime,
-    cookTime:
-      cookTime ??
-      (totalTime !== null && prepTime === null
-        ? totalTime
-        : totalTime !== null && prepTime !== null && totalTime > prepTime
-          ? totalTime - prepTime
-          : null),
+    ...recipeTimes(
+      readDuration(node.prepTime),
+      readDuration(node.cookTime),
+      readDuration(node.totalTime),
+    ),
     ingredients,
     instructions: toInstructions(node.recipeInstructions),
     tags: toTags(node, ingredients),
@@ -462,6 +461,60 @@ function readRecipeVideos(node: JsonObject): JsonLdVideo[] {
   });
 }
 
+// Embedded players like YouTube's have no file to save, but the recipe can
+// still link to them. Only players Tastebase can show are kept, since other
+// embed addresses are usually ad-network players that don't open on their own.
+function readVideoLink(value: JsonValue | undefined): string | null {
+  const items = Array.isArray(value) ? value : value ? [value] : [];
+  for (const item of items) {
+    if (!isObject(item)) continue;
+    for (const candidate of [item.embedUrl, item.url]) {
+      const link =
+        typeof candidate === "string" ? videoWatchUrl(candidate) : null;
+      if (link) return link;
+    }
+  }
+  return null;
+}
+
+interface StepEntry {
+  text: string;
+  isTip: boolean;
+}
+
+function collectStepEntries(
+  value: JsonValue | undefined,
+  depth = 0,
+): StepEntry[] {
+  if (value === undefined || value === null || depth > MAX_SEARCH_DEPTH) {
+    return [];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => collectStepEntries(item, depth + 1));
+  }
+  if (!isObject(value)) return [];
+  if (value.itemListElement !== undefined) {
+    return collectStepEntries(value.itemListElement, depth + 1);
+  }
+  const text = readText(value.text ?? value.name ?? value.description);
+  return text ? [{ text, isTip: hasType(value, "HowToTip") }] : [];
+}
+
+// Keeps the step each tip follows so it can be matched to the imported step.
+// Tips before the first step or after the last are about the whole recipe.
+function readTips(value: JsonValue | undefined): JsonLdTip[] {
+  const entries = collectStepEntries(value);
+  const lastStep = entries.findLastIndex((entry) => !entry.isTip);
+  let stepText = "";
+  return entries.flatMap((entry, index) => {
+    if (!entry.isTip) {
+      stepText = entry.text;
+      return [];
+    }
+    return [{ text: entry.text, stepText: index > lastStep ? "" : stepText }];
+  });
+}
+
 function readSiteName(node: JsonObject, scripts: JsonValue[]): string | null {
   const publisher = node.publisher;
   if (publisher !== undefined) {
@@ -509,6 +562,8 @@ export function extractJsonLdRecipe(html: string): JsonLdRecipe | null {
         imageUrl: readImageUrl(node.image ?? node.thumbnailUrl),
         stepImages: readStepImages(node.recipeInstructions),
         videos: readRecipeVideos(node),
+        tips: readTips(node.recipeInstructions),
+        videoLink: readVideoLink(node.video),
       };
     }
   }

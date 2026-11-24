@@ -55,6 +55,9 @@ export interface RecipeParsingResult {
   servings: number | null;
   prepTime: number | null;
   cookTime: number | null;
+  // Only kept when it's longer than prep and cook together, as it is when a
+  // recipe rests, rises or marinates.
+  totalTime: number | null;
   ingredients: ParsedIngredient[];
   instructions: ParsedInstruction[];
   tags: string[];
@@ -76,6 +79,20 @@ export interface JsonLdVideo {
   text: string;
   name: string | null;
   durationSeconds: number | null;
+}
+
+// A tip the recipe's structured data puts between its steps. stepText is the
+// step it follows, or empty when it comes before the first step or after the
+// last.
+export interface JsonLdTip {
+  text: string;
+  stepText: string;
+}
+
+// stepNumber is null for a tip about the whole recipe.
+export interface ImportedTip {
+  text: string;
+  stepNumber: number | null;
 }
 
 export interface ImportedVideo {
@@ -101,6 +118,8 @@ export interface RecipeImportResult {
   photoUrls: string[];
   stepPhotos: ImportedStepPhoto[];
   videos: ImportedVideo[];
+  tips: ImportedTip[];
+  videoLink: string | null;
   warnings: string[];
 }
 

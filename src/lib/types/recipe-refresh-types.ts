@@ -48,6 +48,7 @@ export type RefreshDetailValues = Partial<
     | "servings"
     | "prepTimeMinutes"
     | "cookTimeMinutes"
+    | "totalTimeMinutes"
     | "difficulty"
     | "cuisine"
   >

@@ -24,6 +24,7 @@ export const RECIPE_CONSTANTS = {
     MAX_PREP_TIME: 600, // 10 hours
     MIN_COOK_TIME: 0,
     MAX_COOK_TIME: 1440, // 24 hours
+    MAX_TOTAL_TIME: 4320, // 3 days
     DEFAULT_STEP_TIME: 15, // minutes
   },
 

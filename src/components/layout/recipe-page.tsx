@@ -28,7 +28,10 @@ import { photosWithRole } from "@/lib/utils/photo-tags";
 import { averageRating } from "@/lib/utils/recipe-utils";
 import { recipeWideVideos } from "@/lib/utils/recipe-videos";
 import { resolveSwatch } from "@/lib/utils/swatches";
-import { formatTotalTime } from "@/lib/utils/time-formatting";
+import {
+  formatTotalTime,
+  recipeTotalMinutes,
+} from "@/lib/utils/time-formatting";
 
 interface RecipePageProps {
   recipe: RecipeWithRelations;
@@ -60,9 +63,7 @@ export function RecipePage({
   const swatch = resolveSwatch(recipe.id, recipe.swatch);
   const stepCount = recipe.instructions.length;
   const ingredientPhotos = photosWithRole(recipe.images, PhotoRole.INGREDIENTS);
-  const total = formatTotalTime(
-    (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0),
-  );
+  const total = formatTotalTime(recipeTotalMinutes(recipe));
   const methodMeta = [
     stepCount > 0 ? `${stepCount} ${stepCount === 1 ? "step" : "steps"}` : null,
     total,

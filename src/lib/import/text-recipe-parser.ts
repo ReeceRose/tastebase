@@ -10,6 +10,7 @@ import {
   normalizeText,
   parseDurationText,
   parseServings,
+  recipeTimes,
   startsWithQuantity,
   stripListMarker,
 } from "@/lib/import/recipe-text-helpers";
@@ -299,12 +300,7 @@ export function parseRecipeText(
         ? description
         : null,
     servings: metadata.servings,
-    prepTime: metadata.prepTime,
-    cookTime:
-      metadata.cookTime ??
-      (metadata.totalTime !== null && metadata.prepTime === null
-        ? metadata.totalTime
-        : null),
+    ...recipeTimes(metadata.prepTime, metadata.cookTime, metadata.totalTime),
     ingredients: toIngredients(ingredientLines),
     instructions: toInstructions(instructionLines),
     tags: [],

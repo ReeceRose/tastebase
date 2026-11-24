@@ -25,6 +25,8 @@ export const recipes = sqliteTable(
     servings: integer("servings"),
     prepTimeMinutes: integer("prep_time_minutes"),
     cookTimeMinutes: integer("cook_time_minutes"),
+    // Set only when longer than prep and cook together (resting, rising).
+    totalTimeMinutes: integer("total_time_minutes"),
     difficulty: text("difficulty", {
       enum: [
         RecipeDifficulty.EASY,

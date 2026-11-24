@@ -6,6 +6,7 @@ import {
   RECIPE_IMPORT_SOURCE_LABELS,
   type RecipeImportResult,
 } from "@/lib/types/import-types";
+import { recipeTotalMinutes } from "@/lib/utils/time-formatting";
 
 interface ImportSummaryCardProps {
   result: RecipeImportResult;
@@ -21,7 +22,12 @@ export function ImportSummaryCard({
   morePhotos,
 }: ImportSummaryCardProps) {
   const { recipe, image } = result;
-  const totalMinutes = (recipe.prepTime ?? 0) + (recipe.cookTime ?? 0);
+  const totalMinutes =
+    recipeTotalMinutes({
+      prepTimeMinutes: recipe.prepTime,
+      cookTimeMinutes: recipe.cookTime,
+      totalTimeMinutes: recipe.totalTime,
+    }) ?? 0;
   const foundNothing =
     recipe.ingredients.length === 0 && recipe.instructions.length === 0;
 

@@ -38,6 +38,7 @@ function recipe(
     servings: null,
     prepTime: null,
     cookTime: null,
+    totalTime: null,
     ingredients,
     instructions: Array.from({ length: stepCount }, (_, index) => ({
       step: index + 1,

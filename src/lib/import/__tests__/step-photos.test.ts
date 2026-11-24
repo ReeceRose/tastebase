@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { matchStepPhotos, matchVideos } from "@/lib/import/step-photos";
+import {
+  matchStepPhotos,
+  matchTips,
+  matchVideos,
+} from "@/lib/import/step-photos";
 import type { ParsedInstruction } from "@/lib/types/import-types";
 
 function steps(...texts: string[]): ParsedInstruction[] {
@@ -112,6 +116,29 @@ describe("matchVideos", () => {
         durationSeconds: 4,
         stepNumber: null,
       },
+    ]);
+  });
+});
+
+describe("matchTips", () => {
+  it("numbers tips by the step they follow", () => {
+    const instructions = steps(
+      "Mix the flour and water.",
+      "Knead the dough for 10 minutes.",
+    );
+    expect(
+      matchTips(
+        [
+          { text: "Use warm water.", stepText: "Mix the flour and water." },
+          { text: "Keeps for 3 days.", stepText: "" },
+          { text: "Lost step.", stepText: "A step that was dropped." },
+        ],
+        instructions,
+      ),
+    ).toEqual([
+      { text: "Use warm water.", stepNumber: 1 },
+      { text: "Keeps for 3 days.", stepNumber: null },
+      { text: "Lost step.", stepNumber: null },
     ]);
   });
 });

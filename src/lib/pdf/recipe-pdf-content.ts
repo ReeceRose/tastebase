@@ -21,7 +21,10 @@ import {
   groupInstructionsByGroup,
 } from "@/lib/utils/recipe-utils";
 import { resolveSwatch } from "@/lib/utils/swatches";
-import { formatTotalTime } from "@/lib/utils/time-formatting";
+import {
+  formatTotalTime,
+  recipeTotalMinutes,
+} from "@/lib/utils/time-formatting";
 import { formatTemperatureForDisplay } from "@/lib/utils/unit-conversions";
 
 const DIFFICULTY_LABELS: Record<RecipeDifficulty, string> = {
@@ -36,6 +39,12 @@ function buildFacts(recipe: RecipeWithRelations): RecipePdfFact[] {
   return [
     { label: "Prep", value: formatTotalTime(recipe.prepTimeMinutes) },
     { label: "Cook", value: formatTotalTime(recipe.cookTimeMinutes) },
+    {
+      label: "Total",
+      value: recipe.totalTimeMinutes
+        ? formatTotalTime(recipeTotalMinutes(recipe))
+        : null,
+    },
     {
       label: "Serves",
       value: recipe.servings ? String(recipe.servings) : null,
@@ -126,9 +135,7 @@ export function buildRecipePdfContent(
   includedRecipeIds: Set<string> = new Set(),
 ): RecipePdfContent {
   const stepCount = recipe.instructions.length;
-  const total = formatTotalTime(
-    (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0),
-  );
+  const total = formatTotalTime(recipeTotalMinutes(recipe));
   const mainPhoto =
     recipe.images.find((image) => image.isHero) ?? recipe.images[0] ?? null;
   const ingredientPhotos = photosWithRole(recipe.images, PhotoRole.INGREDIENTS);

@@ -8,6 +8,7 @@ import type {
   RecipeWithRelations,
 } from "@/lib/types/recipe-types";
 import { hasNutrientValues, NUTRIENTS } from "@/lib/utils/nutrition";
+import { recipeTotalMinutes } from "@/lib/utils/time-formatting";
 
 type JsonLdValue =
   | string
@@ -103,9 +104,6 @@ export function buildRecipeJsonLd(
   recipe: RecipeWithRelations,
   origin: string,
 ): JsonLdObject {
-  const totalMinutes =
-    (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0);
-
   return withoutEmpty({
     "@context": "https://schema.org",
     "@type": "Recipe",
@@ -121,7 +119,7 @@ export function buildRecipeJsonLd(
     recipeYield: recipe.servings,
     prepTime: isoDuration(recipe.prepTimeMinutes),
     cookTime: isoDuration(recipe.cookTimeMinutes),
-    totalTime: isoDuration(totalMinutes),
+    totalTime: isoDuration(recipeTotalMinutes(recipe)),
     recipeCuisine: recipe.cuisine,
     difficulty: recipe.difficulty,
     keywords: recipe.tags.map((tag) => tag.name),

@@ -13,6 +13,7 @@ const RESULT: RecipeImportResult = {
     servings: 250,
     prepTime: 15,
     cookTime: null,
+    totalTime: null,
     ingredients: [
       {
         name: "beans",
@@ -54,6 +55,8 @@ const RESULT: RecipeImportResult = {
   photoUrls: [],
   stepPhotos: [],
   videos: [],
+  tips: [],
+  videoLink: null,
   warnings: [],
 };
 
@@ -102,5 +105,47 @@ describe("mapImportResultToFormData", () => {
       timeMinutes: 45,
       temperature: "low heat",
     });
+  });
+});
+
+describe("imported tips, times and video links", () => {
+  const withSteps: RecipeImportResult = {
+    ...RESULT,
+    recipe: {
+      ...RESULT.recipe,
+      totalTime: 480,
+      instructions: [
+        { ...RESULT.recipe.instructions[0], step: 1 },
+        { ...RESULT.recipe.instructions[0], step: 2, instruction: "Serve." },
+      ],
+    },
+    tips: [
+      { text: "Stir now and then.", stepNumber: 1 },
+      { text: "Don't let it boil.", stepNumber: 1 },
+      { text: "Freezes well.", stepNumber: null },
+      { text: "z".repeat(190), stepNumber: 2 },
+      { text: "Too much to fit.", stepNumber: 2 },
+    ],
+    videoLink: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  };
+
+  it("puts tips in their step's notes", () => {
+    const form = mapImportResultToFormData(withSteps);
+    expect(form.instructions?.map((step) => step.notes)).toEqual([
+      "Stir now and then. Don't let it boil.",
+      "z".repeat(190),
+    ]);
+  });
+
+  it("puts whole-recipe tips and overflow in the recipe's notes", () => {
+    expect(mapImportResultToFormData(withSteps).extraNotes).toBe(
+      "Freezes well.\n\nToo much to fit.",
+    );
+  });
+
+  it("carries the total time and video link", () => {
+    const form = mapImportResultToFormData(withSteps);
+    expect(form.totalTimeMinutes).toBe(480);
+    expect(form.videoUrl).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
   });
 });

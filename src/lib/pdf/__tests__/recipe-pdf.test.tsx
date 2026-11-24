@@ -126,6 +126,7 @@ const recipe: RecipeWithRelations = {
   servings: 4,
   prepTimeMinutes: 15,
   cookTimeMinutes: 60,
+  totalTimeMinutes: null,
   difficulty: RecipeDifficulty.HARD,
   cuisine: null,
   swatch: RecipeSwatch.LEEK,

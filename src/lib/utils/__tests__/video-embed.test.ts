@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { safeVideoLink, videoEmbedUrl } from "@/lib/utils/video-embed";
+import {
+  safeVideoLink,
+  videoEmbedUrl,
+  videoWatchUrl,
+} from "@/lib/utils/video-embed";
 
 describe("videoEmbedUrl", () => {
   it.each([
@@ -55,5 +59,28 @@ describe("safeVideoLink", () => {
   it("drops other schemes", () => {
     expect(safeVideoLink("javascript:alert(1)")).toBeNull();
     expect(safeVideoLink(null)).toBeNull();
+  });
+});
+
+describe("videoWatchUrl", () => {
+  it.each([
+    [
+      "https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0",
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    ],
+    [
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    ],
+    ["https://player.vimeo.com/video/76979871", "https://vimeo.com/76979871"],
+  ])("turns %s into a watch page", (input, expected) => {
+    expect(videoWatchUrl(input)).toBe(expected);
+  });
+
+  it("ignores other players", () => {
+    expect(
+      videoWatchUrl("https://cdn.jwplayer.com/players/abc.html"),
+    ).toBeNull();
+    expect(videoWatchUrl(null)).toBeNull();
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { Controller, useFormContext } from "react-hook-form";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 import {
   EditorField,
   EditorSectionCard,
@@ -32,6 +32,7 @@ export function EditorBasics() {
     servings: useId(),
     prep: useId(),
     cook: useId(),
+    total: useId(),
     difficulty: useId(),
     cuisine: useId(),
   };
@@ -40,6 +41,11 @@ export function EditorBasics() {
     control,
     formState: { errors },
   } = useFormContext<RecipeEditorValues>();
+  const [prep, cook] = useWatch({
+    control,
+    name: ["prepTimeMinutes", "cookTimeMinutes"],
+  });
+  const partsTotal = (prep ?? 0) + (cook ?? 0);
 
   return (
     <EditorSectionCard id={EditorSection.BASICS} title="Basics">
@@ -72,7 +78,7 @@ export function EditorBasics() {
           />
         </EditorField>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <EditorField
             id={ids.servings}
             label="Serves"
@@ -116,6 +122,23 @@ export function EditorBasics() {
               })}
             />
           </EditorField>
+          <EditorField
+            id={ids.total}
+            label="Total (min)"
+            error={errors.totalTimeMinutes?.message}
+          >
+            <Input
+              id={ids.total}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              placeholder={partsTotal > 0 ? String(partsTotal) : ""}
+              title="Only needed when it takes longer than prep and cook, like resting or rising"
+              {...register("totalTimeMinutes", {
+                setValueAs: numberOrNull,
+              })}
+            />
+          </EditorField>
           <EditorField id={ids.difficulty} label="Difficulty">
             <Controller
               control={control}
@@ -143,7 +166,6 @@ export function EditorBasics() {
             id={ids.cuisine}
             label="Cuisine"
             error={errors.cuisine?.message}
-            className="col-span-2 sm:col-span-1"
           >
             <Input
               id={ids.cuisine}

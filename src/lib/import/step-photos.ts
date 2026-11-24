@@ -1,7 +1,9 @@
 import type {
   ImportedStepPhoto,
+  ImportedTip,
   ImportedVideo,
   JsonLdStepImage,
+  JsonLdTip,
   JsonLdVideo,
   ParsedInstruction,
 } from "@/lib/types/import-types";
@@ -64,5 +66,19 @@ export function matchVideos(
       durationSeconds: video.durationSeconds,
       stepNumber: index >= 0 ? index + 1 : null,
     };
+  });
+}
+
+// Tips go with the step they follow. One whose step can't be found is kept
+// for the whole recipe rather than dropped.
+export function matchTips(
+  tips: JsonLdTip[],
+  instructions: ParsedInstruction[],
+): ImportedTip[] {
+  const steps = instructions.map((step) => comparable(step.instruction));
+  return tips.map((tip) => {
+    const text = comparable(tip.stepText);
+    const index = text ? findStep(text, steps) : -1;
+    return { text: tip.text, stepNumber: index >= 0 ? index + 1 : null };
   });
 }

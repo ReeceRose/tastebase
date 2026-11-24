@@ -81,6 +81,7 @@ function imported(): RecipeImportResult {
       servings: 6,
       prepTime: 10,
       cookTime: null,
+      totalTime: null,
       ingredients: [
         {
           quantity: "1.5",
@@ -152,6 +153,8 @@ function imported(): RecipeImportResult {
     photoUrls: [],
     stepPhotos: [],
     videos: [],
+    tips: [],
+    videoLink: null,
     warnings: [],
   };
 }

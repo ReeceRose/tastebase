@@ -1,0 +1,1 @@
+ALTER TABLE `recipes` ADD `total_time_minutes` integer;

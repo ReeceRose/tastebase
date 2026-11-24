@@ -6,6 +6,20 @@ export function formatTotalTime(minutes: number | null): string | null {
   return rest === 0 ? `${hours} h` : `${hours} h ${rest}`;
 }
 
+export interface RecipeTimeFields {
+  prepTimeMinutes?: number | null;
+  cookTimeMinutes?: number | null;
+  totalTimeMinutes?: number | null;
+}
+
+// A recipe's own total covers waiting time, but prep and cook win when they
+// add up to more, as they can after an edit.
+export function recipeTotalMinutes(recipe: RecipeTimeFields): number | null {
+  const parts = (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0);
+  const total = Math.max(recipe.totalTimeMinutes ?? 0, parts);
+  return total > 0 ? total : null;
+}
+
 const DAY_MS = 1000 * 60 * 60 * 24;
 
 function startOfDay(date: Date): number {

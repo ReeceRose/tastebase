@@ -5,6 +5,7 @@ import { parseNutrition } from "@/lib/import/nutrition-parser";
 import {
   parseIsoDuration,
   parseServings,
+  recipeTimes,
 } from "@/lib/import/recipe-text-helpers";
 import type { RecipeParsingResult } from "@/lib/types/import-types";
 
@@ -59,8 +60,11 @@ export function extractMicrodataRecipe(
     title: text("name"),
     description: text("description"),
     servings: servings ? parseServings(servings) : null,
-    prepTime: duration("prepTime"),
-    cookTime: duration("cookTime"),
+    ...recipeTimes(
+      duration("prepTime"),
+      duration("cookTime"),
+      duration("totalTime"),
+    ),
     ingredients: parseIngredientList(list(["recipeIngredient", "ingredients"])),
     instructions: toParsedInstructions(
       steps.map((step) => ({ text: step, groupName: null })),

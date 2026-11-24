@@ -33,6 +33,7 @@ const DETAIL_LABELS: Record<DetailField, string> = {
   servings: "Serves",
   prepTimeMinutes: "Prep time",
   cookTimeMinutes: "Cook time",
+  totalTimeMinutes: "Total time",
   difficulty: "Difficulty",
   cuisine: "Cuisine",
 };
@@ -40,6 +41,7 @@ const DETAIL_LABELS: Record<DetailField, string> = {
 const MINUTE_FIELDS = new Set<DetailField>([
   "prepTimeMinutes",
   "cookTimeMinutes",
+  "totalTimeMinutes",
 ]);
 
 function clean(text: string | null | undefined): string {
@@ -82,6 +84,7 @@ function importedDetails(result: RecipeImportResult): RefreshDetailValues {
   if (recipe.servings !== null) values.servings = form.servings;
   if (recipe.prepTime) values.prepTimeMinutes = recipe.prepTime;
   if (recipe.cookTime) values.cookTimeMinutes = recipe.cookTime;
+  if (recipe.totalTime) values.totalTimeMinutes = recipe.totalTime;
   if (recipe.difficulty) values.difficulty = recipe.difficulty;
   if (recipe.cuisine) values.cuisine = recipe.cuisine;
   return values;

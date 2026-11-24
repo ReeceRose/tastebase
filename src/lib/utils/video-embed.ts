@@ -73,3 +73,17 @@ export function safeVideoLink(value: string | null): string | null {
   if (!value) return null;
   return parseUrl(value)?.toString() ?? null;
 }
+
+// The page address for a video Tastebase can embed, so a link saved from an
+// embedded player opens normally.
+export function videoWatchUrl(value: string | null): string | null {
+  if (!value) return null;
+  const url = parseUrl(value);
+  if (!url) return null;
+
+  const youtube = youtubeId(url);
+  if (youtube) return `https://www.youtube.com/watch?v=${youtube}`;
+
+  const vimeo = vimeoId(url);
+  return vimeo ? `https://vimeo.com/${vimeo}` : null;
+}

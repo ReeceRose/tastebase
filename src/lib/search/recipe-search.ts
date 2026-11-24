@@ -26,6 +26,13 @@ import type { RecipeSearchParams } from "@/lib/validations/recipe-schemas";
 
 const logger = createOperationLogger("recipe-search");
 
+// Matches recipeTotalMinutes: a recipe's own total, or prep and cook when they
+// add up to more.
+const TOTAL_MINUTES = sql`MAX(
+  COALESCE(${recipes.totalTimeMinutes}, 0),
+  COALESCE(${recipes.prepTimeMinutes}, 0) + COALESCE(${recipes.cookTimeMinutes}, 0)
+)`;
+
 export async function searchRecipes(
   userId: string,
   searchParams: RecipeSearchParams,
@@ -63,6 +70,7 @@ export async function searchRecipes(
         servings: recipes.servings,
         prepTimeMinutes: recipes.prepTimeMinutes,
         cookTimeMinutes: recipes.cookTimeMinutes,
+        totalTimeMinutes: recipes.totalTimeMinutes,
         difficulty: recipes.difficulty,
         cuisine: recipes.cuisine,
         swatch: recipes.swatch,
@@ -75,8 +83,6 @@ export async function searchRecipes(
         isArchived: recipes.isArchived,
         createdAt: recipes.createdAt,
         updatedAt: recipes.updatedAt,
-        // Calculate total time
-        totalTimeMinutes: sql<number>`COALESCE(${recipes.prepTimeMinutes}, 0) + COALESCE(${recipes.cookTimeMinutes}, 0)`,
         // Add user info
         userName: users.name,
         userEmail: users.email,
@@ -141,9 +147,7 @@ export async function searchRecipes(
     }
 
     if (maxTotalTime) {
-      conditions.push(
-        sql`(COALESCE(${recipes.prepTimeMinutes}, 0) + COALESCE(${recipes.cookTimeMinutes}, 0)) BETWEEN 1 AND ${maxTotalTime}`,
-      );
+      conditions.push(sql`${TOTAL_MINUTES} BETWEEN 1 AND ${maxTotalTime}`);
     }
 
     // Filter by servings
@@ -204,7 +208,7 @@ export async function searchRecipes(
             prepTimeMinutes: recipes.prepTimeMinutes,
             cookTimeMinutes: recipes.cookTimeMinutes,
             difficulty: recipes.difficulty,
-            totalTime: sql`COALESCE(${recipes.prepTimeMinutes}, 0) + COALESCE(${recipes.cookTimeMinutes}, 0)`,
+            totalTime: TOTAL_MINUTES,
             averageRating: sql`(SELECT AVG(${recipeNotes.rating}) FROM ${recipeNotes} WHERE ${recipeNotes.recipeId} = ${recipes.id})`,
           }[sortBy];
 

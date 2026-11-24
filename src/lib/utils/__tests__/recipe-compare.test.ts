@@ -43,6 +43,7 @@ function recipe(
     servings: 4,
     prepTimeMinutes: null,
     cookTimeMinutes: null,
+    totalTimeMinutes: null,
     difficulty: null,
     ingredients,
     instructions: [],

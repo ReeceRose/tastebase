@@ -237,7 +237,8 @@ describe("extractJsonLdRecipe", () => {
       "Toast the bread.",
       "Butter it.",
     ]);
-    expect(result?.recipe.cookTime).toBe(5);
+    expect(result?.recipe.cookTime).toBeNull();
+    expect(result?.recipe.totalTime).toBe(5);
     expect(result?.siteName).toBe("Toast Times");
   });
 
@@ -358,5 +359,116 @@ describe("extractJsonLdRecipe videos", () => {
       }),
     );
     expect(result?.videos).toEqual([]);
+  });
+});
+
+describe("total time", () => {
+  function times(prepTime: string, cookTime: string, totalTime: string) {
+    return extractJsonLdRecipe(
+      page({
+        "@type": "Recipe",
+        name: "Brined chicken",
+        prepTime,
+        cookTime,
+        totalTime,
+        recipeIngredient: ["1 chicken"],
+        recipeInstructions: ["Brine overnight.", "Roast."],
+      }),
+    )?.recipe;
+  }
+
+  it("keeps a total that includes waiting time", () => {
+    expect(times("PT15M", "PT1H", "PT9H15M")).toMatchObject({
+      prepTime: 15,
+      cookTime: 60,
+      totalTime: 555,
+    });
+  });
+
+  it("drops a total that only adds up prep and cook", () => {
+    expect(times("PT15M", "PT1H", "PT1H15M")?.totalTime).toBeNull();
+  });
+
+  it("doesn't turn a total into a cook time", () => {
+    expect(times("PT15M", "", "PT8H")).toMatchObject({
+      prepTime: 15,
+      cookTime: null,
+      totalTime: 480,
+    });
+  });
+});
+
+describe("tips", () => {
+  it("keeps the step each tip follows", () => {
+    const result = extractJsonLdRecipe(
+      page({
+        "@type": "Recipe",
+        name: "Bread",
+        recipeIngredient: ["500 g flour"],
+        recipeInstructions: [
+          { "@type": "HowToTip", text: "Weigh the flour if you can." },
+          {
+            "@type": "HowToSection",
+            name: "Dough",
+            itemListElement: [
+              { "@type": "HowToStep", text: "Mix the dough." },
+              { "@type": "HowToTip", text: "It will look shaggy." },
+              { "@type": "HowToStep", text: "Knead for 10 minutes." },
+            ],
+          },
+          { "@type": "HowToStep", text: "Bake." },
+          { "@type": "HowToTip", text: "Keeps for 3 days." },
+        ],
+      }),
+    );
+    expect(result?.recipe.instructions.map((step) => step.instruction)).toEqual(
+      ["Mix the dough.", "Knead for 10 minutes.", "Bake."],
+    );
+    expect(result?.tips).toEqual([
+      { text: "Weigh the flour if you can.", stepText: "" },
+      { text: "It will look shaggy.", stepText: "Mix the dough." },
+      { text: "Keeps for 3 days.", stepText: "" },
+    ]);
+  });
+});
+
+describe("video links", () => {
+  function videoLink(video: object | object[]) {
+    return extractJsonLdRecipe(
+      page({
+        "@type": "Recipe",
+        name: "Soup",
+        recipeIngredient: ["1 onion"],
+        recipeInstructions: ["Cook."],
+        video,
+      }),
+    )?.videoLink;
+  }
+
+  it("links to a YouTube embed as a watch page", () => {
+    expect(
+      videoLink({
+        "@type": "VideoObject",
+        embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      }),
+    ).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+  });
+
+  it("falls back to the video's page address", () => {
+    expect(
+      videoLink([
+        { "@type": "VideoObject", embedUrl: "https://ads.example/player/1" },
+        { "@type": "VideoObject", url: "https://vimeo.com/123456" },
+      ]),
+    ).toBe("https://vimeo.com/123456");
+  });
+
+  it("skips players Tastebase can't show", () => {
+    expect(
+      videoLink({
+        "@type": "VideoObject",
+        embedUrl: "https://content.jwplatform.com/players/abc.html",
+      }),
+    ).toBeNull();
   });
 });

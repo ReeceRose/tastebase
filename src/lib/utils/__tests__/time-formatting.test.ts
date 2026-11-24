@@ -3,6 +3,7 @@ import {
   formatElapsed,
   formatRelativeDay,
   formatTotalTime,
+  recipeTotalMinutes,
 } from "@/lib/utils/time-formatting";
 
 describe("formatTotalTime", () => {
@@ -47,5 +48,37 @@ describe("formatElapsed", () => {
     expect(formatElapsed(new Date(2026, 8, 1), now)).toBe("6 weeks");
     expect(formatElapsed(new Date(2026, 4, 1), now)).toBe("5 months");
     expect(formatElapsed(new Date(2024, 9, 1), now)).toBe("2 years");
+  });
+});
+
+describe("recipeTotalMinutes", () => {
+  it("adds prep and cook when there's no total", () => {
+    expect(
+      recipeTotalMinutes({ prepTimeMinutes: 10, cookTimeMinutes: 20 }),
+    ).toBe(30);
+  });
+
+  it("uses a total that covers waiting time", () => {
+    expect(
+      recipeTotalMinutes({
+        prepTimeMinutes: 10,
+        cookTimeMinutes: 20,
+        totalTimeMinutes: 480,
+      }),
+    ).toBe(480);
+  });
+
+  it("ignores a total shorter than prep and cook", () => {
+    expect(
+      recipeTotalMinutes({
+        prepTimeMinutes: 30,
+        cookTimeMinutes: 60,
+        totalTimeMinutes: 45,
+      }),
+    ).toBe(90);
+  });
+
+  it("is null without any times", () => {
+    expect(recipeTotalMinutes({})).toBeNull();
   });
 });

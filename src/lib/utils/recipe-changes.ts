@@ -13,6 +13,7 @@ const DETAIL_FIELDS: ComparableDetailField[] = [
   "servings",
   "prepTimeMinutes",
   "cookTimeMinutes",
+  "totalTimeMinutes",
   "difficulty",
   "cuisine",
   "sourceUrl",

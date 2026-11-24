@@ -1,11 +1,14 @@
 import { RecipeDifficulty } from "@/lib/types";
 import type {
+  ImportedTip,
   ParsedIngredient,
+  ParsedInstruction,
   RecipeImportResult,
 } from "@/lib/types/import-types";
 import type {
   EditorIngredient,
   RecipeFormData,
+  RecipeFormInstruction,
 } from "@/lib/types/recipe-types";
 import { RECIPE_CONSTANTS } from "@/lib/utils/recipe-constants";
 
@@ -45,10 +48,52 @@ function mapIngredient(ingredient: ParsedIngredient): EditorIngredient {
   };
 }
 
+const MAX_EXTRA_NOTES_LENGTH =
+  RECIPE_CONSTANTS.VALIDATION_LIMITS.EXTRA_NOTES.MAX_LENGTH;
+
+interface PlacedTips {
+  instructions: RecipeFormInstruction[];
+  extraNotes: string;
+}
+
+// A tip goes in the notes of the step it follows. Tips about the whole recipe,
+// and any too long for a step's notes, go in the recipe's notes instead.
+function placeTips(
+  steps: ParsedInstruction[],
+  tips: ImportedTip[],
+): PlacedTips {
+  const stepNotes = steps.map(() => "");
+  const recipeNotes: string[] = [];
+  for (const tip of tips) {
+    const index = tip.stepNumber === null ? -1 : tip.stepNumber - 1;
+    const current = stepNotes[index];
+    const joined = current ? `${current} ${tip.text}` : tip.text;
+    if (current !== undefined && joined.length <= MAX_NOTES_LENGTH) {
+      stepNotes[index] = joined;
+    } else {
+      recipeNotes.push(tip.text);
+    }
+  }
+  return {
+    instructions: steps.map((instruction, index) => ({
+      instruction: instruction.instruction,
+      timeMinutes: instruction.timeMinutes,
+      temperature: instruction.temperature ?? "",
+      notes: stepNotes[index] ?? "",
+      groupName: clampText(instruction.groupName, MAX_GROUP_LENGTH),
+    })),
+    extraNotes: clampText(recipeNotes.join("\n\n"), MAX_EXTRA_NOTES_LENGTH),
+  };
+}
+
 export function mapImportResultToFormData(
   result: RecipeImportResult,
 ): Partial<RecipeFormData> {
   const { recipe } = result;
+  const { instructions, extraNotes } = placeTips(
+    recipe.instructions,
+    result.tips,
+  );
 
   return {
     title: recipe.title ?? "",
@@ -56,18 +101,15 @@ export function mapImportResultToFormData(
     servings: clampServings(recipe.servings),
     prepTimeMinutes: recipe.prepTime ?? 0,
     cookTimeMinutes: recipe.cookTime ?? 0,
+    totalTimeMinutes: recipe.totalTime ?? 0,
     difficulty: recipe.difficulty ?? RecipeDifficulty.MEDIUM,
     cuisine: recipe.cuisine ?? "",
     sourceUrl: result.sourceUrl ?? "",
     sourceName: result.sourceName ?? "",
+    videoUrl: result.videoLink ?? "",
+    extraNotes,
     ingredients: recipe.ingredients.map(mapIngredient),
-    instructions: recipe.instructions.map((instruction) => ({
-      instruction: instruction.instruction,
-      timeMinutes: instruction.timeMinutes,
-      temperature: instruction.temperature ?? "",
-      notes: "",
-      groupName: clampText(instruction.groupName, MAX_GROUP_LENGTH),
-    })),
+    instructions,
     tags: recipe.tags,
     nutrition: recipe.nutrition,
   };

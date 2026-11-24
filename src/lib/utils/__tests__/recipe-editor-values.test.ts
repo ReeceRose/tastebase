@@ -77,6 +77,7 @@ describe("editorValuesFromRecipe", () => {
       servings: null,
       prepTimeMinutes: null,
       cookTimeMinutes: 0,
+      totalTimeMinutes: null,
       difficulty: null,
       cuisine: null,
       swatch: null,

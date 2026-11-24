@@ -9,6 +9,7 @@ import {
 } from "@/db/schema.recipes";
 import type { RecipeHeroImage, RecipeSummary } from "@/lib/types";
 import { resolveSwatch } from "@/lib/utils/swatches";
+import { recipeTotalMinutes } from "@/lib/utils/time-formatting";
 
 interface SummaryQuery {
   userId: string;
@@ -25,6 +26,7 @@ const summaryColumns = {
   swatch: recipes.swatch,
   prepTimeMinutes: recipes.prepTimeMinutes,
   cookTimeMinutes: recipes.cookTimeMinutes,
+  totalTimeMinutes: recipes.totalTimeMinutes,
   difficulty: recipes.difficulty,
   cuisine: recipes.cuisine,
   isPublic: recipes.isPublic,
@@ -47,11 +49,6 @@ export function visibleTo(userId: string): SQL {
     eq(recipes.isArchived, false),
     or(eq(recipes.userId, userId), eq(recipes.isPublic, true)),
   ) as SQL;
-}
-
-function totalMinutes(row: SummaryRow): number | null {
-  const total = (row.prepTimeMinutes ?? 0) + (row.cookTimeMinutes ?? 0);
-  return total > 0 ? total : null;
 }
 
 export async function findHeroImages(
@@ -110,7 +107,7 @@ async function hydrate(
     title: row.title,
     description: row.description,
     swatch: resolveSwatch(row.id, row.swatch),
-    totalMinutes: totalMinutes(row),
+    totalMinutes: recipeTotalMinutes(row),
     difficulty: row.difficulty,
     cuisine: row.cuisine,
     isPublic: row.isPublic,

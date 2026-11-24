@@ -81,7 +81,7 @@ interface RecipeFormIngredient {
   linkedRecipeTitle?: string | null;
 }
 
-interface RecipeFormInstruction {
+export interface RecipeFormInstruction {
   instruction: string;
   timeMinutes?: number | null;
   temperature?: string;
@@ -97,6 +97,7 @@ export interface RecipeFormData {
   servings?: number | null;
   prepTimeMinutes?: number | null;
   cookTimeMinutes?: number | null;
+  totalTimeMinutes?: number | null;
   difficulty?: RecipeDifficulty | null;
   cuisine?: string;
   sourceUrl?: string;
@@ -116,6 +117,7 @@ export interface CreateRecipeData {
   servings?: number;
   prepTimeMinutes?: number;
   cookTimeMinutes?: number;
+  totalTimeMinutes?: number;
   difficulty?: RecipeDifficulty;
   cuisine?: string;
   sourceUrl?: string;
@@ -169,7 +171,6 @@ export interface RecipeWithDetails extends Recipe {
     name?: string | null;
     email: string;
   };
-  totalTimeMinutes: number;
   userName?: string | null;
   userEmail?: string;
 }
@@ -438,6 +439,7 @@ export interface ComparableRecipeFields {
   servings?: number | null;
   prepTimeMinutes?: number | null;
   cookTimeMinutes?: number | null;
+  totalTimeMinutes?: number | null;
   difficulty?: string | null;
   cuisine?: string | null;
   sourceUrl?: string | null;

@@ -26,6 +26,7 @@ const RESULT: RecipeImportResult = {
     servings: null,
     prepTime: null,
     cookTime: null,
+    totalTime: null,
     ingredients: [],
     instructions: [],
     tags: [],
@@ -42,6 +43,8 @@ const RESULT: RecipeImportResult = {
   photoUrls: [],
   stepPhotos: [],
   videos: [],
+  tips: [],
+  videoLink: null,
   warnings: [],
 };
 

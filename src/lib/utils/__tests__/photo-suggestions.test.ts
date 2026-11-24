@@ -22,6 +22,7 @@ function result(
       servings: null,
       prepTime: null,
       cookTime: null,
+      totalTime: null,
       ingredients: [],
       instructions: [],
       tags: [],
@@ -38,6 +39,8 @@ function result(
     photoUrls,
     stepPhotos,
     videos: [],
+    tips: [],
+    videoLink: null,
     warnings: [],
   };
 }

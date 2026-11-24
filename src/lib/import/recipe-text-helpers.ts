@@ -38,6 +38,27 @@ export function parseIsoDuration(duration: string): number | null {
   return total > 0 ? total : null;
 }
 
+export interface RecipeTimes {
+  prepTime: number | null;
+  cookTime: number | null;
+  totalTime: number | null;
+}
+
+// A total longer than prep and cook covers time spent waiting, so it's kept on
+// its own instead of being folded into the cook time.
+export function recipeTimes(
+  prepTime: number | null,
+  cookTime: number | null,
+  totalTime: number | null,
+): RecipeTimes {
+  const known = (prepTime ?? 0) + (cookTime ?? 0);
+  return {
+    prepTime,
+    cookTime,
+    totalTime: totalTime !== null && totalTime > known ? totalTime : null,
+  };
+}
+
 function readNumber(value: string): number {
   return parseFloat(value.replace(",", "."));
 }

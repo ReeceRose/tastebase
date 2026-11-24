@@ -136,6 +136,12 @@ export const createRecipeSchema = z.object({
     )
     .max(RECIPE_CONSTANTS.TIME_LIMITS.MAX_COOK_TIME, "Cook time is too long")
     .optional(),
+  totalTimeMinutes: z
+    .number()
+    .int("Total time must be a whole number of minutes")
+    .min(0, "Total time must be positive")
+    .max(RECIPE_CONSTANTS.TIME_LIMITS.MAX_TOTAL_TIME, "Total time is too long")
+    .optional(),
   difficulty: z.nativeEnum(RecipeDifficulty).optional(),
   cuisine: z
     .string()

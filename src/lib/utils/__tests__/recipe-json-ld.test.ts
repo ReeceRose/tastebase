@@ -89,6 +89,7 @@ function recipe(overrides: Partial<RecipeWithRelations>): RecipeWithRelations {
     servings: 4,
     prepTimeMinutes: 10,
     cookTimeMinutes: 30,
+    totalTimeMinutes: null,
     difficulty: RecipeDifficulty.EASY,
     cuisine: "Italian",
     swatch: null,

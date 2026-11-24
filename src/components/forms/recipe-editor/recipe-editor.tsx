@@ -63,6 +63,7 @@ const FIELD_SECTIONS: Record<string, EditorSection> = {
   servings: EditorSection.BASICS,
   prepTimeMinutes: EditorSection.BASICS,
   cookTimeMinutes: EditorSection.BASICS,
+  totalTimeMinutes: EditorSection.BASICS,
   difficulty: EditorSection.BASICS,
   cuisine: EditorSection.BASICS,
   ingredients: EditorSection.INGREDIENTS,
