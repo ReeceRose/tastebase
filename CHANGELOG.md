@@ -4,6 +4,31 @@ Release notes for [Tastebase](https://github.com/ReeceRose/tastebase). This file
 source of truth: `scripts/release.sh` writes each entry here, commits it, tags that
 commit, and publishes the same text as the GitHub Release.
 
+## v0.1.23 — 2026-11-24
+
+Recipe imports now keep more of what the original page offers: tips, full timings and video links.
+
+### What's Changed
+
+#### Features
+- **Cooking tips come along on import.** Tips from the source page go into the notes of the step they belong to. Tips that don't match a step, or are too long for step notes, go in the recipe's notes.
+- **Total time for recipes with resting or rising.** When a recipe's total time is longer than prep and cook time added together, Tastebase now saves it. It shows on the recipe page, in printed PDFs and when comparing recipes, and it counts in search filters.
+- **Video links from YouTube and Vimeo.** If an imported recipe points to a YouTube or Vimeo video, its video link is filled in for you.
+- **Total time in the editor.** You can see and change a recipe's total time alongside prep and cook time.
+
+#### Fixes
+- Total time from an imported page is no longer used as a recipe's cook time.
+
+#### Improvements
+- "Update from source" now picks up changes to total time.
+- All dependencies are updated to their latest versions.
+
+### Docker
+
+```
+docker pull ghcr.io/reecerose/tastebase:0.1.23
+```
+
 ## v0.1.22 — 2026-11-23
 
 Recipes can now be compared side by side, show nutrition, and pull in changes from the page they were imported from.
